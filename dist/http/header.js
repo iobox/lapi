@@ -103,6 +103,41 @@ var Header = function (_Bag) {
       });
       _get(Header.prototype.__proto__ || Object.getPrototypeOf(Header.prototype), 'replace', this).call(this, _data);
     }
+
+    /**
+     * Return all headers
+     * @returns {Object}
+     */
+
+  }, {
+    key: 'all',
+    value: function all() {
+      var _this2 = this;
+
+      var _data = {};
+      this.keys.forEach(function (key) {
+        _data[key] = _this2.get(key);
+      });
+      return _data;
+    }
+
+    /**
+     * Return an object which contains specific keys
+     * @param {!Array} keys
+     * @returns {{}}
+     */
+
+  }, {
+    key: 'only',
+    value: function only(keys) {
+      var _this3 = this;
+
+      var _data = {};
+      keys.forEach(function (key) {
+        _data[_str2.default.upperCaseFirst(key, '-')] = _this3.get(key);
+      });
+      return _data;
+    }
   }, {
     key: 'keys',
 

@@ -49,7 +49,7 @@ var Request = function (_Message) {
     _this.setQuery(new _bag2.default());
     _this.setServer(new _bag2.default());
     _this.setClient(new _bag2.default());
-    _this.resource = resource;
+    _this.setResource(resource);
     return _this;
   }
 
