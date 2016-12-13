@@ -1,7 +1,6 @@
 import Bag from '../../lib/bag'
 import Request from '../../lib/http/request'
 var expect = require('chai').expect
-var url = require('url')
 
 /** @test {Request} */
 describe('http/request.js',() => {
@@ -13,12 +12,12 @@ describe('http/request.js',() => {
   /** @test {Request.setQuery} */
   it('[setQuery] should allow to set query', () => {
     // set query as a string
-    let str = 'sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=cookie%20nodejs'
+    let str = '?sourceid=chrome-instant&ion=1&espv=2&ie=UTF-8#q=cookie%20nodejs'
     request.setQuery(str)
     expect(parseInt(request.getQuery().get('ion'))).to.equal(1)
 
     let uri = `https://www.google.com.vn/webhp?${str}`
-    request.setQuery(url.parse(uri, true, true).query)
+    request.setQuery(uri)
     expect(parseInt(request.getQuery().get('ion'))).to.equal(1)
 
     request.setQuery({ion: 2})
@@ -75,5 +74,41 @@ describe('http/request.js',() => {
   it('[setMethod] should allow to set method of request', () => {
     request.setMethod(Request.METHOD_POST)
     expect(request.getMethod()).to.equal(Request.METHOD_POST)
+  })
+
+  /** @test {Request.getResource} */
+  it('[getResource] should return an object', () => {
+    expect(request.getResource()).to.deep.equal({})
+  })
+
+  /** @test {Request.setResource} */
+  it('[setResource] should allow to set resource of request, and do some setup actions', () => {
+    const resource = {
+      rawHeaders: [ 'Host',
+        'localhost:8000',
+        'Connection',
+        'keep-alive',
+        'Cache-Control',
+        'no-cache',
+        'User-Agent',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36',
+        'Postman-Token',
+        'cde33caa-d307-9716-7775-18acc8c8540f',
+        'Accept',
+        '*/*',
+        'Accept-Encoding',
+        'gzip, deflate, sdch, br',
+        'Accept-Language',
+        'en-US,en;q=0.8,vi;q=0.6' ],
+      url: '/?authorize_key=abcd&ids[]=1&ids[]=188&ids[]=29&username=long.do'
+    }
+    request.setResource(resource)
+    expect(request.getResource()).to.deep.equal(resource)
+
+    // Test against header
+    expect(request.getHeader().get('host')).to.equal('localhost:8000')
+
+    // Test against query
+    expect(request.getQuery().get('authorize_key')).to.equal('abcd')
   })
 })

@@ -26,6 +26,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var url = require('url');
+
 /**
  * Http Request
  *
@@ -36,10 +38,10 @@ var Request = function (_Message) {
 
   /**
    * Constructor
-   * @param {?Object} resource
+   * @param {?Object} [resource={}] The original resource of request, it should be an instance of IncomingMessage
    */
   function Request() {
-    var resource = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var resource = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, Request);
 
@@ -62,7 +64,16 @@ var Request = function (_Message) {
   _createClass(Request, [{
     key: 'setResource',
     value: function setResource(resource) {
+      if (resource === null || (typeof resource === 'undefined' ? 'undefined' : _typeof(resource)) !== 'object') {
+        throw new Error('The resource of request must be an object.');
+      }
+
       _get(Request.prototype.__proto__ || Object.getPrototypeOf(Request.prototype), 'setResource', this).call(this, resource);
+      this._setUpMethod();
+      this._setUpHeader();
+      this._setUpQuery();
+      this._setUpServer();
+      this._setUpClient();
     }
 
     /**
@@ -111,34 +122,10 @@ var Request = function (_Message) {
       } else if ((typeof query === 'undefined' ? 'undefined' : _typeof(query)) === 'object') {
         this._query = new _bag2.default(query);
       } else if (typeof query === 'string') {
-        this._query = new _bag2.default(this._parseQueryString(query));
+        this._query = new _bag2.default(url.parse(query, true).query);
       } else {
         throw new Error('The query of request must be either a string, an instance of Bag or an object.');
       }
-    }
-
-    /**
-     * Parse string into query
-     * @param {string} string Query's string
-     * @returns {Object}
-     * @private
-     */
-
-  }, {
-    key: '_parseQueryString',
-    value: function _parseQueryString(string) {
-      var query = {};
-      var args = string.match(/(&|^)([\w|\-]+=[\w|\-]+)/gi);
-      args.forEach(function (arg) {
-        if (arg[0] === '&') {
-          arg = arg.substr(1);
-        }
-        var v = arg.split('=');
-        if (v.length === 2) {
-          query[v[0]] = v[1];
-        }
-      });
-      return query;
     }
 
     /**
@@ -200,6 +187,66 @@ var Request = function (_Message) {
         throw new Error('The request\'s client information must be either an instance of Bag or an object.');
       }
     }
+
+    /**
+     * Set up header from resource
+     * @private
+     */
+
+  }, {
+    key: '_setUpHeader',
+    value: function _setUpHeader() {
+      var resource = this.getResource();
+      if (resource.rawHeaders !== undefined) {
+        for (var i = 0; i < resource.rawHeaders.length; i++) {
+          this.getHeader().set(resource.rawHeaders[i], resource.rawHeaders[++i]);
+        }
+      }
+    }
+
+    /**
+     * Setup query from resource's url
+     * @private
+     */
+
+  }, {
+    key: '_setUpQuery',
+    value: function _setUpQuery() {
+      if (this.getResource().url !== undefined) {
+        this.setQuery(this.getResource().url);
+      }
+    }
+
+    /**
+     * Set up method of request
+     * @private
+     */
+
+  }, {
+    key: '_setUpMethod',
+    value: function _setUpMethod() {
+      if (this.getResource().method !== undefined) {
+        this.setMethod(this.getResource().method);
+      }
+    }
+
+    /**
+     * Set up information about request's server
+     * @private
+     */
+
+  }, {
+    key: '_setUpServer',
+    value: function _setUpServer() {}
+
+    /**
+     * Set up information about request's client source
+     * @private
+     */
+
+  }, {
+    key: '_setUpClient',
+    value: function _setUpClient() {}
   }]);
 
   return Request;
