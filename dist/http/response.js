@@ -64,12 +64,13 @@ var Response = function (_Message) {
 
   /**
    * Send response to client
+   * @param {!Object} Original response's resource. It should be an instance of http.ServerResponse
    */
 
 
   _createClass(Response, [{
     key: 'send',
-    value: function send() {
+    value: function send(resource) {
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -80,7 +81,7 @@ var Response = function (_Message) {
               key = _step$value[0],
               value = _step$value[1];
 
-          this.getResource().setHeader(key, value);
+          resource.setHeader(key, value);
         }
       } catch (err) {
         _didIteratorError = true;
@@ -97,9 +98,9 @@ var Response = function (_Message) {
         }
       }
 
-      this.getResource().statusCode = this.statusCode;
-      this.getResource().statusMessage = this.statusMessage;
-      this.getResource().end(this.getBody().toString());
+      resource.statusCode = this.statusCode;
+      resource.statusMessage = this.statusMessage;
+      resource.end(this.getBody().toString());
     }
   }]);
 

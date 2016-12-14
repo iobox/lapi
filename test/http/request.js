@@ -76,13 +76,19 @@ describe('http/request.js',() => {
     expect(request.getMethod()).to.equal(Request.METHOD_POST)
   })
 
-  /** @test {Request.getResource} */
-  it('[getResource] should return an object', () => {
-    expect(request.getResource()).to.deep.equal({})
+  /** @test {Request.getUri} */
+  it('[getUri] should return an instance of Bag', () => {
+    expect(request.getUri()).to.be.an.instanceof(Bag)
   })
 
-  /** @test {Request.setResource} */
-  it('[setResource] should allow to set resource of request, and do some setup actions', () => {
+  /** @test {Request.setUri} */
+  it('[setUri] should allow to set uri of request', () => {
+    const uri = 'https://google.com:9090/auth/sign-in/?authorize_key=abcd&ids[]=1&ids[]=188&ids[]=29&username=long.do#hash'
+    request.setUri(uri)
+  })
+
+  /** @test {Request.from} */
+  it('[from] should return a valid request instance', () => {
     const resource = {
       rawHeaders: [ 'Host',
         'localhost:8000',
@@ -102,8 +108,8 @@ describe('http/request.js',() => {
         'en-US,en;q=0.8,vi;q=0.6' ],
       url: '/?authorize_key=abcd&ids[]=1&ids[]=188&ids[]=29&username=long.do'
     }
-    request.setResource(resource)
-    expect(request.getResource()).to.deep.equal(resource)
+    request = Request.from(resource)
+    expect(request).to.be.an.instanceof(Request)
 
     // Test against header
     expect(request.getHeader().get('host')).to.equal('localhost:8000')

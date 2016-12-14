@@ -88,28 +88,6 @@ var Message = function () {
         throw new Error('The message\'s header must be an instance of Header or an object.');
       }
     }
-
-    /**
-     * Get original resource
-     * @returns {*}
-     */
-
-  }, {
-    key: 'getResource',
-    value: function getResource() {
-      return this._resource;
-    }
-
-    /**
-     * Set original resource
-     * @param {*} resource
-     */
-
-  }, {
-    key: 'setResource',
-    value: function setResource(resource) {
-      this._resource = resource;
-    }
   }]);
 
   return Message;
