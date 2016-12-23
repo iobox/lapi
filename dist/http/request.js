@@ -98,19 +98,28 @@ var Request = function (_Message) {
         this._uri = new _bag2.default(uri);
       } else if (typeof uri === 'string') {
         var info = url.parse(uri, true);
-        this._uri = new _bag2.default({
-          protocol: info.protocol,
-          host: info.hostname,
-          port: parseInt(info.port),
-          path: info.pathname,
-          hash: info.hash,
-          href: info.href,
-          search: info.search
-        });
+        this._uri.set(Request.URI_PROTOCOL, info.protocol);
+        this._uri.set(Request.URI_HOST, info.hostname);
+        this._uri.set(Request.URI_PORT, parseInt(info.port));
+        this._uri.set(Request.URI_PATH, info.pathname);
+        this._uri.set(Request.URI_HASH, info.hash);
+        this._uri.set(Request.URI_HREF, info.href);
+        this._uri.set(Request.URI_SEARCH, info.search);
         this.setQuery(info.query);
       } else {
         throw new Error('The request\'s URI must be an instance of Bag, an object or a string.');
       }
+    }
+
+    /**
+     * Get path from Uri
+     * @returns string
+     */
+
+  }, {
+    key: 'getPath',
+    value: function getPath() {
+      return this.getUri().get(Request.URI_PATH, Request.DEFAULT_PATH);
     }
 
     /**
@@ -342,3 +351,5 @@ Request.URI_HOST = 'host';
 Request.URI_PORT = 'port';
 Request.URI_PATH = 'path';
 Request.URI_HASH = 'hash';
+Request.URI_HREF = 'href';
+Request.URI_SEARCH = 'search';

@@ -4,12 +4,15 @@ function include(file, name) {
   return typeof name === 'undefined' ? package.default : package[name];
 }
 
-module.exports = {
-  Bag: include('bag'),
-  Class: include('class'),
-  Str: include('str'),
-  Singleton: include('singleton'),
-  EventManager: include('em'),
+var $exports = {
+  Bag: 'bag',
+  Str: 'str',
 
-  cli: include('cli')
+  HttpRequest: 'http/request',
+  HttpResponse: 'http/response'
 };
+
+Object.keys($exports).forEach(function(name) {
+  $exports[name] = include($exports[name])
+});
+module.exports = $exports;
