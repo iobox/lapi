@@ -1,4 +1,4 @@
-# apipack
+# chiron
 Light API framework for NodeJS
 
 [![Build Status](https://travis-ci.org/dotronglong/codepack.svg)](https://travis-ci.org/dotronglong/codepack)
