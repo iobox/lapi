@@ -8,6 +8,8 @@ var $exports = {
   Bag: 'bag',
   Str: 'str',
 
+  HttpRoute: 'http/routing/route',
+  HttpRouter: 'http/routing/router',
   HttpRequest: 'http/request',
   HttpResponse: 'http/response'
 };

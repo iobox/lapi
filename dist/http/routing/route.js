@@ -189,12 +189,90 @@ var Route = function () {
   }
 
   /**
-   * List of accepted methods
-   * @returns {Array}
+   * Get name
+   * @returns {string}
    */
 
 
   _createClass(Route, [{
+    key: "getName",
+    value: function getName() {
+      return this._name;
+    }
+
+    /**
+     * Set name
+     * @param {!string} name
+     */
+
+  }, {
+    key: "setName",
+    value: function setName(name) {
+      if (name === undefined) {
+        throw new Error('Name of route must be a string.');
+      }
+      this._name = name;
+    }
+
+    /**
+     * List of accepted methods
+     * @returns {Array}
+     */
+
+  }, {
+    key: "getMethods",
+    value: function getMethods() {
+      return this._methods;
+    }
+
+    /**
+     * In case methods is a string, it would be converted to an array with single item
+     * @param {Array} methods
+     */
+
+  }, {
+    key: "setMethods",
+    value: function setMethods(methods) {
+      if (methods !== null && Array.isArray(methods) === false) {
+        methods = [methods];
+      }
+
+      this._methods = methods;
+    }
+
+    /**
+     * Extra configuration for route
+     * @returns {Bag}
+     */
+
+  }, {
+    key: "getOptions",
+    value: function getOptions() {
+      return this._options;
+    }
+
+    /**
+     * Set options
+     * @param {Bag|Object} options
+     */
+
+  }, {
+    key: "setOptions",
+    value: function setOptions(options) {
+      if ((typeof options === "undefined" ? "undefined" : _typeof(options)) === "object") {
+        if (options instanceof _bag2.default) {
+          this._options = options;
+        } else {
+          this._options = new _bag2.default(options);
+        }
+      }
+    }
+
+    /**
+     * @returns {Object}
+     */
+
+  }, {
     key: "match",
 
 
@@ -261,54 +339,6 @@ var Route = function () {
       this._matches[SRC_HOST] = {};
       this._matches[SRC_PATH] = {};
     }
-  }, {
-    key: "methods",
-    get: function get() {
-      return this._methods;
-    }
-
-    /**
-     * In case methods is a string, it would be converted to an array with single item
-     * @param {Array} methods
-     */
-    ,
-    set: function set(methods) {
-      if (methods !== null && Array.isArray(methods) === false) {
-        methods = [methods];
-      }
-
-      this._methods = methods;
-    }
-
-    /**
-     * Extra configuration for route
-     * @returns {Bag}
-     */
-
-  }, {
-    key: "options",
-    get: function get() {
-      return this._options;
-    }
-
-    /**
-     * @param {Bag|Object} options
-     */
-    ,
-    set: function set(options) {
-      if ((typeof options === "undefined" ? "undefined" : _typeof(options)) === "object") {
-        if (options instanceof _bag2.default) {
-          this._options = options;
-        } else {
-          this._options = new _bag2.default(options);
-        }
-      }
-    }
-
-    /**
-     * @returns {Object}
-     */
-
   }, {
     key: "matches",
     get: function get() {
