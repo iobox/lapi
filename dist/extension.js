@@ -16,16 +16,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var App = function (_Kernel) {
-  _inherits(App, _Kernel);
+var Extension = function (_Kernel) {
+  _inherits(Extension, _Kernel);
 
-  function App() {
-    _classCallCheck(this, App);
+  function Extension() {
+    _classCallCheck(this, Extension);
 
-    return _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Extension.__proto__ || Object.getPrototypeOf(Extension)).apply(this, arguments));
   }
 
-  return App;
+  return Extension;
 }(_kernel2.default);
 
-exports.default = App;
+exports.default = Extension;

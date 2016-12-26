@@ -42,7 +42,7 @@ var Request = function (_Message) {
 
     var _this = _possibleConstructorReturn(this, (Request.__proto__ || Object.getPrototypeOf(Request)).call(this));
 
-    _this.setMethod(Request.METHOD_GET);
+    _this.setMethod(Request.DEFAULT_METHOD);
     _this.setUri(new _bag2.default());
     _this.setQuery(new _bag2.default());
     _this.setServer(new _bag2.default());
