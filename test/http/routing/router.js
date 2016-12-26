@@ -1,72 +1,72 @@
-import Router from "../../../lib/http/routing/router"
-import Route from "../../../lib/http/routing/route"
-import Request from "../../../lib/http/request"
-var expect = require("chai").expect
+import Router from '../../../lib/http/routing/router'
+import Route from '../../../lib/http/routing/route'
+import Request from '../../../lib/http/request'
+var expect = require('chai').expect
 
-describe("http/routing/router.js", () => {
+describe('http/routing/router.js', () => {
   let router, route, name, path
   beforeEach(() => {
-    name = "home"
-    path = "/my-path"
+    name = 'home'
+    path = '/my-path'
     router = new Router()
     route = new Route(name, Request.METHOD_POST, path)
   })
 
-  it("[add] should allow to add a new route", () => {
+  it('[add] should allow to add a new route', () => {
     expect(router.length).to.equal(0)
     router.add(route)
     expect(router.length).to.equal(1)
 
-    router.add({name: "another"})
+    router.add({name: 'another'})
     expect(router.length).to.equal(2)
   })
 
-  it("[has] should return false at first, and true on latter call", () => {
+  it('[has] should return false at first, and true on latter call', () => {
     expect(router.has(name)).to.be.false
     router.add(route)
     expect(router.has(name)).to.be.true
   })
 
-  it("[remove] should a specific route by name", () => {
+  it('[remove] should a specific route by name', () => {
     router.add(route)
     expect(router.has(name)).to.be.true
     router.remove(name)
     expect(router.has(name)).to.be.false
   })
   
-  it("[route] should return appropriate route", () => {
+  it('[route] should return appropriate route', () => {
     let request = new Request()
-    request.host = "vn.domain.com"
-    request.path = "/accounts/1988-longdo"
+    request.getUri().set(Request.URI_HOST, 'vn.domain.com')
+    request.getUri().set(Request.URI_PATH, '/accounts/1988-john')
     let route_1 = Route.from({
-      name: "user_account_id",
-      host: "{country}.domain.com",
-      path: "/accounts/{id}",
-      demands: {
+      name: 'user_account_id',
+      host: '{country}.domain.com',
+      path: '/accounts/{id}',
+      requirements: {
         id: /\d+/
       }
     })
     let route_2 = Route.from({
-      name: "user_account_name",
-      host: "{country}.domain.com",
-      path: "/accounts/{id}-{name}",
-      demands: {
+      name: 'user_account_name',
+      host: '{country}.domain.com',
+      path: '/accounts/{id}-{name}',
+      requirements: {
         id: /\d+/
       }
     })
     router.add(route_1)
     router.add(route_2)
     route = router.route(request)
-    // expect(route.name).to.equal("user_account_name")
-    // expect(route.matches).to.deep.equal({
-    //   country: "vn",
-    //   id: "1988",
-    //   name: "longdo"
-    // })
-    // expect(request.params.all()).to.deep.equal({
-    //   country: "vn",
-    //   id: "1988",
-    //   name: "longdo"
-    // })
+    expect(route.getName()).to.equal('user_account_name')
+    expect(route.getMatches()).to.deep.equal({
+      country: 'vn',
+      id: '1988',
+      name: 'john'
+    })
+    expect(request.getAttributes().all()).to.deep.equal({
+      country: 'vn',
+      id: '1988',
+      name: 'john'
+    })
   })
 })

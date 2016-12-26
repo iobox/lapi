@@ -117,4 +117,62 @@ describe('http/request.js',() => {
     // Test against query
     expect(request.getQuery().get('authorize_key')).to.equal('abcd')
   })
+
+  /** @test {Request.getPath} */
+  it('[getPath] should return a path extracted from uri', () => {
+    request.setUri('http://domain.com/some-path/some-other-path')
+    expect(request.getPath()).to.equal('/some-path/some-other-path')
+  })
+
+  /** @test {Request.getHost} */
+  it('[getHost] should return a string represents for host', () => {
+    request.setUri('http://domain.com/some-path/some-other-path')
+    expect(request.getHost()).to.equal('domain.com')
+  })
+
+  /** @test {Request.getPort} */
+  it('[getPort] should return an integer (or null) represents for port', () => {
+    request.setUri('http://domain.com/some-path/some-other-path')
+    expect(request.getPort()).to.be.NaN
+
+    request.setUri('http://domain.com:8080/some-path/some-other-path')
+    expect(request.getPort()).to.equal(8080)
+  })
+
+  /** @test {Request.getAttributes} */
+  it('[getAttributes] should return a Bag of attributes', () => {
+    expect(request.getAttributes()).to.be.an.instanceof(Bag)
+    request.set('some-key', 'some-value')
+    expect(request.getAttributes().all()).to.deep.equal({'some-key': 'some-value'})
+  })
+
+  /** @test {Request.setAttributes} */
+  it('[setAttributes] should allow to set attributes', () => {
+    expect(request.getAttributes().all()).to.deep.equal({})
+    request.setAttributes({'some-key': 'some-value'})
+    expect(request.getAttributes().all()).to.deep.equal({'some-key': 'some-value'})
+  })
+
+  /** @test {Request.has} */
+  it('[has] should return true if key exists and false if otherwise', () => {
+    expect(request.has('some-key')).to.be.false
+    expect(request.has('some-another-key')).to.be.false
+    request.set('some-key')
+    expect(request.has('some-key')).to.be.true
+    request.getQuery().set('some-another-key', true)
+    expect(request.has('some-another-key')).to.be.true
+  })
+
+  /** @test {Request.get} */
+  it('[get] should return a value either from attributes or query', () => {
+    expect(request.get('some-key', false)).to.be.false
+    request.getQuery().set('some-key', true)
+    expect(request.get('some-key', false)).to.be.true
+  })
+
+  /** @test {Request.set} */
+  it('[set] should allow to set an attribute', () => {
+    request.set('some-key', true)
+    expect(request.getAttributes().all()).to.deep.equal({'some-key': true})
+  })
 })

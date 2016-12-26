@@ -47,6 +47,7 @@ var Request = function (_Message) {
     _this.setQuery(new _bag2.default());
     _this.setServer(new _bag2.default());
     _this.setClient(new _bag2.default());
+    _this.setAttributes(new _bag2.default());
     return _this;
   }
 
@@ -112,6 +113,34 @@ var Request = function (_Message) {
     }
 
     /**
+     * Get attributes
+     * @returns {Bag}
+     */
+
+  }, {
+    key: 'getAttributes',
+    value: function getAttributes() {
+      return this._attributes;
+    }
+
+    /**
+     * Set attributes
+     * @param {Object|Bag} attributes
+     */
+
+  }, {
+    key: 'setAttributes',
+    value: function setAttributes(attributes) {
+      if (attributes instanceof _bag2.default) {
+        this._attributes = attributes;
+      } else if ((typeof attributes === 'undefined' ? 'undefined' : _typeof(attributes)) === 'object') {
+        this._attributes = new _bag2.default(attributes);
+      } else {
+        throw new Error('Attributes of request must be either an instance of Bag or an object');
+      }
+    }
+
+    /**
      * Get path from Uri
      * @returns {string}
      */
@@ -135,7 +164,7 @@ var Request = function (_Message) {
 
     /**
      * Get port
-     * @returns {int|null}
+     * @returns {int}
      */
 
   }, {
@@ -172,6 +201,53 @@ var Request = function (_Message) {
       } else {
         throw new Error('The query of request must be either a string, an instance of Bag or an object.');
       }
+    }
+
+    /**
+     * Return a specific key if exists in request
+     * @param {!string} key
+     * @param {?*} [def=null] Default value to return if key does not exist
+     * @returns {*}
+     */
+
+  }, {
+    key: 'get',
+    value: function get(key) {
+      var def = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      if (this.getAttributes().has(key)) {
+        return this.getAttributes().get(key);
+      } else if (this.getQuery().has(key)) {
+        return this.getQuery().get(key);
+      } else {
+        return def;
+      }
+    }
+
+    /**
+     * Tells whether or not a key exists in request
+     * @param {!string} key
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'has',
+    value: function has(key) {
+      return !!(this.getAttributes().has(key) || this.getQuery().has(key));
+    }
+
+    /**
+     * Set an attribute by key
+     * @param {!string} key
+     * @param {*} [value=null]
+     */
+
+  }, {
+    key: 'set',
+    value: function set(key) {
+      var value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      this.getAttributes().set(key, value);
     }
 
     /**

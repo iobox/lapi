@@ -84,4 +84,21 @@ describe('http/routing/route.js', () => {
     route.setHost('localhost')
     expect(route.match(request)).to.be.true
   })
+
+  it('[match] should allow to match on specific methods', () => {
+    route.setMethods([Request.METHOD_POST, Request.METHOD_PUT])
+    route.setPath('/some-path')
+
+    let request = new Request()
+    request.setUri('/some-path')
+
+    request.setMethod(Request.METHOD_GET)
+    expect(route.match(request)).to.be.false
+
+    request.setMethod(Request.METHOD_POST)
+    expect(route.match(request)).to.be.true
+
+    request.setMethod(Request.METHOD_PUT)
+    expect(route.match(request)).to.be.true
+  })
 })

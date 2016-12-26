@@ -67,7 +67,7 @@ var Router = function (_Bag) {
     key: 'add',
     value: function add(route) {
       if ((typeof route === 'undefined' ? 'undefined' : _typeof(route)) !== 'object') {
-        throw new Error('[Router#add] route must be an object');
+        throw new Error('[Router#add] Route must be either an object or an instance of Route');
       }
 
       if (!(route instanceof _route2.default)) {
@@ -98,7 +98,7 @@ var Router = function (_Bag) {
     key: 'route',
     value: function route(request) {
       if (!(request instanceof _request2.default)) {
-        throw new Error('[Router#route] request must be an instance of Http/Request');
+        throw new Error('[Router#route] Request must be an instance of Http/Request');
       }
 
       var _iteratorNormalCompletion = true;
@@ -106,13 +106,13 @@ var Router = function (_Bag) {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = this.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var _step$value = _slicedToArray(_step.value, 2),
               name = _step$value[0],
               route = _step$value[1];
 
           if (route.match(request)) {
-            request.params = Object.assign(route.params, route.matches);
+            request.setAttributes(Object.assign(route.getAttributes(), route.getMatches()));
             return route;
           }
         }

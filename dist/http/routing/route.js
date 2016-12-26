@@ -12,6 +12,10 @@ var _bag = require('../../bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
+var _request = require('../request');
+
+var _request2 = _interopRequireDefault(_request);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -367,7 +371,7 @@ var Route = function () {
       this.preMatch();
 
       var isMatched = false;
-      if ((this.getMethods() === null || this.getMethods().indexOf(request.getMethod()) >= 0) && (this.getHost() === null || matchAndApply(request.getHost(), this.getHost(), this._matches[SRC_HOST])) && (this.getPath() === null || matchAndApply(request.getPath(), this.getPath(), this._matches[SRC_PATH])) && (this.getPort() === null || request.getPort() !== null && request.getPort() === this.getPort())) {
+      if ((this.getMethods() === null || this.getMethods().indexOf(request.getMethod()) >= 0) && (this.getHost() === null || matchAndApply(request.getHost(), this.getHost(), this._matches[SRC_HOST])) && (this.getPath() === null || matchAndApply(request.getPath(), this.getPath(), this._matches[SRC_PATH])) && (this.getPort() === null || !Number.isNaN(request.getPort()) && request.getPort() === this.getPort())) {
         isMatched = true;
       }
 
@@ -432,7 +436,7 @@ var Route = function () {
     value: function from(object) {
       var route = new this();
       route.setName(object.name || '');
-      route.setMethods(object.methods || []);
+      route.setMethods(object.methods || [_request2.default.DEFAULT_METHOD]);
       route.setPath(object.path || '');
       route.setHost(object.host || null);
       route.setPort(object.port || null);
