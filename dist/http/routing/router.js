@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -10,15 +10,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _route = require("./route");
+var _route = require('./route');
 
 var _route2 = _interopRequireDefault(_route);
 
-var _request = require("../request");
+var _request = require('../request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _bag = require("../../bag");
+var _bag = require('../../bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
@@ -64,17 +64,17 @@ var Router = function (_Bag) {
 
 
   _createClass(Router, [{
-    key: "add",
+    key: 'add',
     value: function add(route) {
-      if ((typeof route === "undefined" ? "undefined" : _typeof(route)) !== "object") {
-        throw new Error("[Router#add] route must be an object");
+      if ((typeof route === 'undefined' ? 'undefined' : _typeof(route)) !== 'object') {
+        throw new Error('[Router#add] route must be an object');
       }
 
       if (!(route instanceof _route2.default)) {
         route = _route2.default.from(route);
       }
 
-      this.set(route.name, route);
+      this.set(route.getName(), route);
     }
 
     /**
@@ -83,7 +83,7 @@ var Router = function (_Bag) {
      */
 
   }, {
-    key: "remove",
+    key: 'remove',
     value: function remove(name) {
       this.delete(name);
     }
@@ -95,10 +95,10 @@ var Router = function (_Bag) {
      */
 
   }, {
-    key: "route",
+    key: 'route',
     value: function route(request) {
       if (!(request instanceof _request2.default)) {
-        throw new Error("[Router#route] request must be an instance of Http/Request");
+        throw new Error('[Router#route] request must be an instance of Http/Request');
       }
 
       var _iteratorNormalCompletion = true;

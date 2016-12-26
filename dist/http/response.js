@@ -64,7 +64,7 @@ var Response = function (_Message) {
 
   /**
    * Send response to client
-   * @param {!Object} Original response's resource. It should be an instance of http.ServerResponse
+   * @param {!Object} resource Original response's resource. It should be an instance of http.ServerResponse
    */
 
 

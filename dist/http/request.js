@@ -51,7 +51,7 @@ var Request = function (_Message) {
   }
 
   /**
-   * Get request's method (GET|POST|PUT|PATCH|DELETE|OPTIONS)
+   * Get request's method
    * @returns {string}
    */
 
@@ -113,13 +113,35 @@ var Request = function (_Message) {
 
     /**
      * Get path from Uri
-     * @returns string
+     * @returns {string}
      */
 
   }, {
     key: 'getPath',
     value: function getPath() {
       return this.getUri().get(Request.URI_PATH, Request.DEFAULT_PATH);
+    }
+
+    /**
+     * Get host
+     * @returns {string|null}
+     */
+
+  }, {
+    key: 'getHost',
+    value: function getHost() {
+      return this.getUri().get(Request.URI_HOST);
+    }
+
+    /**
+     * Get port
+     * @returns {int|null}
+     */
+
+  }, {
+    key: 'getPort',
+    value: function getPort() {
+      return this.getUri().get(Request.URI_PORT);
     }
 
     /**
