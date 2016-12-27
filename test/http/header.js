@@ -1,5 +1,5 @@
 var expect = require('chai').expect
-import Header from '../../lib/http/header'
+import Header from '../../src/http/header'
 
 /** @test {Header} */
 describe('http/header.js', () => {

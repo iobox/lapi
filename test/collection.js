@@ -1,4 +1,4 @@
-import Collection from "../lib/collection"
+import Collection from "../src/collection"
 var expect = require("chai").expect
 
 /** @test {Collection} */

@@ -1,6 +1,6 @@
-import Router from '../../../lib/http/routing/router'
-import Route from '../../../lib/http/routing/route'
-import Request from '../../../lib/http/request'
+import Router from '../../../src/http/routing/router'
+import Route from '../../../src/http/routing/route'
+import Request from '../../../src/http/request'
 var expect = require('chai').expect
 
 describe('http/routing/router.js', () => {

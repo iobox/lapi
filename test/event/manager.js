@@ -1,6 +1,6 @@
-import Event from "../../lib/event/event"
-import EventManager from "../../lib/event/manager"
-import Listener from "../../lib/event/listener"
+import Event from "../../src/event/event"
+import EventManager from "../../src/event/manager"
+import Listener from "../../src/event/listener"
 var expect = require("chai").expect
 
 /** @test {EventManager} */

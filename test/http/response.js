@@ -1,5 +1,5 @@
 var expect = require("chai").expect
-import Response from "../../lib/http/response"
+import Response from "../../src/http/response"
 
 /** @test {Response} */
 describe("http/response.js", () => {

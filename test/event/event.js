@@ -1,4 +1,4 @@
-import Event from "../../lib/event/event"
+import Event from "../../src/event/event"
 var expect = require("chai").expect
 
 /** @test {Event} */

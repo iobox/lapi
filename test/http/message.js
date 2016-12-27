@@ -1,7 +1,7 @@
 var expect = require('chai').expect
-import Message from '../../lib/http/message'
-import Header from '../../lib/http/header'
-import Body from '../../lib/http/body'
+import Message from '../../src/http/message'
+import Header from '../../src/http/header'
+import Body from '../../src/http/body'
 
 /** @test {Message} */
 describe('http/message.js',() => {

@@ -1,5 +1,5 @@
-import Bag from '../../lib/bag'
-import Request from '../../lib/http/request'
+import Bag from '../../src/bag'
+import Request from '../../src/http/request'
 var expect = require('chai').expect
 
 /** @test {Request} */
