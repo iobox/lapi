@@ -36,11 +36,7 @@ describe('http/request.js',() => {
 
   /** @test {Request.setServer} */
   it('[setServer] should allow to set some properties', () => {
-    try {
-      request.setServer('some-string')
-    } catch (e) {
-      expect(e).to.be.an.instanceof(Error)
-    }
+    expect(() => {request.setServer('some-string')}).to.throw(Error)
 
     const data = {some_value: true}
     request.setServer(data)
@@ -54,11 +50,7 @@ describe('http/request.js',() => {
 
   /** @test {Request.setClient} */
   it('[setClient] should allow to set some properties', () => {
-    try {
-      request.setClient('some-string')
-    } catch (e) {
-      expect(e).to.be.an.instanceof(Error)
-    }
+    expect(() => {request.setClient('some-string')}).to.throw(Error)
 
     const data = {some_value: true}
     request.setClient(data)

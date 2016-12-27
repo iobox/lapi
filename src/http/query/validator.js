@@ -6,10 +6,10 @@ import QueryExtensionInterface from './extension/interface'
 export default class Validator {
   /**
    * Constructor
-   * @param {Request} request
-   * @param {Bag|Object} rules
+   * @param {?Request} [request=null]
+   * @param {?(Bag|Object)} [rules=null]
    */
-  constructor(request, rules) {
+  constructor(request = null, rules = null) {
     this.setRequest(request || new Request())
     this.setRules(rules || new Bag())
 
@@ -18,7 +18,7 @@ export default class Validator {
      * @type {Bag}
      * @private
      */
-    this._parameters = new Bag()
+    this._attributes = new Bag()
 
     /**
      * Internal Extension Manager
@@ -121,6 +121,7 @@ export default class Validator {
 
   /**
    * Execute all rules to produce parameters
+   * @returns {Validator}
    */
   execute() {
     const query = this.getRequest().getQuery();
@@ -130,15 +131,18 @@ export default class Validator {
           if (extension instanceof QueryExtensionInterface) { /* Only process if extension is an instance of QueryExtensionInterface */
             // Check whether or not appropriate key is registered, and it must be a name of extension's method
             if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
+              // Run extension rule validation
               extension[key](query, field, rule[key])
 
               // The value is accepted, since there is no errors raised
-              this._parameters.set(field, query.get(field))
+              this._attributes.set(field, query.get(field))
             }
           }
         }
       })
     })
+
+    return this
   }
 
   /**
@@ -146,7 +150,7 @@ export default class Validator {
    * @returns {Object}
    */
   all() {
-    return this._parameters.all()
+    return this._attributes.all()
   }
 
   /**
@@ -155,7 +159,7 @@ export default class Validator {
    * @returns {Object}
    */
   only(fields) {
-    return this._parameters.only(fields)
+    return this._attributes.only(fields)
   }
 
   /**
@@ -164,6 +168,6 @@ export default class Validator {
    * @param {?*} [def=null] Default value to be returned
    */
   get(field, def = null) {
-    return this._parameters.get(field, def)
+    return this._attributes.get(field, def)
   }
 }

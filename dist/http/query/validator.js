@@ -31,10 +31,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Validator = function () {
   /**
    * Constructor
-   * @param {Request} request
-   * @param {Bag|Object} rules
+   * @param {?Request} [request=null]
+   * @param {?(Bag|Object)} [rules=null]
    */
-  function Validator(request, rules) {
+  function Validator() {
+    var request = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var rules = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
     _classCallCheck(this, Validator);
 
     this.setRequest(request || new _request2.default());
@@ -45,7 +48,7 @@ var Validator = function () {
      * @type {Bag}
      * @private
      */
-    this._parameters = new _bag2.default();
+    this._attributes = new _bag2.default();
 
     /**
      * Internal Extension Manager
@@ -175,6 +178,7 @@ var Validator = function () {
 
     /**
      * Execute all rules to produce parameters
+     * @returns {Validator}
      */
 
   }, {
@@ -196,10 +200,11 @@ var Validator = function () {
                 /* Only process if extension is an instance of QueryExtensionInterface */
                 // Check whether or not appropriate key is registered, and it must be a name of extension's method
                 if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
+                  // Run extension rule validation
                   extension[key](query, field, rule[key]);
 
                   // The value is accepted, since there is no errors raised
-                  this._parameters.set(field, query.get(field));
+                  this._attributes.set(field, query.get(field));
                 }
               }
             }
@@ -219,6 +224,8 @@ var Validator = function () {
           }
         });
       });
+
+      return this;
     }
 
     /**
@@ -229,7 +236,7 @@ var Validator = function () {
   }, {
     key: 'all',
     value: function all() {
-      return this._parameters.all();
+      return this._attributes.all();
     }
 
     /**
@@ -241,7 +248,7 @@ var Validator = function () {
   }, {
     key: 'only',
     value: function only(fields) {
-      return this._parameters.only(fields);
+      return this._attributes.only(fields);
     }
 
     /**
@@ -255,7 +262,7 @@ var Validator = function () {
     value: function get(field) {
       var def = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-      return this._parameters.get(field, def);
+      return this._attributes.get(field, def);
     }
   }]);
 

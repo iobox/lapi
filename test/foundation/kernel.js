@@ -16,11 +16,7 @@ describe('kernel.js', function() {
 
   /** @test {Kernel#setContainer} */
   it('[setContainer] should allow to set a container', () => {
-    try {
-      kernel.setContainer({})
-    } catch (e) {
-      expect(e).to.be.an.instanceof(Error)
-    }
+    expect(() => {kernel.setContainer({})}).to.throw(Error)
 
     const container = new Container()
     container.set('db', 'db-instance')
