@@ -1,5 +1,5 @@
-import Kernel from '../src/kernel'
-import Container from '../src/container'
+import Kernel from '../../src/foundation/kernel'
+import Container from '../../src/foundation/container'
 var expect = require('chai').expect
 
 /** @test {Kernel} */

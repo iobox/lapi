@@ -1,4 +1,4 @@
-const assert = require("assert")
+const assert = require('assert')
 
 /**
  * Support to manipulate collection of items
@@ -13,7 +13,7 @@ export default class Collection {
      * @access protected
      * @type {Array}
      */
-    this.items = items
+    this._items = items
   }
 
   /**
@@ -23,7 +23,7 @@ export default class Collection {
    * @returns {Collection}
    */
   add(item) {
-    this.items.push(item)
+    this._items.push(item)
     return this
   }
 
@@ -34,15 +34,15 @@ export default class Collection {
    */
   remove(item) {
     switch (typeof item) {
-      case "number":
-        this.items.splice(item, 1)
+      case 'number':
+        this._items.splice(item, 1)
         break
 
-      case "object":
+      case 'object':
       default:
-        for (let i = 0; i < this.items.length; i++) {
+        for (let i = 0; i < this._items.length; i++) {
           try {
-            assert.deepEqual(item, this.items[i])
+            assert.deepEqual(item, this._items[i])
             this.remove(i)
           } catch (e) {
             // do nothing
@@ -59,19 +59,19 @@ export default class Collection {
    * @returns {boolean}
    */
   has(item) {
-    if (this.items.length) {
-      for (let i = 0; i < this.items.length; i++) {
+    if (this._items.length) {
+      for (let i = 0; i < this._items.length; i++) {
         switch (typeof item) {
-          case "object":
+          case 'object':
             try {
-              assert.deepEqual(item, this.items[i])
+              assert.deepEqual(item, this._items[i])
               return true
             } catch (e) {
               // do nothing
             }
             break
           default:
-            if (item === this.items[i]) {
+            if (item === this._items[i]) {
               return true
             }
             break
@@ -98,7 +98,7 @@ export default class Collection {
    * @returns {*}
    */
   pop() {
-    return this.items.pop()
+    return this._items.pop()
   }
 
   /**
@@ -114,11 +114,11 @@ export default class Collection {
     }
 
     let items = new Collection()
-    this.items.forEach((item) => {
+    this._items.forEach((item) => {
       let isMatched = true
       for (let i = 0; i < keys.length; i++) {
         let key = keys[i]
-        if (typeof item[key] === "undefined" || query[key] !== item[key]) {
+        if (typeof item[key] === 'undefined' || query[key] !== item[key]) {
           isMatched = false
           break
         }
@@ -138,7 +138,7 @@ export default class Collection {
    * @returns {*}
    */
   get(index, def = null) {
-    return typeof this.items[index] === "undefined" ? def : this.items[index]
+    return typeof this._items[index] === 'undefined' ? def : this._items[index]
   }
 
   /**
@@ -146,7 +146,7 @@ export default class Collection {
    * @param {Array} [items=[]]
    */
   replace(items = []) {
-    this.items = items
+    this._items = items
   }
 
   /**
@@ -154,18 +154,18 @@ export default class Collection {
    * @returns {Array}
    */
   all() {
-    return this.items
+    return this._items
   }
 
   /**
    * Loop through data with a callback
    * @param {function} callback A callback function to handle item,
    *                            it would receive 2 parameters (key, value) as the input
-   * @param {?Object} target An object to become "this argument" (receiver) of the callback
+   * @param {?Object} target An object to become 'this argument' (receiver) of the callback
    */
   forEach(callback, target) {
-    this.items.forEach((item) => {
-      if (typeof target === "undefined") {
+    this._items.forEach((item) => {
+      if (typeof target === 'undefined') {
         callback(item)
       } else {
         callback.apply(target, [item])
