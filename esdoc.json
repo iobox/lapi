@@ -1,5 +1,5 @@
 {
-  "source": "./lib",
+  "source": "./src",
   "destination": "./docs/api",
   "includes": ["^_esdoc$", "\\.(js|es6)$"],
   "index": "./README.md",
