@@ -63,11 +63,10 @@ function loop(keys, values) {
 var Bag = function () {
   /**
    * Constructor
-   * @param {?{}} [data={}] Initial object data
+   * @param {?Object} [data={}] Initial object data
    */
   function Bag() {
     var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var $this = arguments[1];
 
     _classCallCheck(this, Bag);
 
@@ -103,7 +102,7 @@ var Bag = function () {
     value: function replace() {
       var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-      this._data = copy(data);
+      this._data = copy(data || {});
     }
 
     /**
@@ -115,7 +114,7 @@ var Bag = function () {
   }, {
     key: 'has',
     value: function has(key) {
-      return !(typeof this._data[key] === 'undefined');
+      return !(this._data[key] === undefined);
     }
 
     /**

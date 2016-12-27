@@ -45,9 +45,9 @@ function loop(keys, values) {
 export default class Bag {
   /**
    * Constructor
-   * @param {?{}} [data={}] Initial object data
+   * @param {?Object} [data={}] Initial object data
    */
-  constructor(data = {}, $this) {
+  constructor(data = {}) {
     this.replace(data)
     iterator.apply(this)
   }
@@ -89,7 +89,7 @@ export default class Bag {
    * @param {?{}} [data={}] Data to replace
    */
   replace(data = {}) {
-    this._data = copy(data)
+    this._data = copy(data || {})
   }
 
   /**
@@ -98,7 +98,7 @@ export default class Bag {
    * @returns {boolean}
    */
   has(key) {
-    return !(typeof this._data[key] === 'undefined')
+    return !(this._data[key] === undefined)
   }
 
   /**

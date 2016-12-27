@@ -124,23 +124,26 @@ export default class Validator {
    * @returns {Validator}
    */
   execute() {
-    const query = this.getRequest().getQuery();
+    const validator = this
+    const query     = this.getRequest().getQuery()
+    let fields      = []
     this.getRules().forEach((field, rules) => {
-      Object.keys(rules).forEach(function(key) { /* Loop rules */
-        for (const extension of this.getExtensionManager().getExtensions()) { /* Loop extensions */
+      Object.keys(rules).forEach(function (key) { /* Loop rules */
+        for (const extension of validator.getExtensionManager().getExtensions()) { /* Loop extensions */
           if (extension instanceof QueryExtensionInterface) { /* Only process if extension is an instance of QueryExtensionInterface */
             // Check whether or not appropriate key is registered, and it must be a name of extension's method
             if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
               // Run extension rule validation
-              extension[key](query, field, rule[key])
+              extension[key](query, field, rules[key])
 
               // The value is accepted, since there is no errors raised
-              this._attributes.set(field, query.get(field))
+              fields.push(field)
             }
           }
         }
       })
     })
+    this._attributes = new Bag(fields.length ? query.only(fields) : {})
 
     return this
   }

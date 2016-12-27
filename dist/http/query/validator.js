@@ -184,7 +184,9 @@ var Validator = function () {
   }, {
     key: 'execute',
     value: function execute() {
+      var validator = this;
       var query = this.getRequest().getQuery();
+      var fields = [];
       this.getRules().forEach(function (field, rules) {
         Object.keys(rules).forEach(function (key) {
           /* Loop rules */
@@ -193,7 +195,7 @@ var Validator = function () {
           var _iteratorError = undefined;
 
           try {
-            for (var _iterator = this.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            for (var _iterator = validator.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
               var extension = _step.value;
               /* Loop extensions */
               if (extension instanceof _interface2.default) {
@@ -201,10 +203,10 @@ var Validator = function () {
                 // Check whether or not appropriate key is registered, and it must be a name of extension's method
                 if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
                   // Run extension rule validation
-                  extension[key](query, field, rule[key]);
+                  extension[key](query, field, rules[key]);
 
                   // The value is accepted, since there is no errors raised
-                  this._attributes.set(field, query.get(field));
+                  fields.push(field);
                 }
               }
             }
@@ -224,6 +226,7 @@ var Validator = function () {
           }
         });
       });
+      this._attributes = new _bag2.default(fields.length ? query.only(fields) : {});
 
       return this;
     }

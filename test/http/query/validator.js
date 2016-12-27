@@ -3,6 +3,7 @@ import Validator from '../../../src/http/query/validator'
 import Request from '../../../src/http/request'
 import Bag from '../../../src/bag'
 import ExtensionManager from '../../../src/foundation/extension/manager'
+import QueryExtensionInterface from '../../../src/http/query/extension/interface'
 
 /** @test {Validator} */
 describe('http/query/validator.js', () => {
@@ -98,5 +99,25 @@ describe('http/query/validator.js', () => {
   /** @test {Validator#execute} */
   it('[execute] execute and build attributes', () => {
     expect(validator.execute()).to.deep.equal(validator)
+
+    class CustomError {}
+    class MyExtension extends QueryExtensionInterface {
+      register() {return ['someValidatorMethod', 'anotherValidatorMethod']}
+      someValidatorMethod(query, field, option) {
+        throw new CustomError('It works!')
+      }
+      anotherValidatorMethod(query, field, option) {/* it is valid */}
+    }
+
+    validator.set('a_field', {someValidatorMethod: true})
+    validator.getExtensionManager().extend(new MyExtension())
+    expect(() => {validator.execute()}).to.throw(CustomError)
+
+    let request = new Request()
+    request.setQuery('?another_field=yes&custom_field=hello')
+    validator.setRequest(request)
+    validator.delete('a_field')
+    validator.set('another_field', {anotherValidatorMethod: true})
+    expect(validator.execute().all()).to.deep.equal({another_field: 'yes'})
   })
 })
