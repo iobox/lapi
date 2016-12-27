@@ -119,5 +119,21 @@ describe('http/query/validator.js', () => {
     validator.delete('a_field')
     validator.set('another_field', {anotherValidatorMethod: true})
     expect(validator.execute().all()).to.deep.equal({another_field: 'yes'})
+
+    request.setQuery('?field=true&another_field=yes&custom_field=hello')
+    validator.setRequest(request)
+    validator.setRules({
+      not_exist_field: {def: 10},
+      custom_field: {anotherValidatorMethod: true}
+    })
+    expect(validator.execute().all()).to.deep.equal({not_exist_field: 10, custom_field: 'hello'})
+
+    request.setQuery('?field=true&another_field=yes&custom_field=hello')
+    validator.setRequest(request)
+    validator.setRules({
+      field: {},
+      custom_field: {anotherValidatorMethod: true}
+    })
+    expect(validator.execute().all()).to.deep.equal({field: 'true', custom_field: 'hello'})
   })
 })

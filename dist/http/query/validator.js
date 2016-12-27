@@ -184,29 +184,40 @@ var Validator = function () {
   }, {
     key: 'execute',
     value: function execute() {
-      var validator = this;
+      var self = this;
       var query = this.getRequest().getQuery();
-      var fields = [];
+      this._attributes = new _bag2.default();
       this.getRules().forEach(function (field, rules) {
-        Object.keys(rules).forEach(function (key) {
-          /* Loop rules */
+        var methods = Object.keys(rules);
+        if (!methods.length) {
+          // If there is no methods specified, just add value to attributes
+          self._attributes.set(field, query.get(field));
+          return true;
+        }
+
+        var def = null;
+        methods.forEach(function (method) {
+          /* Loop through rules */
+          if (method === 'def') {
+            // Special case! Reserved key uses to return default value
+            def = rules[method];
+            return true;
+          }
+
           var _iteratorNormalCompletion = true;
           var _didIteratorError = false;
           var _iteratorError = undefined;
 
           try {
-            for (var _iterator = validator.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            for (var _iterator = self.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
               var extension = _step.value;
-              /* Loop extensions */
+              /* Loop through extensions */
               if (extension instanceof _interface2.default) {
                 /* Only process if extension is an instance of QueryExtensionInterface */
                 // Check whether or not appropriate key is registered, and it must be a name of extension's method
-                if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
+                if (extension.register().indexOf(method) >= 0 && typeof extension[method] === 'function') {
                   // Run extension rule validation
-                  extension[key](query, field, rules[key]);
-
-                  // The value is accepted, since there is no errors raised
-                  fields.push(field);
+                  extension[method](query, field, rules[method]);
                 }
               }
             }
@@ -225,8 +236,10 @@ var Validator = function () {
             }
           }
         });
+
+        // The value is accepted, since there is no errors raised
+        self._attributes.set(field, query.get(field, def));
       });
-      this._attributes = new _bag2.default(fields.length ? query.only(fields) : {});
 
       return this;
     }

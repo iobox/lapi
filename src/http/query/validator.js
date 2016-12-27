@@ -124,26 +124,39 @@ export default class Validator {
    * @returns {Validator}
    */
   execute() {
-    const validator = this
-    const query     = this.getRequest().getQuery()
-    let fields      = []
+    const self  = this
+    const query = this.getRequest().getQuery()
+    this._attributes = new Bag()
     this.getRules().forEach((field, rules) => {
-      Object.keys(rules).forEach(function (key) { /* Loop rules */
-        for (const extension of validator.getExtensionManager().getExtensions()) { /* Loop extensions */
+      const methods = Object.keys(rules)
+      if (!methods.length) {
+        // If there is no methods specified, just add value to attributes
+        self._attributes.set(field, query.get(field))
+        return true
+      }
+
+      let def = null
+      methods.forEach(function (method) { /* Loop through rules */
+        if (method === 'def') {
+          // Special case! Reserved key uses to return default value
+          def = rules[method]
+          return true
+        }
+
+        for (const extension of self.getExtensionManager().getExtensions()) { /* Loop through extensions */
           if (extension instanceof QueryExtensionInterface) { /* Only process if extension is an instance of QueryExtensionInterface */
             // Check whether or not appropriate key is registered, and it must be a name of extension's method
-            if (extension.register().indexOf(key) >= 0 && typeof extension[key] === 'function') {
+            if (extension.register().indexOf(method) >= 0 && typeof extension[method] === 'function') {
               // Run extension rule validation
-              extension[key](query, field, rules[key])
-
-              // The value is accepted, since there is no errors raised
-              fields.push(field)
+              extension[method](query, field, rules[method])
             }
           }
         }
       })
+
+      // The value is accepted, since there is no errors raised
+      self._attributes.set(field, query.get(field, def))
     })
-    this._attributes = new Bag(fields.length ? query.only(fields) : {})
 
     return this
   }
