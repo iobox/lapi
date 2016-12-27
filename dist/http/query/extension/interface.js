@@ -6,13 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _kernel = require('./kernel');
+var _interface = require('../../../foundation/extension/interface');
 
-var _kernel2 = _interopRequireDefault(_kernel);
-
-var _manager = require('./extension/manager');
-
-var _manager2 = _interopRequireDefault(_manager);
+var _interface2 = _interopRequireDefault(_interface);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -22,48 +18,31 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var App = function (_Kernel) {
-  _inherits(App, _Kernel);
+/**
+ * @interface
+ */
+var QueryExtensionInterface = function (_ExtensionInterface) {
+  _inherits(QueryExtensionInterface, _ExtensionInterface);
 
-  function App(container) {
-    _classCallCheck(this, App);
+  function QueryExtensionInterface() {
+    _classCallCheck(this, QueryExtensionInterface);
 
-    /**
-     * Internal Extension Manager
-     * @type {ExtensionManager}
-     * @private
-     */
-    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, container));
-
-    _this._extensionManager = new _manager2.default();
-    return _this;
+    return _possibleConstructorReturn(this, (QueryExtensionInterface.__proto__ || Object.getPrototypeOf(QueryExtensionInterface)).apply(this, arguments));
   }
 
-  /**
-   * Get Extension Manager
-   * @returns {ExtensionManager}
-   */
-
-
-  _createClass(App, [{
-    key: 'getExtensionManager',
-    value: function getExtensionManager() {
-      return this._extensionManager;
-    }
+  _createClass(QueryExtensionInterface, [{
+    key: 'register',
 
     /**
-     * Set Extension Manager
-     * @param {!ExtensionManager} extensionManager
+     * Return a list of supporting rule's names
+     * @returns {Array}
      */
-
-  }, {
-    key: 'setExtensionManager',
-    value: function setExtensionManager(extensionManager) {
-      this._extensionManager = extensionManager;
+    value: function register() {
+      throw new Error('[Http/Query/Extension/Interface#register] register must be implemented');
     }
   }]);
 
-  return App;
-}(_kernel2.default);
+  return QueryExtensionInterface;
+}(_interface2.default);
 
-exports.default = App;
+exports.default = QueryExtensionInterface;

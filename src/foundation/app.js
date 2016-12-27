@@ -1,33 +1,31 @@
 import Kernel from './kernel'
-import Extension from './extension'
+import ExtensionManager from './extension/manager'
 
 export default class App extends Kernel {
   constructor(container) {
     super(container)
+
+    /**
+     * Internal Extension Manager
+     * @type {ExtensionManager}
+     * @private
+     */
+    this._extensionManager = new ExtensionManager()
   }
 
   /**
-   * Register one or multiple extensions
-   * @param {Extension|Extension[]} extensions
+   * Get Extension Manager
+   * @returns {ExtensionManager}
    */
-  register(extensions) {
-    if (Array.isArray(extensions)) {
-      for (const extension of extensions) {
-        this._registerExtension(extension)
-      }
-    } else if (extensions instanceof Extension) {
-      this._registerExtension(extensions)
-    } else {
-      throw new Error('[App#register] Input argument must be either an array of Extension or an instance of Extension')
-    }
+  getExtensionManager() {
+    return this._extensionManager
   }
 
   /**
-   * Register an extension
-   * @param {Extension} extension
-   * @private
+   * Set Extension Manager
+   * @param {!ExtensionManager} extensionManager
    */
-  _registerExtension(extension) {
-    
+  setExtensionManager(extensionManager) {
+    this._extensionManager = extensionManager
   }
 }

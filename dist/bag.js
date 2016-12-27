@@ -136,7 +136,7 @@ var Bag = function () {
     /**
      * Set a key-value pair
      * @param {!string} key
-     * @param {!*} value
+     * @param {?*} value
      */
 
   }, {
@@ -232,11 +232,13 @@ var Bag = function () {
 
   }, {
     key: 'forEach',
-    value: function forEach(callback, target) {
+    value: function forEach(callback) {
       var _this2 = this;
 
+      var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
       this.keys.forEach(function (key) {
-        if (target === undefined) {
+        if (target === null) {
           callback(key, _this2._data[key]);
         } else {
           callback.apply(target, [key, _this2._data[key]]);

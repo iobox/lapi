@@ -12,7 +12,8 @@ var $exports = {
   Router: 'http/routing/router',
   Header: 'http/header',
   Request: 'http/request',
-  Response: 'http/response'
+  Response: 'http/response',
+  QueryManager: 'http/query/manager'
 };
 
 const distDir  = 'dist';

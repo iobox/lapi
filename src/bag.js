@@ -114,7 +114,7 @@ export default class Bag {
   /**
    * Set a key-value pair
    * @param {!string} key
-   * @param {!*} value
+   * @param {?*} value
    */
   set(key, value) {
     this._data[key] = value
@@ -181,9 +181,9 @@ export default class Bag {
    *                            it would receive 2 parameters (key, value) as the input
    * @param {?Object} target An object to become 'this argument' (receiver) of the callback
    */
-  forEach(callback, target) {
+  forEach(callback, target = null) {
     this.keys.forEach((key) => {
-      if (target === undefined) {
+      if (target === null) {
         callback(key, this._data[key])
       } else {
         callback.apply(target, [key, this._data[key]])
