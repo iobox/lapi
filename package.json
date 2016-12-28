@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/theranos/ohio#readme",
   "engines" : {
-    "node" : ">=5.10.1"
+    "node" : ">=6.1.0"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.9.0",
