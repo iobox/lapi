@@ -1,4 +1,4 @@
-import Bag from '../bag'
+import Bag from '../foundation/bag'
 
 /**
  * HTTP Body

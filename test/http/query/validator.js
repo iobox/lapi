@@ -1,7 +1,7 @@
 var expect = require('chai').expect
 import Validator from '../../../src/http/query/validator'
 import Request from '../../../src/http/request'
-import Bag from '../../../src/bag'
+import Bag from '../../../src/foundation/bag'
 import ExtensionManager from '../../../src/foundation/extension/manager'
 import QueryExtensionInterface from '../../../src/http/query/extension/interface'
 

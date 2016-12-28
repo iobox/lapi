@@ -1,4 +1,4 @@
-import Bag from '../../bag'
+import Bag from '../../foundation/bag'
 import Request from '../request'
 
 const SRC_HOST = 'host'

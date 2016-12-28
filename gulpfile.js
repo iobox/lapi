@@ -7,7 +7,7 @@ const mocha   = require('gulp-mocha')
 const concat  = require('gulp-concat')
 const clc     = require('cli-color')
 const nodemon = require('gulp-nodemon')
-var jsdoc     = require('gulp-jsdoc3')
+const fs      = require('fs')
 
 const main       = 'index.js'
 const buildDir   = 'build'
@@ -78,4 +78,46 @@ gulp.task('server', ['build:src'], function () {
     },
     tasks: ['build:src']
   })
+})
+gulp.task('indexing', function () {
+  let indexes = {}, files = [], stats
+  const readDir = function(dir) {
+    fs.readdirSync(path.join(dir)).forEach(function (file) {
+      stats = fs.statSync(path.join(dir, file))
+      if (stats.isDirectory()) {
+        readDir(path.join(dir, file))
+      } else if (stats.isFile()) {
+        if (file.match(/^_/)) {
+          return false
+        }
+        files.push(`${dir}/${file}`)
+      }
+    })
+  }
+  readDir(srcDir)
+
+  if (!files.length) {
+    return false
+  }
+
+  const Str = require('./src/utils/str').default
+  for (let file of files) {
+    let parts = file.split('/'), node = null
+    parts.forEach(function (part) {
+      if (part === srcDir) {
+        return false
+      }
+      part = part.replace(/(\.js)$/, '')
+
+      if (node === null) { /* Process first part */
+        node = {}
+      }
+    })
+  }
+
+  const $exports = 'var $exports = ' + JSON.stringify(indexes, null, ' ') + ';'
+  let content = fs.readFileSync(path.join('index.js'), {encoding: 'utf8'})
+  content = content.replace(/\/\/ AUTO GENERATED ==>((\n.*\n?)*)\/\/ <== AUTO GENERATED/,
+        '// AUTO GENERATED ==>' + "\n" + $exports + "\n" + '// <== AUTO GENERATED')
+  fs.writeFileSync(path.join('index.js'), content, {encoding: 'utf8'})
 })

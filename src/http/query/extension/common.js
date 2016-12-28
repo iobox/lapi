@@ -1,5 +1,5 @@
 import QueryExtensionInterface from './interface'
-import Bag from '../../../bag'
+import Bag from '../../../foundation/bag'
 
 /**
  * @implements {QueryExtensionInterface}

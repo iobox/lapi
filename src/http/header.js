@@ -1,5 +1,5 @@
-import Bag from '../bag'
-import Str from '../str'
+import Bag from '../foundation/bag'
+import Str from '../utils/str'
 
 /**
  * Contain headers as a bag, easy to manipulate

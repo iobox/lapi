@@ -1,5 +1,5 @@
 const url = require('url')
-import Bag from '../bag'
+import Bag from '../foundation/bag'
 import Message from './message'
 
 /**

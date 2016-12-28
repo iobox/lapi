@@ -18,7 +18,7 @@ var _request = require('../request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _bag = require('../../bag');
+var _bag = require('../../foundation/bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 

@@ -8,7 +8,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _bag = require('../../bag');
+var _bag = require('../../foundation/bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 

@@ -10,7 +10,7 @@ var _interface = require('./interface');
 
 var _interface2 = _interopRequireDefault(_interface);
 
-var _bag = require('../../../bag');
+var _bag = require('../../../foundation/bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 

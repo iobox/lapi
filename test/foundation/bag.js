@@ -1,4 +1,4 @@
-import Bag from '../src/bag'
+import Bag from '../../src/foundation/bag'
 var expect = require('chai').expect
 
 /** @test {Bag} */

@@ -1,6 +1,6 @@
 import Route from './route'
 import Request from '../request'
-import Bag from '../../bag'
+import Bag from '../../foundation/bag'
 
 /**
  * Router

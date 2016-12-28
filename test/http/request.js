@@ -1,4 +1,4 @@
-import Bag from '../../src/bag'
+import Bag from '../../src/foundation/bag'
 import Request from '../../src/http/request'
 var expect = require('chai').expect
 

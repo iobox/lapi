@@ -1,6 +1,6 @@
 var expect = require('chai').expect
 import CommonExtension from '../../../../src/http/query/extension/common'
-import Bag from '../../../../src/bag'
+import Bag from '../../../../src/foundation/bag'
 
 /** @test {CommonExtension} */
 describe('http/query/extension/common.js', () => {
