@@ -1,6 +1,9 @@
 import ExtensionInterface from './interface'
 import Container from '../container'
 
+/**
+ * @implements {ExtensionInterface}
+ */
 export default class ContainerExtension extends ExtensionInterface {
   constructor() {
     super()

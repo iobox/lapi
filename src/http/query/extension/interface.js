@@ -1,9 +1,10 @@
-import ExtensionInterface from '../../../foundation/extension/interface'
+import FoundationExtensionInterface from '../../../foundation/extension/interface'
 
 /**
  * @interface
+ * @extends {src/foundation/extension/interface.js~ExtensionInterface}
  */
-export default class QueryExtensionInterface extends ExtensionInterface {
+export default class ExtensionInterface extends FoundationExtensionInterface {
   /**
    * Return a list of supporting rule's names
    * @returns {Array}

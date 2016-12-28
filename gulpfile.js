@@ -80,8 +80,8 @@ gulp.task('server', ['build:src'], function () {
   })
 })
 gulp.task('indexing', function () {
-  let indexes = {}, files = [], stats
-  const readDir = function(dir) {
+  var indexes     = {}, stats
+  const readDir   = function (dir) {
     fs.readdirSync(path.join(dir)).forEach(function (file) {
       stats = fs.statSync(path.join(dir, file))
       if (stats.isDirectory()) {
@@ -90,34 +90,33 @@ gulp.task('indexing', function () {
         if (file.match(/^_/)) {
           return false
         }
-        files.push(`${dir}/${file}`)
+        parseFile(`${dir}/${file}`)
       }
     })
   }
-  readDir(srcDir)
-
-  if (!files.length) {
-    return false
-  }
-
   const Str = require('./src/utils/str').default
-  for (let file of files) {
-    let parts = file.split('/'), node = null
+  const parseFile = function (file) {
+    var parts = file.split('/'), node = indexes
     parts.forEach(function (part) {
       if (part === srcDir) {
         return false
       }
-      part = part.replace(/(\.js)$/, '')
-
-      if (node === null) { /* Process first part */
-        node = {}
+      part = Str.ucfirst(part)
+      if (part.match(/(\.js)$/)) {
+        part = require('./' + path.join.apply(null, parts)).default.name
+        parts[0] = ''
+        node[part] = path.join.apply(null, parts)
+      } else if (node[part] === undefined) {
+        node[part] = {}
       }
+      node = node[part]
     })
   }
+  readDir(srcDir)
 
   const $exports = 'var $exports = ' + JSON.stringify(indexes, null, ' ') + ';'
-  let content = fs.readFileSync(path.join('index.js'), {encoding: 'utf8'})
-  content = content.replace(/\/\/ AUTO GENERATED ==>((\n.*\n?)*)\/\/ <== AUTO GENERATED/,
-        '// AUTO GENERATED ==>' + "\n" + $exports + "\n" + '// <== AUTO GENERATED')
+  var content    = fs.readFileSync(path.join('index.js'), {encoding: 'utf8'})
+  content        = content.replace(/\/\/ AUTO GENERATED ==>((\n.*\n?)*)\/\/ <== AUTO GENERATED/,
+    '// AUTO GENERATED ==>' + "\n" + $exports + "\n" + '// <== AUTO GENERATED')
   fs.writeFileSync(path.join('index.js'), content, {encoding: 'utf8'})
 })
