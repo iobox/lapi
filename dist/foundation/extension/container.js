@@ -6,9 +6,13 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _interface = require('../../../foundation/extension/interface');
+var _interface = require('./interface');
 
 var _interface2 = _interopRequireDefault(_interface);
+
+var _container = require('../container');
+
+var _container2 = _interopRequireDefault(_container);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -19,31 +23,50 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /**
- * @interface
- * @extends {src/foundation/extension/interface.js~ExtensionInterface}
+ * @implements {ExtensionInterface}
  */
-var ExtensionInterface = function (_FoundationExtensionI) {
-  _inherits(ExtensionInterface, _FoundationExtensionI);
+var ContainerExtension = function (_ExtensionInterface) {
+  _inherits(ContainerExtension, _ExtensionInterface);
 
-  function ExtensionInterface() {
-    _classCallCheck(this, ExtensionInterface);
-
-    return _possibleConstructorReturn(this, (ExtensionInterface.__proto__ || Object.getPrototypeOf(ExtensionInterface)).apply(this, arguments));
-  }
-
-  _createClass(ExtensionInterface, [{
-    key: 'register',
+  function ContainerExtension() {
+    _classCallCheck(this, ContainerExtension);
 
     /**
-     * Return a list of supporting rule's names
-     * @returns {Array}
+     * Shared Container
+     * @type {Container}
+     * @private
      */
-    value: function register() {
-      throw new Error('[Http/Query/Extension/Interface#register] register must be implemented');
+    var _this = _possibleConstructorReturn(this, (ContainerExtension.__proto__ || Object.getPrototypeOf(ContainerExtension)).call(this));
+
+    _this._container = new _container2.default();
+    return _this;
+  }
+
+  /**
+   * Get Container
+   * @returns {Container}
+   */
+
+
+  _createClass(ContainerExtension, [{
+    key: 'getContainer',
+    value: function getContainer() {
+      return this._container;
+    }
+
+    /**
+     * Set Container
+     * @param {!Container} container
+     */
+
+  }, {
+    key: 'setContainer',
+    value: function setContainer(container) {
+      this._container = container;
     }
   }]);
 
-  return ExtensionInterface;
+  return ContainerExtension;
 }(_interface2.default);
 
-exports.default = ExtensionInterface;
+exports.default = ContainerExtension;
