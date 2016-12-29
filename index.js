@@ -17,7 +17,8 @@ var $exports = {
   "Extension": {
    "ContainerExtension": "foundation/extension/container.js",
    "ExtensionInterface": "foundation/extension/interface.js",
-   "ExtensionManager": "foundation/extension/manager.js"
+   "ExtensionManager": "foundation/extension/manager.js",
+   "ModuleExtension": "foundation/extension/module.js"
   },
   "Kernel": "foundation/kernel.js"
  },
