@@ -24,6 +24,10 @@ var _interface = require('./extension/interface');
 
 var _interface2 = _interopRequireDefault(_interface);
 
+var _invalidArgument = require('../../exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -73,13 +77,14 @@ var Validator = function () {
     /**
      * Set Request
      * @param {Request} request
+     * @throws {InvalidArgumentException} throws an InvalidArgumentException if request is not an instance of Request
      */
 
   }, {
     key: 'setRequest',
     value: function setRequest(request) {
       if (!(request instanceof _request2.default)) {
-        throw new Error('[QueryManager#setRequest] request must be an instance of Request');
+        throw new _invalidArgument2.default('[Http/Query/Validator#setRequest] request must be an instance of Request');
       }
       this._request = request;
     }
@@ -98,7 +103,7 @@ var Validator = function () {
     /**
      * Set rules
      * @param {Bag|Object} rules
-     * @throws {Error} throw an Error if rules is not an instance of Bag or an object
+     * @throws {InvalidArgumentException} throw an Error if rules is not an instance of Bag or an object
      */
 
   }, {
@@ -109,7 +114,7 @@ var Validator = function () {
       } else if ((typeof rules === 'undefined' ? 'undefined' : _typeof(rules)) === 'object') {
         this._rules = new _bag2.default(rules);
       } else {
-        throw new Error('[QueryManager#setRules] rules must be an instance of Bag or an object');
+        throw new _invalidArgument2.default('[Http/Query/Validator#setRules] rules must be an instance of Bag or an object');
       }
     }
 

@@ -6,10 +6,14 @@ var $exports = {
   "Listener": "event/listener.js",
   "EventManager": "event/manager.js"
  },
+ "Exception": {
+  "InvalidArgumentException": "exception/invalid-argument.js"
+ },
  "Foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
   "Container": "foundation/container.js",
+  "Exception": "foundation/exception.js",
   "Extension": {
    "ContainerExtension": "foundation/extension/container.js",
    "ExtensionInterface": "foundation/extension/interface.js",
@@ -19,6 +23,9 @@ var $exports = {
  },
  "Http": {
   "Body": "http/body.js",
+  "Exception": {
+   "HttpException": "http/exception/http.js"
+  },
   "Header": "http/header.js",
   "Message": "http/message.js",
   "Query": {

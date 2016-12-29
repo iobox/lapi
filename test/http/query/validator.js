@@ -4,6 +4,7 @@ import Request from '../../../src/http/request'
 import Bag from '../../../src/foundation/bag'
 import ExtensionManager from '../../../src/foundation/extension/manager'
 import QueryExtensionInterface from '../../../src/http/query/extension/interface'
+import InvalidArgumentException from '../../../src/exception/invalid-argument'
 
 /** @test {Validator} */
 describe('http/query/validator.js', () => {
@@ -19,7 +20,7 @@ describe('http/query/validator.js', () => {
 
   /** @test {Validator#setRequest} */
   it('[setRequest] should allow to set a request', () => {
-    expect(() => {validator.setRequest({})}).to.throw(Error)
+    expect(() => {validator.setRequest({})}).to.throw(InvalidArgumentException)
 
     const request = new Request()
     request.set('attr', 'value')
@@ -34,7 +35,7 @@ describe('http/query/validator.js', () => {
 
   /** @test {Validator#setRules} */
   it('[setRules] should allow to set rules', () => {
-    expect(() => {validator.setRules('')}).to.throw(Error)
+    expect(() => {validator.setRules('')}).to.throw(InvalidArgumentException)
 
     let rules = new Bag({'attr': 'value'})
     validator.setRules(rules)

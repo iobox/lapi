@@ -2,6 +2,7 @@ import Bag from '../../foundation/bag'
 import Request from '../request'
 import ExtensionManager from '../../foundation/extension/manager'
 import QueryExtensionInterface from './extension/interface'
+import InvalidArgumentException from '../../exception/invalid-argument'
 
 export default class Validator {
   /**
@@ -39,10 +40,11 @@ export default class Validator {
   /**
    * Set Request
    * @param {Request} request
+   * @throws {InvalidArgumentException} throws an InvalidArgumentException if request is not an instance of Request
    */
   setRequest(request) {
     if (!(request instanceof Request)) {
-      throw new Error('[QueryManager#setRequest] request must be an instance of Request')
+      throw new InvalidArgumentException('[Http/Query/Validator#setRequest] request must be an instance of Request')
     }
     this._request = request
   }
@@ -58,7 +60,7 @@ export default class Validator {
   /**
    * Set rules
    * @param {Bag|Object} rules
-   * @throws {Error} throw an Error if rules is not an instance of Bag or an object
+   * @throws {InvalidArgumentException} throw an Error if rules is not an instance of Bag or an object
    */
   setRules(rules) {
     if (rules instanceof Bag) {
@@ -66,7 +68,7 @@ export default class Validator {
     } else if (typeof rules === 'object') {
       this._rules = new Bag(rules)
     } else {
-      throw new Error('[QueryManager#setRules] rules must be an instance of Bag or an object')
+      throw new InvalidArgumentException('[Http/Query/Validator#setRules] rules must be an instance of Bag or an object')
     }
   }
 
