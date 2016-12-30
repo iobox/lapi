@@ -198,8 +198,9 @@ var Bag = function () {
 
     /**
      * Get key-value pairs only for proposed keys
-     * @param {!Array} keys An array of keys to get their's values
+     * @param {?Array} keys An array of keys to get their's values
      * @returns {{}}
+     * @throws {InvalidArgumentException} throws an exception when keys is not an array
      */
 
   }, {
@@ -207,6 +208,9 @@ var Bag = function () {
     value: function only(keys) {
       var _this2 = this;
 
+      if (!Array.isArray(keys)) {
+        throw new _invalidArgument2.default('[Foundation/Bag#only] keys must be an array');
+      }
       var items = {};
       keys.forEach(function (key) {
         return items[key] = _this2._data[key];
@@ -283,8 +287,10 @@ var Bag = function () {
 
   }, {
     key: 'entries',
-    value: function entries(keys) {
-      return iterator.apply(keys === undefined ? this : this.only(keys));
+    value: function entries() {
+      var keys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+
+      return iterator.apply(keys === null ? this : this.only(keys));
     }
   }, {
     key: 'length',

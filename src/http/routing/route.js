@@ -92,8 +92,8 @@ export default class Route {
    *   '{language}.domain.com',
    *   6969,
    *   {id: /\d+/, language: /[a-zA-Z]{2}/},
-   *   {format: 'json'},
-   *   {useDb: true}
+   *   {format: "json"},
+   *   {controller: new SomeController(), action: "someAction"}
    * )
    *
    * @param {string} [name=''] Name of route, it should be an unique string

@@ -38,8 +38,9 @@ var ModuleExtension = function (_ContainerExtension) {
     value: function setUp() {}
 
     /**
-     * This method is called when application is encountered an error.
-     * It could be useful for listening errors and logging them.
+     * This method is called when outgoing response is sent,
+     * and application is going to close connection.
+     * It is useful for do some shutdown actions, such as closing database connection.
      */
 
   }, {

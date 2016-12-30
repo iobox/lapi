@@ -7,25 +7,30 @@ var $exports = {
   "EventManager": "event/manager.js"
  },
  "Exception": {
+  "InternalErrorException": "exception/internal-error.js",
   "InvalidArgumentException": "exception/invalid-argument.js"
  },
  "Foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
   "Container": "foundation/container.js",
+  "Controller": "foundation/controller.js",
   "Exception": "foundation/exception.js",
   "Extension": {
    "ContainerExtension": "foundation/extension/container.js",
    "ExtensionInterface": "foundation/extension/interface.js",
    "ExtensionManager": "foundation/extension/manager.js",
-   "ModuleExtension": "foundation/extension/module.js"
+   "ModuleExtension": "foundation/extension/module.js",
+   "SystemExtension": "foundation/extension/system.js"
   },
   "Kernel": "foundation/kernel.js"
  },
  "Http": {
   "Body": "http/body.js",
   "Exception": {
-   "HttpException": "http/exception/http.js"
+   "HttpException": "http/exception/http.js",
+   "InvalidArgumentException": "http/exception/invalid-argument.js",
+   "NotFoundException": "http/exception/not-found.js"
   },
   "Header": "http/header.js",
   "Message": "http/message.js",
@@ -42,6 +47,10 @@ var $exports = {
    "Route": "http/routing/route.js",
    "Router": "http/routing/router.js"
   }
+ },
+ "Logger": {
+  "FileLogger": "logger/file.js",
+  "LoggerInterface": "logger/interface.js"
  },
  "Utils": {
   "Str": "utils/str.js"

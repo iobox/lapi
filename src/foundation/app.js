@@ -4,6 +4,7 @@ import Container from './container'
 import ModuleExtension from './extension/module'
 import ExtensionManager from './extension/manager'
 import ContainerExtension from './extension/container'
+import ExtensionInterface from './extension/interface'
 import InvalidArgumentException from '../exception/invalid-argument'
 
 export default class App extends Kernel {
@@ -43,7 +44,7 @@ export default class App extends Kernel {
    * @returns {Bag}
    */
   getOptions() {
-    return this._options
+    return this.getContainer().get('app.options')
   }
 
   /**
@@ -53,12 +54,20 @@ export default class App extends Kernel {
    */
   setOptions(options) {
     if (options instanceof Bag) {
-      this._options = options
+      this.getContainer().set('app.options', options)
     } else if (typeof options === 'object') {
-      this._options = new Bag(options)
+      this.getContainer().set('app.options', new Bag(options))
     } else {
       throw new InvalidArgumentException('[Foundation/App#setOptions] options must be either an object or an instance of Bag')
     }
+  }
+
+  /**
+   * Extend application with extension
+   * @param {ExtensionInterface} extension
+   */
+  extend(extension) {
+    this.getExtensionManager().extend(extension)
   }
 
   /**

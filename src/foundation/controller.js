@@ -2,6 +2,7 @@ import Kernel from './kernel'
 import Request from '../http/request'
 import Response from '../http/response'
 import InvalidArgumentException from '../exception/invalid-argument'
+import Route from '../http/routing/route'
 
 export default class Controller extends Kernel {
   /**
@@ -16,15 +17,25 @@ export default class Controller extends Kernel {
   }
 
   /**
-   * This method would be called before running active action
+   * Get route
+   * @returns {Route}
    */
-  beforeAction() {}
+  getRoute() {
+    return this._route
+  }
 
   /**
-   * This method would be called after receiving data from action
-   * @param {?(Object|Response|string)} response
+   * Set route
+   * @param {!Route} route
+   * @throws {InvalidArgumentException} throws an exception if route is not an instance of Route
    */
-  afterAction(response = null) {}
+  setRoute(route) {
+    if (route instanceof Route) {
+      this._route = route
+    } else {
+      throw new InvalidArgumentException('[Foundation/Controller#setRoute] route must be an instance of Route')
+    }
+  }
 
   /**
    * Get Request

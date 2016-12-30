@@ -32,6 +32,10 @@ var _container3 = require('./extension/container');
 
 var _container4 = _interopRequireDefault(_container3);
 
+var _interface = require('./extension/interface');
+
+var _interface2 = _interopRequireDefault(_interface);
+
 var _invalidArgument = require('../exception/invalid-argument');
 
 var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
@@ -98,7 +102,7 @@ var App = function (_Kernel) {
   }, {
     key: 'getOptions',
     value: function getOptions() {
-      return this._options;
+      return this.getContainer().get('app.options');
     }
 
     /**
@@ -111,12 +115,23 @@ var App = function (_Kernel) {
     key: 'setOptions',
     value: function setOptions(options) {
       if (options instanceof _bag2.default) {
-        this._options = options;
+        this.getContainer().set('app.options', options);
       } else if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object') {
-        this._options = new _bag2.default(options);
+        this.getContainer().set('app.options', new _bag2.default(options));
       } else {
         throw new _invalidArgument2.default('[Foundation/App#setOptions] options must be either an object or an instance of Bag');
       }
+    }
+
+    /**
+     * Extend application with extension
+     * @param {ExtensionInterface} extension
+     */
+
+  }, {
+    key: 'extend',
+    value: function extend(extension) {
+      this.getExtensionManager().extend(extension);
     }
 
     /**

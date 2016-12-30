@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _body = require('./body');
@@ -15,6 +17,14 @@ var _body2 = _interopRequireDefault(_body);
 var _message = require('./message');
 
 var _message2 = _interopRequireDefault(_message);
+
+var _header = require('./header');
+
+var _header2 = _interopRequireDefault(_header);
+
+var _invalidArgument = require('./exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -32,12 +42,12 @@ var Response = function (_Message) {
 
   /**
    * Constructor
-   * @param {?string} [content=''] Response's body content
-   * @param {?number} [statusCode=200] Response's status code, default is OK
+   * @param {?(string|Object)} [content={}] Response's body content
+   * @param {!number} [statusCode=200] Response's status code, default is OK
    * @param {?Object} [header={}] Initial headers
    */
   function Response() {
-    var content = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+    var content = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var statusCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Response.HTTP_OK;
     var header = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
@@ -45,32 +55,54 @@ var Response = function (_Message) {
 
     var _this = _possibleConstructorReturn(this, (Response.__proto__ || Object.getPrototypeOf(Response)).call(this));
 
-    _this.setBody(new _body2.default(content));
-    _this.setHeader(header);
-
-    /**
-     * Response's status code
-     * @type {number}
-     */
-    _this.statusCode = statusCode;
-
-    /**
-     * Response's status message
-     * @type {string}
-     */
-    _this.statusMessage = null;
+    if ((typeof content === 'undefined' ? 'undefined' : _typeof(content)) === 'object') {
+      _this.getBody().setContent(JSON.stringify(content));
+      _this.getBody().setContentType(_body2.default.CONTENT_JSON);
+      _this.getHeader().set(_header2.default.CONTENT_TYPE, _body2.default.CONTENT_JSON);
+    } else if (typeof content === 'string') {
+      _this.getBody().setContent(content);
+      _this.getBody().setContentType(_body2.default.CONTENT_HTML);
+      _this.getHeader().set(_header2.default.CONTENT_TYPE, _body2.default.CONTENT_HTML);
+    } else {
+      throw new _invalidArgument2.default('[Http/Response#constructor] content must be either an object or a string');
+    }
+    _this.setStatusCode(statusCode);
+    _this.getHeader().extend(header);
     return _this;
   }
 
   /**
-   * Send response to client
-   * @param {!Object} resource Original response's resource. It should be an instance of http.ServerResponse
+   * Get HTTP Status Code
+   * @returns {number}
    */
 
 
   _createClass(Response, [{
+    key: 'getStatusCode',
+    value: function getStatusCode() {
+      return this._statusCode;
+    }
+
+    /**
+     * Set HTTP Status Code
+     * @param {!number} statusCode
+     */
+
+  }, {
+    key: 'setStatusCode',
+    value: function setStatusCode(statusCode) {
+      this._statusCode = statusCode;
+    }
+
+    /**
+     * Send response to client
+     * @param {?Object} resource Original response's resource. It should be an instance of http.ServerResponse
+     */
+
+  }, {
     key: 'send',
-    value: function send(resource) {
+    value: function send() {
+      var resource = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -98,8 +130,7 @@ var Response = function (_Message) {
         }
       }
 
-      resource.statusCode = this.statusCode;
-      resource.statusMessage = this.statusMessage;
+      resource.statusCode = this.getStatusCode();
       resource.end(this.getBody().toString());
     }
   }]);

@@ -155,10 +155,14 @@ export default class Bag {
 
   /**
    * Get key-value pairs only for proposed keys
-   * @param {!Array} keys An array of keys to get their's values
+   * @param {?Array} keys An array of keys to get their's values
    * @returns {{}}
+   * @throws {InvalidArgumentException} throws an exception when keys is not an array
    */
   only(keys) {
+    if (!Array.isArray(keys)) {
+      throw new InvalidArgumentException('[Foundation/Bag#only] keys must be an array')
+    }
     let items = {}
     keys.forEach(key => items[key] = this._data[key])
     return items
@@ -213,7 +217,7 @@ export default class Bag {
    * @param {?Array} keys (Optional) Only allow to loop pre-defined keys
    * @returns {function} Iterator function to be used as for..of
    */
-  entries(keys) {
-    return iterator.apply(keys === undefined ? this : this.only(keys))
+  entries(keys = null) {
+    return iterator.apply(keys === null ? this : this.only(keys))
   }
 }

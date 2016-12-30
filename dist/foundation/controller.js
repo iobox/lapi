@@ -22,6 +22,10 @@ var _invalidArgument = require('../exception/invalid-argument');
 
 var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
 
+var _route = require('../http/routing/route');
+
+var _route2 = _interopRequireDefault(_route);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -52,23 +56,31 @@ var Controller = function (_Kernel) {
   }
 
   /**
-   * This method would be called before running active action
+   * Get route
+   * @returns {Route}
    */
 
 
   _createClass(Controller, [{
-    key: 'beforeAction',
-    value: function beforeAction() {}
+    key: 'getRoute',
+    value: function getRoute() {
+      return this._route;
+    }
 
     /**
-     * This method would be called after receiving data from action
-     * @param {?(Object|Response|string)} response
+     * Set route
+     * @param {!Route} route
+     * @throws {InvalidArgumentException} throws an exception if route is not an instance of Route
      */
 
   }, {
-    key: 'afterAction',
-    value: function afterAction() {
-      var response = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    key: 'setRoute',
+    value: function setRoute(route) {
+      if (route instanceof _route2.default) {
+        this._route = route;
+      } else {
+        throw new _invalidArgument2.default('[Foundation/Controller#setRoute] route must be an instance of Route');
+      }
     }
 
     /**

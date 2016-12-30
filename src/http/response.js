@@ -1,5 +1,7 @@
 import Body from './body'
 import Message from './message'
+import Header from './header'
+import InvalidArgumentException from './exception/invalid-argument'
 
 /**
  * HTTP Response
@@ -7,40 +9,54 @@ import Message from './message'
 export default class Response extends Message {
   /**
    * Constructor
-   * @param {?string} [content=''] Response's body content
-   * @param {?number} [statusCode=200] Response's status code, default is OK
+   * @param {?(string|Object)} [content={}] Response's body content
+   * @param {!number} [statusCode=200] Response's status code, default is OK
    * @param {?Object} [header={}] Initial headers
    */
-  constructor(content = '', statusCode = Response.HTTP_OK, header = {}) {
+  constructor(content = {}, statusCode = Response.HTTP_OK, header = {}) {
     super()
 
-    this.setBody(new Body(content))
-    this.setHeader(header)
+    if (typeof content === 'object') {
+      this.getBody().setContent(JSON.stringify(content))
+      this.getBody().setContentType(Body.CONTENT_JSON)
+      this.getHeader().set(Header.CONTENT_TYPE, Body.CONTENT_JSON)
+    } else if (typeof content === 'string') {
+      this.getBody().setContent(content)
+      this.getBody().setContentType(Body.CONTENT_HTML)
+      this.getHeader().set(Header.CONTENT_TYPE, Body.CONTENT_HTML)
+    } else {
+      throw new InvalidArgumentException('[Http/Response#constructor] content must be either an object or a string')
+    }
+    this.setStatusCode(statusCode)
+    this.getHeader().extend(header)
+  }
 
-    /**
-     * Response's status code
-     * @type {number}
-     */
-    this.statusCode = statusCode
+  /**
+   * Get HTTP Status Code
+   * @returns {number}
+   */
+  getStatusCode() {
+    return this._statusCode
+  }
 
-    /**
-     * Response's status message
-     * @type {string}
-     */
-    this.statusMessage = null
+  /**
+   * Set HTTP Status Code
+   * @param {!number} statusCode
+   */
+  setStatusCode(statusCode) {
+    this._statusCode = statusCode
   }
 
   /**
    * Send response to client
-   * @param {!Object} resource Original response's resource. It should be an instance of http.ServerResponse
+   * @param {?Object} resource Original response's resource. It should be an instance of http.ServerResponse
    */
-  send(resource) {
+  send(resource = null) {
     for (let [key, value] of this.getHeader()) {
       resource.setHeader(key, value)
     }
 
-    resource.statusCode    = this.statusCode
-    resource.statusMessage = this.statusMessage
+    resource.statusCode    = this.getStatusCode()
     resource.end(this.getBody().toString())
   }
 }
