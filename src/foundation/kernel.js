@@ -28,7 +28,7 @@ export default class Kernel {
     if (container instanceof Container) {
       this._container = container
     } else {
-      throw new Error('[Kernel#setContainer] An instance of Container is required')
+      throw new Error('[Foundation/Kernel#setContainer] An instance of Container is required')
     }
   }
 
