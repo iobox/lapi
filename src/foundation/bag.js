@@ -1,3 +1,5 @@
+import InvalidArgumentException from '../exception/invalid-argument'
+
 function copy(...args) {
   return Object.assign({}, ...args)
 }
@@ -126,6 +128,21 @@ export default class Bag {
    */
   delete(key) {
     delete this._data[key]
+  }
+
+  /**
+   * Set multiple key-value pairs
+   * @param {Object|Bag} data
+   * @throws {InvalidArgumentException} throws an exception when input data is not an instance of Bag or an object
+   */
+  extend(data) {
+    if (data instanceof Bag) {
+      data.forEach((key, value) => this.set(key, value))
+    } else if (typeof data === 'object') {
+      this.extend(new Bag(data))
+    } else {
+      throw new InvalidArgumentException('[Foundation/Bag#extend] data must be an instance of Bag or an object')
+    }
   }
 
   /**

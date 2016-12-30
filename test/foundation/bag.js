@@ -60,6 +60,17 @@ describe('bag.js', function() {
     expect(bag.get('a')).to.be.null
   })
 
+  /** @test {Bag#extend} */
+  it('[extend] should allow to set multiple key-value pairs', () => {
+    bag = new Bag({a: 'Hello'})
+    bag.extend({b: 'World', c: '!'})
+    expect(bag.all()).to.deep.equal({a: 'Hello', b: 'World', c: '!'})
+
+    bag = new Bag({a: 'Hello'})
+    bag.extend(new Bag({b: 'World', c: '!'}))
+    expect(bag.all()).to.deep.equal({a: 'Hello', b: 'World', c: '!'})
+  })
+
   /** @test {Bag#all} */
   it('[all] should return all values of bag', () => {
     expect(bag.all()).to.deep.equal(data)

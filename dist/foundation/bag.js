@@ -4,7 +4,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _invalidArgument = require('../exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -156,6 +164,28 @@ var Bag = function () {
     }
 
     /**
+     * Set multiple key-value pairs
+     * @param {Object|Bag} data
+     * @throws {InvalidArgumentException} throws an exception when input data is not an instance of Bag or an object
+     */
+
+  }, {
+    key: 'extend',
+    value: function extend(data) {
+      var _this = this;
+
+      if (data instanceof Bag) {
+        data.forEach(function (key, value) {
+          return _this.set(key, value);
+        });
+      } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
+        this.extend(new Bag(data));
+      } else {
+        throw new _invalidArgument2.default('[Foundation/Bag#extend] data must be an instance of Bag or an object');
+      }
+    }
+
+    /**
      * Return a cloned version of Bag data
      * @returns {{}}
      */
@@ -175,11 +205,11 @@ var Bag = function () {
   }, {
     key: 'only',
     value: function only(keys) {
-      var _this = this;
+      var _this2 = this;
 
       var items = {};
       keys.forEach(function (key) {
-        return items[key] = _this._data[key];
+        return items[key] = _this2._data[key];
       });
       return items;
     }
@@ -232,15 +262,15 @@ var Bag = function () {
   }, {
     key: 'forEach',
     value: function forEach(callback) {
-      var _this2 = this;
+      var _this3 = this;
 
       var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
       this.keys.forEach(function (key) {
         if (target === null) {
-          callback(key, _this2._data[key]);
+          callback(key, _this3._data[key]);
         } else {
-          callback.apply(target, [key, _this2._data[key]]);
+          callback.apply(target, [key, _this3._data[key]]);
         }
       });
     }
