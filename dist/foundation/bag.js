@@ -272,9 +272,9 @@ var Bag = function () {
 
       this.keys.forEach(function (key) {
         if (target === null) {
-          callback(key, _this3._data[key]);
+          callback(key, _this3.get(key));
         } else {
-          callback.apply(target, [key, _this3._data[key]]);
+          callback.apply(target, [key, _this3.get(key)]);
         }
       });
     }

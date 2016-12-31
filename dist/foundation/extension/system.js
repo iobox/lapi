@@ -70,15 +70,27 @@ var _notFound2 = _interopRequireDefault(_notFound);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
 var EventEmitter = require('events');
 var http = require('http');
 var https = require('https');
+var fs = require('fs');
+
+/**
+ * Contain information about original request, response
+ */
+
+var Connection = function Connection(req, res) {
+  _classCallCheck(this, Connection);
+
+  this.req = req;
+  this.res = res;
+};
 
 var SystemExtension = function (_ModuleExtension) {
   _inherits(SystemExtension, _ModuleExtension);
@@ -96,8 +108,7 @@ var SystemExtension = function (_ModuleExtension) {
      * To set up some common objects, such as db, controller, request, response
      */
     value: function setUp() {
-      this.getContainer().set('events', new EventEmitter());
-
+      this.setUpEvents();
       this.setUpLogger();
       this.setUpRouter();
       this.setUpServer();
@@ -150,6 +161,25 @@ var SystemExtension = function (_ModuleExtension) {
       } else {
         throw new Error('[Foundation/Extension/System#getLogger] logger must be an instance of LoggerInterface');
       }
+    }
+
+    /**
+     * Set up events
+     */
+
+  }, {
+    key: 'setUpEvents',
+    value: function setUpEvents() {
+      var events = new EventEmitter();
+      var self = this;
+      events.on('error', function (e) {
+        self.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
+      });
+      events.on('http.server.ready', function (port, host) {
+        console.log('[info] Server is started at ' + host + ':' + port);
+      });
+
+      this.getContainer().set('events', events);
     }
 
     /**
@@ -209,7 +239,6 @@ var SystemExtension = function (_ModuleExtension) {
           server = this._setUpServerHttp();
         }
       } catch (e) {
-        console.log(e.message);
         this.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
       }
 
@@ -233,9 +262,14 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: '_setUpServerHttp',
     value: function _setUpServerHttp() {
+      var _this3 = this;
+
       var host = this.getOptions().get('server.host', null);
       var port = this.getOptions().get('server.port', 80);
-      return http.createServer().listen(port, host);
+      var backlog = this.getOptions().get('server.backlog', 511);
+      return http.createServer().listen(port, host, backlog, function () {
+        _this3.getEvents().emit('http.server.ready', port, host);
+      });
     }
 
     /**
@@ -246,7 +280,22 @@ var SystemExtension = function (_ModuleExtension) {
 
   }, {
     key: '_setUpServerHttps',
-    value: function _setUpServerHttps() {}
+    value: function _setUpServerHttps() {
+      var _this4 = this;
+
+      var host = this.getOptions().get('server.host', null);
+      var port = this.getOptions().get('server.port', 443);
+      var backlog = this.getOptions().get('server.backlog', 511);
+      if (!this.getOptions().has('server.ssl.key') || !this.getOptions().has('server.ssl.cert')) {
+        throw new _internalError2.default('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS');
+      }
+      return https.createServer({
+        key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
+        cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
+      }).listen(port, host, backlog, function () {
+        _this4.getEvents().emit('http.server.ready', port, host);
+      });
+    }
 
     /**
      * Handle incoming request
@@ -265,53 +314,174 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'handleIncomingRequest',
     value: function handleIncomingRequest(req, res) {
-      try {
-        var request = _request2.default.from(req),
-            response = new _response2.default(),
-            router = this.getContainer().get('http.router'),
+      var _this5 = this;
+
+      this.conn = new Connection(req, res);
+      this.request = null;
+      this.makeRequest(this.conn).then(function (request) {
+        _this5.request = request;
+        return _this5.routeRequest(request);
+      }).then(function (route) {
+        return _this5.dispatchRequest(route, _this5.request);
+      }).then(function (response) {
+        return _this5.sendResponse(response, _this5.conn);
+      }).catch(function (e) {
+        return _this5.handleError(e, _this5.conn);
+      });
+    }
+
+    /**
+     * Make new request from resource
+     * @param {Connection} conn
+     * @returns {Promise}
+     */
+
+  }, {
+    key: 'makeRequest',
+    value: function makeRequest(conn) {
+      return new Promise(function (resolve, reject) {
+        try {
+          (function () {
+            var request = _request2.default.from(conn.req);
+            if (request.getMethod() === _request2.default.METHOD_GET) {
+              resolve(request);
+            } else {
+              (function () {
+                var content = '';
+                conn.req.on('data', function (buffer) {
+                  content += buffer.toString('utf8');
+                });
+                conn.req.on('end', function () {
+                  try {
+                    request.getBody().setContent(content);
+                    request.getBody().setContentType(request.getHeader().get(_header2.default.CONTENT_TYPE));
+                    resolve(request);
+                  } catch (e) {
+                    reject(e);
+                  }
+                });
+              })();
+            }
+          })();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+    /**
+     * Route request
+     * @param {Request} request
+     * @returns {Promise}
+     */
+
+  }, {
+    key: 'routeRequest',
+    value: function routeRequest(request) {
+      var _this6 = this;
+
+      return new Promise(function (resolve, reject) {
+        var router = _this6.getContainer().get('http.router'),
             route = router.route(request);
 
         if (route instanceof _route2.default) {
-          var controller = route.getOptions().get('controller');
-          if (controller instanceof _controller2.default) {
-            var action = route.getOptions().get('action');
-            if (action === null || action === '' || typeof controller[action] !== 'function') {
-              throw new _internalError2.default('action is not defined in controller', null, {
-                'request': request,
-                'response': response,
-                'route': route
-              });
-            }
+          resolve(route);
+        } else {
+          reject(new _notFound2.default('Sorry! There is no routes found'));
+        }
+      });
+    }
 
-            controller.setContainer(this.getContainer());
-            controller.setRequest(request);
-            controller.setResponse(response);
-            controller.setRoute(route);
+    /**
+     * Dispatch request
+     * @param {Route} route
+     * @param {Request} request
+     * @returns {Promise}
+     */
 
-            this.getEvents().emit('http.request.before', controller);
-            var content = controller[action]();
-            this.getEvents().emit('http.request.after', content, controller);
-            this.getEvents().emit('http.response.send', response, res);
-          } else if (typeof controller === 'function') {
-            var _content = controller(request, response, route, this.getContainer());
-            this.getEvents().emit('http.request.after', _content, response);
-            this.getEvents().emit('http.response.send', response, res);
-          } else {
-            throw new _internalError2.default('controller is not defined or not an instance of Foundation/Controller', null, {
+  }, {
+    key: 'dispatchRequest',
+    value: function dispatchRequest(route, request) {
+      var _this7 = this;
+
+      return new Promise(function (resolve, reject) {
+        var response = new _response2.default();
+        var controller = route.getOptions().get('controller');
+        if (controller instanceof _controller2.default) {
+          var action = route.getOptions().get('action');
+          if (action === null || action === '' || typeof controller[action] !== 'function') {
+            reject(new _internalError2.default('action is not defined in controller', null, {
               'request': request,
               'response': response,
               'route': route
-            });
+            }));
           }
+
+          controller.setContainer(_this7.getContainer());
+          controller.setRequest(request);
+          controller.setResponse(response);
+          controller.setRoute(route);
+
+          _this7.getEvents().emit('http.request.before', controller);
+          var content = controller[action]();
+          _this7.getEvents().emit('http.request.after', content, controller);
+          resolve(controller.getResponse());
+        } else if (typeof controller === 'function') {
+          _this7.getEvents().emit('http.request.before', controller);
+          var _content = controller(request, response, route, _this7.getContainer());
+          _this7.getEvents().emit('http.request.after', _content, response);
+          resolve(response);
         } else {
-          throw new _notFound2.default('Sorry! There is no routes found');
+          reject(new _internalError2.default('controller is not defined or not an instance of Foundation/Controller', null, {
+            'request': request,
+            'response': response,
+            'route': route
+          }));
         }
-      } catch (e) {
-        if (e instanceof _exception2.default) {
-          this.getEvents().emit('http.request.exception', e, res);
-        } else if (e instanceof Error) {
-          this.getEvents().emit('system.error', res, e);
+      });
+    }
+
+    /**
+     * Send response
+     * @param {Response} response
+     * @param {Connection} conn
+     * @returns {Promise}
+     */
+
+  }, {
+    key: 'sendResponse',
+    value: function sendResponse(response, conn) {
+      var _this8 = this;
+
+      return new Promise(function (resolve, reject) {
+        try {
+          _this8.getEvents().emit('http.response.send.before', response);
+          response.send(conn.res);
+          _this8.getEvents().emit('http.response.send.after');
+          resolve(response);
+        } catch (e) {
+          reject(e);
         }
+      });
+    }
+
+    /**
+     * Handle errors
+     * @param {Error|Exception} e
+     * @param {Connection} conn
+     * @param {?Request} [request=null]
+     */
+
+  }, {
+    key: 'handleError',
+    value: function handleError(e, conn) {
+      var request = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      if (e instanceof _exception2.default) {
+        this.getEvents().emit('http.request.exception', e, conn);
+      } else if (e instanceof Error) {
+        this.getEvents().emit('system.error', conn.res, new _internalError2.default(e.message, null, {
+          request: request
+        }));
       }
     }
 
@@ -326,19 +496,21 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'handleOutgoingResponse',
     value: function handleOutgoingResponse() {
-      var _this3 = this;
+      var _this9 = this;
 
-      this.getEvents().on('http.response.send', function (response, res) {
-        if (response instanceof _response2.default) {
-          response.send(res);
+      this.getEvents().on('system.error', function (res, e) {
+        var response = new _response2.default({
+          message: 'Oops! There is something wrong.'
+        }, _response2.default.HTTP_INTERNAL_ERROR);
+        var traces = [];
+        if (e instanceof _internalError2.default && e.has('request')) {
+          var request = e.get('request');
+          traces = ['[trace] (Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '[trace] (Request.Header) ' + request.getHeader().toString(), '[trace] (Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
         }
+        _this9.getLogger().write(_interface2.default.TYPE_ERROR, e.message, traces);
+        _this9.getEvents().emit('http.response.send', response, res);
       });
-      this.getEvents().on('system.error', function (response, res) {
-        if (response instanceof _response2.default) {
-          response.send(res);
-        }
-      });
-      this.getEvents().on('http.request.exception', function (e, res) {
+      this.getEvents().on('http.request.exception', function (e, conn) {
         var response = null;
         if (e instanceof _internalError2.default) {
           response = new _response2.default({
@@ -346,7 +518,7 @@ var SystemExtension = function (_ModuleExtension) {
               message: e.getMessage()
             }
           }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this3.getLogger().write(_interface2.default.TYPE_ERROR, e.getMessage(), [JSON.stringify(e.getArguments().all())]);
+          _this9.getLogger().write(_interface2.default.TYPE_ERROR, e.getMessage(), [JSON.stringify(e.getArguments().all())]);
         } else if (e instanceof _http2.default) {
           response = new _response2.default({
             error: {
@@ -355,10 +527,11 @@ var SystemExtension = function (_ModuleExtension) {
             }
           }, e.getStatusCode());
         } else if (e instanceof Error) {
-          _this3.getLogger().write(_interface2.default.TYPE_ERROR, e.getMessage());
+          _this9.getLogger().write(_interface2.default.TYPE_ERROR, e.getMessage());
         }
+
         if (response instanceof _response2.default) {
-          _this3.getEvents().emit('http.response.send', response, res);
+          _this9.sendResponse(response, conn);
         }
       });
       this.getEvents().on('http.request.after', function (content, controller) {
@@ -375,7 +548,6 @@ var SystemExtension = function (_ModuleExtension) {
         if (response instanceof _response2.default) {
           response.getBody().setContent(JSON.stringify(content));
           response.getBody().setContentType(_body2.default.CONTENT_JSON);
-          response.getHeader().set(_header2.default.CONTENT_TYPE, _body2.default.CONTENT_JSON);
         }
       });
     }

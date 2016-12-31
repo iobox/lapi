@@ -1,6 +1,7 @@
 const url = require('url')
 import Bag from '../foundation/bag'
 import Message from './message'
+import Header from './header'
 
 /**
  * Http Request

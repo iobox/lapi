@@ -2,7 +2,7 @@ import Exception from '../foundation/exception'
 import Bag from '../foundation/bag'
 
 export default class InternalErrorException extends Exception {
-  constructor(message = '', code = null, args = {}) {
+  constructor(message = '', code = null, args = null) {
     super(message, code)
     this.setArguments(args || new Bag())
   }
@@ -12,7 +12,7 @@ export default class InternalErrorException extends Exception {
    * @returns {Bag}
    */
   getArguments() {
-    this._arguments
+    return this._arguments
   }
 
   /**
@@ -25,6 +25,15 @@ export default class InternalErrorException extends Exception {
     } else if (typeof args === 'object') {
       this._arguments = new Bag(args)
     }
+  }
+
+  /**
+   * Check if key exist
+   * @param {!string} key
+   * @returns {boolean}
+   */
+  has(key) {
+    return this.getArguments().has(key)
   }
 
   /**

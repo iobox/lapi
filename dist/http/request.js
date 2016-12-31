@@ -16,6 +16,10 @@ var _message = require('./message');
 
 var _message2 = _interopRequireDefault(_message);
 
+var _header = require('./header');
+
+var _header2 = _interopRequireDefault(_header);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }

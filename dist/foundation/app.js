@@ -20,6 +20,14 @@ var _container = require('./container');
 
 var _container2 = _interopRequireDefault(_container);
 
+var _request = require('../http/request');
+
+var _request2 = _interopRequireDefault(_request);
+
+var _route = require('../http/routing/route');
+
+var _route2 = _interopRequireDefault(_route);
+
 var _module = require('./extension/module');
 
 var _module2 = _interopRequireDefault(_module);
@@ -175,6 +183,119 @@ var App = function (_Kernel) {
           }
         }
       }
+    }
+
+    /**
+     * Quick add API route
+     * @param {!string} method
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function|Object} [callback=null]
+     */
+
+  }, {
+    key: 'api',
+    value: function api(method, path) {
+      var requirements = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+      var callback = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
+      var route = new _route2.default();
+      route.setMethods([method]);
+      route.setPath(path);
+      route.setRequirements(requirements || {});
+      if (typeof callback === 'function') {
+        route.setOptions({
+          controller: callback || function () {}
+        });
+      } else if ((typeof callback === 'undefined' ? 'undefined' : _typeof(callback)) === 'object') {
+        route.setOptions(callback);
+      } else {
+        throw new _invalidArgument2.default('[Foundation/App#api] callback must be either an object or a function');
+      }
+
+      var name = '' + method + path;
+      route.setName(name.replace(/\W+/g, '_'));
+      this.getContainer().get('http.router').add(route);
+    }
+
+    /**
+     * HTTP GET
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function} [callback=null]
+     */
+
+  }, {
+    key: 'get',
+    value: function get(path) {
+      var requirements = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      this.api(_request2.default.METHOD_GET, path, requirements, callback);
+    }
+
+    /**
+     * HTTP POST
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function} [callback=null]
+     */
+
+  }, {
+    key: 'post',
+    value: function post(path) {
+      var requirements = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      this.api(_request2.default.METHOD_POST, path, requirements, callback);
+    }
+
+    /**
+     * HTTP PUT
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function} [callback=null]
+     */
+
+  }, {
+    key: 'put',
+    value: function put(path) {
+      var requirements = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      this.api(_request2.default.METHOD_PUT, path, requirements, callback);
+    }
+
+    /**
+     * HTTP PATCH
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function} [callback=null]
+     */
+
+  }, {
+    key: 'patch',
+    value: function patch(path) {
+      var requirements = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      this.api(_request2.default.METHOD_PATCH, path, requirements, callback);
+    }
+
+    /**
+     * HTTP DELETE
+     * @param {string} path
+     * @param {?Object} [requirements=null]
+     * @param {?Function} [callback=null]
+     */
+
+  }, {
+    key: 'delete',
+    value: function _delete(path) {
+      var requirements = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var callback = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+      this.api(_request2.default.METHOD_DELETE, path, requirements, callback);
     }
   }]);
 

@@ -19,11 +19,9 @@ export default class Response extends Message {
     if (typeof content === 'object') {
       this.getBody().setContent(JSON.stringify(content))
       this.getBody().setContentType(Body.CONTENT_JSON)
-      this.getHeader().set(Header.CONTENT_TYPE, Body.CONTENT_JSON)
     } else if (typeof content === 'string') {
       this.getBody().setContent(content)
       this.getBody().setContentType(Body.CONTENT_HTML)
-      this.getHeader().set(Header.CONTENT_TYPE, Body.CONTENT_HTML)
     } else {
       throw new InvalidArgumentException('[Http/Response#constructor] content must be either an object or a string')
     }
@@ -52,9 +50,10 @@ export default class Response extends Message {
    * @param {?Object} resource Original response's resource. It should be an instance of http.ServerResponse
    */
   send(resource = null) {
-    for (let [key, value] of this.getHeader()) {
+    this.getHeader().set(Header.CONTENT_TYPE, this.getBody().getContentType())
+    this.getHeader().forEach((key, value) => {
       resource.setHeader(key, value)
-    }
+    })
 
     resource.statusCode    = this.getStatusCode()
     resource.end(this.getBody().toString())

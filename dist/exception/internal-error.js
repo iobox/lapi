@@ -30,7 +30,7 @@ var InternalErrorException = function (_Exception) {
   function InternalErrorException() {
     var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
     var code = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var args = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var args = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
     _classCallCheck(this, InternalErrorException);
 
@@ -49,7 +49,7 @@ var InternalErrorException = function (_Exception) {
   _createClass(InternalErrorException, [{
     key: 'getArguments',
     value: function getArguments() {
-      this._arguments;
+      return this._arguments;
     }
 
     /**
@@ -65,6 +65,18 @@ var InternalErrorException = function (_Exception) {
       } else if ((typeof args === 'undefined' ? 'undefined' : _typeof(args)) === 'object') {
         this._arguments = new _bag2.default(args);
       }
+    }
+
+    /**
+     * Check if key exist
+     * @param {!string} key
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'has',
+    value: function has(key) {
+      return this.getArguments().has(key);
     }
 
     /**

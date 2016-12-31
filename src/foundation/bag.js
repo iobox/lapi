@@ -205,9 +205,9 @@ export default class Bag {
   forEach(callback, target = null) {
     this.keys.forEach((key) => {
       if (target === null) {
-        callback(key, this._data[key])
+        callback(key, this.get(key))
       } else {
-        callback.apply(target, [key, this._data[key]])
+        callback.apply(target, [key, this.get(key)])
       }
     })
   }
