@@ -80,9 +80,12 @@ gulp.task('server', ['build:src'], function () {
   })
 })
 gulp.task('indexing', function () {
-  var indexes     = {}, stats
+  var indexes     = {}, stats, ignore = [path.join(srcDir, 'index.js')]
   const readDir   = function (dir) {
     fs.readdirSync(path.join(dir)).forEach(function (file) {
+      if (ignore.indexOf(path.join(dir, file)) >= 0) {
+        return false
+      }
       stats = fs.statSync(path.join(dir, file))
       if (stats.isDirectory()) {
         readDir(path.join(dir, file))

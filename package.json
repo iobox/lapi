@@ -1,5 +1,5 @@
 {
-  "name": "ohio",
+  "name": "lapi",
   "version": "0.0.2",
   "description": "Light API framework for NodeJS",
   "main": "index.js",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/theranos/ohio.git"
+    "url": "git+https://github.com/iobox/lapi.git"
   },
   "keywords": [
     "restful",
@@ -22,8 +22,8 @@
     "framework",
     "node",
     "nodejs",
-    "ohio",
-    "theranos"
+    "lapi",
+    "iobox"
   ],
   "author": {
     "name": "Long Do",
@@ -32,9 +32,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/theranos/ohio/issues"
+    "url": "https://github.com/iobox/lapi/issues"
   },
-  "homepage": "https://github.com/theranos/ohio#readme",
+  "homepage": "https://github.com/iobox/lapi#readme",
   "engines" : {
     "node" : ">=5.1.0"
   },
