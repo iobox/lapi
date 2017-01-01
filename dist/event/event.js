@@ -1,10 +1,16 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _exception = require('../foundation/exception');
+
+var _exception2 = _interopRequireDefault(_exception);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -32,31 +38,52 @@ var Event = function () {
     /**
      * Define whether or not to run this event's listeners in parallel
      * @type {boolean}
+     * @private
      */
-    this.parallel = parallel;
+    this._parallel = parallel;
 
     /**
-     * @access private
+     * Determine whether or not to continue event loop
      * @type {boolean}
+     * @private
      */
-    this.continue = true;
+    this._continue = true;
 
     /**
-     * Detail exception if there was an error
-     * @type {Error}
+     * An error if exists
+     * @type {Exception}
+     * @private
      */
-    this.exception = null;
+    this._error = null;
+
+    /**
+     * An array contains results when all listeners are run
+     * @type {Array}
+     * @private
+     */
+    this._results = [];
   }
 
   /**
-   * Stop running event any furthermore
+   * ReadOnly name of event
+   * @returns {string}
    */
 
 
   _createClass(Event, [{
-    key: "stop",
+    key: 'getName',
+    value: function getName() {
+      return this._name;
+    }
+
+    /**
+     * Stop running event any furthermore
+     */
+
+  }, {
+    key: 'stop',
     value: function stop() {
-      this.continue = false;
+      this._continue = false;
     }
 
     /**
@@ -65,20 +92,90 @@ var Event = function () {
      */
 
   }, {
-    key: "stopped",
-    get: function get() {
-      return this.continue === false;
+    key: 'isStopped',
+    value: function isStopped() {
+      return !this._continue;
     }
 
     /**
-     * ReadOnly name of event
-     * @returns {string}
+     * Tells whether or not this event allow to run in parallel
+     * @returns {boolean}
      */
 
   }, {
-    key: "name",
-    get: function get() {
-      return this._name;
+    key: 'isParallel',
+    value: function isParallel() {
+      return this._parallel;
+    }
+
+    /**
+     * Allow to run in parallel or not
+     * @param {boolean} parallel
+     */
+
+  }, {
+    key: 'parallel',
+    value: function parallel(_parallel) {
+      this._parallel = _parallel;
+    }
+
+    /**
+     * Set error
+     * @param {Exception|Error} e
+     */
+
+  }, {
+    key: 'setError',
+    value: function setError(e) {
+      if (e instanceof Error) {
+        e = new _exception2.default(e.message, e.code);
+      }
+
+      this._error = e;
+    }
+
+    /**
+     * Get error
+     * @returns {Exception}
+     */
+
+  }, {
+    key: 'getError',
+    value: function getError() {
+      return this._error;
+    }
+
+    /**
+     * Is there an error
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'hasError',
+    value: function hasError() {
+      return this._error === null ? false : true;
+    }
+
+    /**
+     * Get results
+     * @returns {Array}
+     */
+
+  }, {
+    key: 'getResults',
+    value: function getResults() {
+      return this._results;
+    }
+
+    /**
+     * Set results
+     * @param [Array] results
+     */
+
+  }, {
+    key: 'setResults',
+    value: function setResults(results) {
+      this._results = results;
     }
   }]);
 
@@ -92,4 +189,4 @@ var Event = function () {
 
 
 exports.default = Event;
-Event.NAME = "";
+Event.NAME = '';

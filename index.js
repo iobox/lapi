@@ -3,7 +3,7 @@ var $exports = {
  "Collection": "collection.js",
  "Event": {
   "Event": "event/event.js",
-  "Listener": "event/listener.js",
+  "EventListener": "event/listener.js",
   "EventManager": "event/manager.js"
  },
  "Exception": {

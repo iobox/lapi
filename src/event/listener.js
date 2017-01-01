@@ -1,79 +1,105 @@
-const LIMIT_NONE  = null
-const LIMIT_ONCE  = 1
-const LIMIT_TWICE = 2
-
-const PRIORITY_LOW    = 1
-const PRIORITY_NORMAL = 5
-const PRIORITY_HIGH   = 10
+import Event from './event'
+import Exception from '../foundation/exception'
 
 /**
  * Event Listener
  *
  * Process event when it is emitted by the EventManager
  */
-export default class Listener {
+export default class EventListener {
   /**
    * Constructor
    * @param {!function} runner Callback function to process event, it would receive an event as input
    * @param {?number} [priority=5] Determine the order of listener in running queue
    * @param {?number} [limit=null] Define if this listen could only run at a specific times
    */
-  constructor(runner, priority = PRIORITY_NORMAL, limit = LIMIT_NONE) {
+  constructor(runner, priority = EventListener.PRIORITY_NORMAL, limit = EventListener.LIMIT_NONE) {
     /**
-     * @access protected
      * @type {function}
+     * @private
      */
-    this.runner = runner
+    this._runner = runner
 
     /**
-     * @access protected
      * @type {number}
+     * @private
      */
-    this.priority = priority
+    this._priority = priority
 
     /**
-     * @access protected
      * @type {number}
+     * @private
      */
-    this.limit = limit
+    this._limit = limit
+  }
 
-    /**
-     * @access private
-     * @type {function}
-     */
-    this.cbDone = null
+  /**
+   * Get runner
+   * @returns {Function}
+   */
+  getRunner() {
+    return this._runner
+  }
 
-    /**
-     * @access private
-     * @type {function}
-     */
-    this.cbError = null
+  /**
+   * Set runner
+   * @param {Function} runner
+   */
+  setRunner(runner) {
+    if (typeof runner !== 'function') {
+      throw new Exception('[Event/Listener#setRunner] runner must be a function')
+    }
+    this._runner = runner
+  }
+
+  /**
+   * Get limit
+   * @returns {number}
+   */
+  getLimit() {
+    return this._limit
+  }
+
+  /**
+   * Set limit
+   * @param {number} limit
+   */
+  setLimit(limit) {
+    this._limit = limit
+  }
+
+  /**
+   * Get priority
+   * @returns {number}
+   */
+  getPriority() {
+    return this._priority
+  }
+
+  /**
+   * Set priority
+   * @param {number} priority
+   */
+  setPriority(priority) {
+    this._priority = priority
   }
 
   /**
    * Callback function to be called right after event is fired and stopped completely
-   * @param {!function} callback
-   * @returns {Listener} The current listener object
+   * @param {Event} event
    */
-  done(callback) {
-    this.cbDone = callback
-    return this
-  }
+  onComplete(event) {}
 
   /**
    * Callback function to be run if there is an error when processing event
-   * @param {!function} callback
-   * @returns {Listener} The current listener object
+   * @param {Event} event An error may be acquired using event.getError
    */
-  error(callback) {
-    this.cbError = callback
-    return this
-  }
+  onError(event) {}
 }
-Listener.LIMIT_NONE  = LIMIT_NONE
-Listener.LIMIT_ONCE  = LIMIT_ONCE
-Listener.LIMIT_TWICE = LIMIT_TWICE
+EventListener.LIMIT_NONE  = null
+EventListener.LIMIT_ONCE  = 1
+EventListener.LIMIT_TWICE = 2
 
-Listener.PRIORITY_LOW    = PRIORITY_LOW
-Listener.PRIORITY_NORMAL = PRIORITY_NORMAL
-Listener.PRIORITY_HIGH   = PRIORITY_HIGH
+EventListener.PRIORITY_LOW    = 1
+EventListener.PRIORITY_NORMAL = 5
+EventListener.PRIORITY_HIGH   = 10

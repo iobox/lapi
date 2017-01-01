@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -8,52 +8,71 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _listener = require("./listener");
+var _async = require('async');
 
-var _listener2 = _interopRequireDefault(_listener);
+var _async2 = _interopRequireDefault(_async);
 
-var _event = require("./event");
+var _event = require('./event');
 
 var _event2 = _interopRequireDefault(_event);
 
-var _async = require("async");
+var _bag = require('../foundation/bag');
 
-var _async2 = _interopRequireDefault(_async);
+var _bag2 = _interopRequireDefault(_bag);
+
+var _listener = require('./listener');
+
+var _listener2 = _interopRequireDefault(_listener);
+
+var _exception = require('../foundation/exception');
+
+var _exception2 = _interopRequireDefault(_exception);
+
+var _invalidArgument = require('../exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 /**
  * Handle event when asynchronous calls have been completed
  * @param {Event} event Current running event
- * @param {string} err A string represent for error
+ * @param {Exception} err A string represent for error
+ * @param {Array} results An array of results of tasks
  */
-function onAsyncCompleted(event, err) {
-  var listeners = this.events[event.name].listeners;
-  var total = listeners.length;
-  for (var i = 0; i < total; i++) {
-    var listener = listeners[i];
+function onAsyncCompleted(event, err, results) {
+  var events = this.getEvents().get(event.getName()),
+      listeners = events.listeners,
+      listener = null,
+      limit = null;
 
-    if (listener.limit !== _listener2.default.LIMIT_NONE) {
-      // reduce listener limit
-      this.events[event.name].listeners[i].limit--;
+  for (var i = 0; i < listeners.length; i++) {
+    listener = listeners[i], limit = listener.getLimit();
+
+    if (limit !== _listener2.default.LIMIT_NONE) {
+      // reduce listener's limit
+      events.listeners[i].setLimit(--limit);
     }
 
-    if (err === null && typeof listener.cbDone === "function") {
-      listener.cbDone(event);
-    } else if (err !== null && typeof listener.cbError === "function") {
-      if (typeof err === "string") {
-        event.exception = new Error(err);
-      } else {
-        event.exception = err;
-      }
-      listener.cbError(event);
+    if (err) {
+      // there is an expected error when running tasks in parallel/series
+      event.setError(err);
+      listener.onError(event);
+    } else {
+      // it seems to be fine, set results if any to event
+      event.setResults(results);
+      listener.onComplete(event);
     }
 
-    if (listener.limit === 0) {
+    if (limit === 0) {
       // remove this listener
-      removeEventListener.apply(this, [event.name, i]);
+      removeEventListener.apply(this, [event.getName(), i]);
     }
   }
 }
@@ -80,12 +99,81 @@ var getEventItem = function getEventItem() {
  * @param {number} position Position of the listener in queue
  */
 function removeEventListener(name, position) {
-  this.events[name].listeners.splice(position, 1);
+  this.getEvents().get(name).listeners.splice(position, 1);
 }
+
+var CallableEventListener = function (_EventListener) {
+  _inherits(CallableEventListener, _EventListener);
+
+  function CallableEventListener(runner) {
+    var priority = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _listener2.default.PRIORITY_NORMAL;
+    var limit = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _listener2.default.LIMIT_NONE;
+
+    _classCallCheck(this, CallableEventListener);
+
+    /**
+     * A callback for onComplete
+     * @type {null|function}
+     * @private
+     */
+    var _this = _possibleConstructorReturn(this, (CallableEventListener.__proto__ || Object.getPrototypeOf(CallableEventListener)).call(this, runner, priority, limit));
+
+    _this._onComplete = null;
+
+    /**
+     * A callback for onError
+     * @type {null|function}
+     * @private
+     */
+    _this._onError = null;
+    return _this;
+  }
+
+  /**
+   * Allow to run callback when onComplete is called
+   * @param {function} onComplete
+   */
+
+
+  _createClass(CallableEventListener, [{
+    key: 'complete',
+    value: function complete(onComplete) {
+      this._onComplete = onComplete;
+    }
+
+    /**
+     * Allow to run callback when onError is called
+     * @param {function} onError
+     */
+
+  }, {
+    key: 'error',
+    value: function error(onError) {
+      this._onError = onError;
+    }
+  }, {
+    key: 'onComplete',
+    value: function onComplete(event) {
+      if (this._onComplete) {
+        this._onComplete(event);
+      }
+    }
+  }, {
+    key: 'onError',
+    value: function onError(event) {
+      if (this._onError) {
+        this._onError(event);
+      }
+    }
+  }]);
+
+  return CallableEventListener;
+}(_listener2.default);
 
 /**
  * Manage, emit events
  */
+
 
 var EventManager = function () {
   /**
@@ -95,42 +183,74 @@ var EventManager = function () {
     _classCallCheck(this, EventManager);
 
     /**
-     * @type {{}}
+     * Registered events
+     * @type {Bag}
+     * @private
      */
-    this.events = {};
+    this._events = new _bag2.default();
   }
 
   /**
-   * Subscribe a listener to Event Manager
-   *
-   * @param {!string} name Name of event to subscribe
-   * @param {!Listener} listener A listener object to handle incoming event
+   * Get registered events
+   * @returns {Bag}
    */
 
 
   _createClass(EventManager, [{
-    key: "subscribe",
-    value: function subscribe(name, listener) {
-      if (!(listener instanceof _listener2.default)) {
-        throw new Error("[Event:subscribe] listener must be an instance of Event/Listener");
-      }
-      this.on(name, listener.runner, listener.priority, listener.limit);
+    key: 'getEvents',
+    value: function getEvents() {
+      return this._events;
     }
 
     /**
-     * Unsubsribe a listener
-     *
-     * @param {!string} name Name of event to unsubscribe
-     * @param {!Listener} listener Listener to unsubscribe
+     * Set registered events
+     * @param {Object|Bag} events
+     * @throws {InvalidArgumentException} throws an exception if events is not an instance of Bag or an object
      */
 
   }, {
-    key: "unsubscribe",
+    key: 'setEvents',
+    value: function setEvents(events) {
+      if (events instanceof _bag2.default) {
+        this._events = events;
+      } else if ((typeof events === 'undefined' ? 'undefined' : _typeof(events)) === 'object') {
+        this._events = new _bag2.default(events);
+      } else {
+        throw new _invalidArgument2.default('[Event/Manager#setEvents] events must be an instance of Bag or an object');
+      }
+    }
+
+    /**
+     * Subscribe a listener to Event Manager
+     *
+     * @param {!string} name Name of event to subscribe
+     * @param {!EventListener} listener A listener object to handle incoming event
+     * @throws {Exception} throws an exception if listener is not an instance of Event/EventListener
+     */
+
+  }, {
+    key: 'subscribe',
+    value: function subscribe(name, listener) {
+      if (!(listener instanceof _listener2.default)) {
+        throw new _exception2.default('[Event/Manager#subscribe] listener must be an instance of Event/EventListener');
+      }
+      this.on(name, listener.getRunner(), listener.getPriority(), listener.getLimit());
+    }
+
+    /**
+     * Unsubscribe a listener
+     *
+     * @param {!string} name Name of event to unsubscribe
+     * @param {!EventListener} listener EventListener to unsubscribe
+     */
+
+  }, {
+    key: 'unsubscribe',
     value: function unsubscribe(name, listener) {
       if (!(listener instanceof _listener2.default)) {
-        throw new Error("[Event:subscribe] listener must be an instance of Event/Listener");
+        throw new Error('[Event/Manager#subscribe] listener must be an instance of Event/EventListener');
       }
-      this.off(name, listener.priority);
+      this.off(name, listener.getPriority());
     }
 
     /**
@@ -140,18 +260,18 @@ var EventManager = function () {
      * @param {!function} runner Callback to handle incoming event
      * @param {?number} priority Higher priority handler will be call later than the others
      * @param {?number} limit Number of times to be run. Default is null to ignore limit
-     * @returns {Listener} Listener instance of registration
+     * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
-    key: "on",
+    key: 'on',
     value: function on(name, runner, priority, limit) {
-      if (!this.has(name)) {
-        this.events[name] = getEventItem();
+      if (!this.getEvents().has(name)) {
+        this.getEvents().set(name, getEventItem());
       }
 
-      var listener = new _listener2.default(runner, priority, limit);
-      this.events[name].listeners.push(listener);
+      var listener = new CallableEventListener(runner, priority, limit);
+      this.getEvents().get(name).listeners.push(listener);
 
       return listener;
     }
@@ -162,11 +282,11 @@ var EventManager = function () {
      * @param {!string} name Name of event to listen
      * @param {!function} runner Callback to handle incoming event
      * @param {?number} priority Higher priority handler will be call later than the others
-     * @returns {Listener} Listener instance of registration
+     * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
-    key: "once",
+    key: 'once',
     value: function once(name, runner, priority) {
       return this.on(name, runner, priority, _listener2.default.LIMIT_ONCE);
     }
@@ -177,11 +297,11 @@ var EventManager = function () {
      * @param {!string} name Name of event to listen
      * @param {!function} runner Callback to handle incoming event
      * @param {?number} priority Higher priority handler will be call later than the others
-     * @returns {Listener} Listener instance of registration
+     * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
-    key: "twice",
+    key: 'twice',
     value: function twice(name, runner, priority) {
       return this.on(name, runner, priority, _listener2.default.LIMIT_TWICE);
     }
@@ -196,21 +316,21 @@ var EventManager = function () {
      */
 
   }, {
-    key: "off",
+    key: 'off',
     value: function off(name, priority) {
-      if (typeof priority === "undefined") {
+      if (priority === undefined) {
         // remove all listeners of event's name
-        this.events[name] = getEventItem();
-      } else if (this.has(name)) {
-        var listeners = this.get(name).listeners;
+        this.getEvents().set(name, getEventItem());
+      } else if (this.getEvents().has(name)) {
+        var listeners = this.getEvents().get(name).listeners;
         for (var i = 0; i < listeners.length; i++) {
           var listener = listeners[i];
-          if (listener.priority === priority) {
+          if (listener.getPriority() === priority) {
             removeEventListener.apply(this, [name, i]);
           }
         }
       } else {
-        throw new Error("[Event:off] event's name must be specified.");
+        throw new _exception2.default('[Event/Manager#off] name must be specified.');
       }
     }
 
@@ -218,19 +338,20 @@ var EventManager = function () {
      * Sort event listeners by priority
      * @see {EventManager.SORT_ASCENDING}
      * @param {!string} name Name of event to sort
-     * @param {string} [type="asc"] Sorting type, asc (EventManager.SORT_ASCENDING) or desc (EventManager.SORT_DESCENDING)
+     * @param {string} [type='asc'] Sorting type, asc (EventManager.SORT_ASCENDING) or desc (EventManager.SORT_DESCENDING)
      */
 
   }, {
-    key: "sort",
+    key: 'sort',
     value: function sort(name) {
       var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : EventManager.SORT_ASCENDING;
 
-      if (this.get(name).sorted) {
-        return;
+      var events = this.getEvents().get(name);
+      if (events.sorted) {
+        return false;
       }
 
-      var total = this.events[name].listeners.length;
+      var total = events.listeners.length;
       var pos = void 0,
           guard = void 0,
           listener = void 0,
@@ -238,45 +359,19 @@ var EventManager = function () {
       for (var i = 0; i < total - 1; i++) {
         pos = i;
         for (var j = i + 1; j < total; j++) {
-          guard = this.events[name].listeners[pos];
-          listener = this.events[name].listeners[j];
+          guard = events.listeners[pos];
+          listener = events.listeners[j];
           if (type === EventManager.SORT_ASCENDING && guard.priority > listener.priority || type === EventManager.SORT_DESCENDING && guard.priority < listener.priority) {
             pos = j;
           }
         }
 
         if (i !== pos) {
-          temporary = this.events[name].listeners[i];
-          this.events[name].listeners[i] = this.events[name].listeners[pos];
-          this.events[name].listeners[pos] = temporary;
+          temporary = events.listeners[i];
+          events.listeners[i] = events.listeners[pos];
+          events.listeners[pos] = temporary;
         }
       }
-    }
-
-    /**
-     * Check whether or not event's name has been registered
-     *
-     * @param {string} name
-     * @returns {Boolean}
-     */
-
-  }, {
-    key: "has",
-    value: function has(name) {
-      return _typeof(this.events[name]) === "object";
-    }
-
-    /**
-     * Get event's listeners for a specific event by name
-     *
-     * @param {string} name
-     * @returns {{listeners: Array, sorted: boolean}} An object represents for event item
-     */
-
-  }, {
-    key: "get",
-    value: function get(name) {
-      return this.has(name) ? this.events[name] : getEventItem([], true);
     }
 
     /**
@@ -286,23 +381,29 @@ var EventManager = function () {
      */
 
   }, {
-    key: "emit",
+    key: 'emit',
     value: function emit(event) {
-      var _this = this;
+      var _this2 = this;
 
       if (!(event instanceof _event2.default)) {
-        throw new Error("[Event::emit] event must be an instance of Event");
+        throw new Error('[Event::emit] event must be an instance of Event');
       }
-      var name = event.name;
+      var name = event.getName();
+      if (!this.getEvents().has(name)) {
+        // do nothing, as there is no listeners
+        return false;
+      }
       this.sort(name);
 
-      var listeners = this.get(name).listeners;
+      var listeners = this.getEvents().get(name).listeners;
       var total = listeners.length;
       var parallels = [];
 
       var _loop = function _loop(i) {
-        parallels.push(function (done) {
-          return listeners[i].runner(event, done);
+        // Set a callback function to allow listener to add its result to final results
+        // which is an array and processed as a third parameter after all tasks are run
+        parallels.push(function (callback) {
+          return listeners[i].getRunner()(event, callback);
         });
       };
 
@@ -312,13 +413,13 @@ var EventManager = function () {
 
       // run tasks
       if (parallels.length) {
-        if (event.parallel === true) {
+        if (event.isParallel() === true) {
           _async2.default.parallel(parallels, function (err, results) {
-            onAsyncCompleted.apply(_this, [event, err, results]);
+            onAsyncCompleted.apply(_this2, [event, err, results]);
           });
         } else {
           _async2.default.series(parallels, function (err, results) {
-            onAsyncCompleted.apply(_this, [event, err, results]);
+            onAsyncCompleted.apply(_this2, [event, err, results]);
           });
         }
       }
@@ -330,5 +431,5 @@ var EventManager = function () {
 
 exports.default = EventManager;
 
-EventManager.SORT_ASCENDING = "asc";
-EventManager.SORT_DESCENDING = "desc";
+EventManager.SORT_ASCENDING = 'asc';
+EventManager.SORT_DESCENDING = 'desc';
