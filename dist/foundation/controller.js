@@ -136,6 +136,22 @@ var Controller = function (_Kernel) {
         throw new _invalidArgument2.default('[Foundation/Controller#setResponse] request must be an instance of Response');
       }
     }
+
+    /**
+     * This implementation means to be a solution for quick routing in App.
+     * Therefore, override this method is prohibited
+     * @param {function} action
+     */
+
+  }, {
+    key: 'execute',
+    value: function execute(action) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
+
+      return action.apply(this, args);
+    }
   }]);
 
   return Controller;

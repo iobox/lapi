@@ -13,8 +13,9 @@ import FileLogger from '../../logger/file'
 import LoggerInterface from '../../logger/interface'
 import HttpException from '../../http/exception/http'
 import NotFoundException from '../../http/exception/not-found'
+import EventManager from '../../event/manager'
+import Event from '../../event/event'
 
-const EventEmitter = require('events')
 const http = require('http')
 const https = require('https')
 const fs = require('fs')
@@ -26,6 +27,68 @@ class Connection {
   constructor(req, res) {
     this.req = req
     this.res = res
+  }
+}
+
+class ServerReadyEvent extends Event {
+  constructor(host, port) {
+    super('http.server.ready', true)
+    this.host = host
+    this.port = port
+  }
+}
+
+class UnexpectedErrorEvent extends Event {
+  constructor(error) {
+    super('error', true)
+    this.error = error
+  }
+}
+
+class BeforeActionEvent extends Event {
+  /**
+   * Constructor
+   * @param {Controller} controller
+   */
+  constructor(controller, action) {
+    super('foundation.controller.action.before')
+    this.controller = controller
+    this.action = action
+  }
+}
+
+class BeforeSendResponseEvent extends Event {
+  /**
+   * Constructor
+   * @param {Response} response
+   * @param {Connection} conn
+   */
+  constructor(response, conn) {
+    super('http.response.send.before')
+    this.response = response
+    this.conn = conn
+  }
+}
+
+class AfterSendResponseEvent extends Event {
+  constructor() {
+    super('http.response.send.after', true)
+  }
+}
+
+class SystemErrorEvent extends Event {
+  constructor(conn, error) {
+    super('system.error', true)
+    this.conn = conn
+    this.error = error
+  }
+}
+
+class IncomingRequestExceptionEvent extends Event {
+  constructor(exception, conn) {
+    super('http.request.exception')
+    this.exception = exception
+    this.conn = conn
   }
 }
 
@@ -50,7 +113,7 @@ export default class SystemExtension extends ModuleExtension {
     if (options instanceof Bag) {
       return options
     } else {
-      throw new Error('[Foundation/Extension/System#getOptions] application\'s options must be an instance of Bag')
+      throw new Error('[Foundation/Extension/SystemExtension#getOptions] application\'s options must be an instance of Bag')
     }
   }
 
@@ -60,10 +123,10 @@ export default class SystemExtension extends ModuleExtension {
    */
   getEvents() {
     const events = this.getContainer().get('events')
-    if (events instanceof EventEmitter) {
+    if (events instanceof EventManager) {
       return events
     } else {
-      throw new Error('[Foundation/Extension/System#getEvents] events must be an instance of EventEmitter')
+      throw new Error('[Foundation/Extension/SystemExtension#getEvents] events must be an instance of Event/EventManager')
     }
   }
 
@@ -76,7 +139,7 @@ export default class SystemExtension extends ModuleExtension {
     if (logger instanceof LoggerInterface) {
       return logger
     } else {
-      throw new Error('[Foundation/Extension/System#getLogger] logger must be an instance of LoggerInterface')
+      throw new Error('[Foundation/Extension/SystemExtension#getLogger] logger must be an instance of Logger/LoggerInterface')
     }
   }
 
@@ -84,13 +147,13 @@ export default class SystemExtension extends ModuleExtension {
    * Set up events
    */
   setUpEvents() {
-    let events = new EventEmitter()
+    let events = new EventManager()
     const self = this
-    events.on('error', (e) => {
-      self.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+    events.on('error', (event) => {
+      self.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.message)
     })
-    events.on('http.server.ready', (port, host) => {
-      console.log(`[info] Server is started at ${host}:${port}`)
+    events.on('http.server.ready', (event) => {
+      console.log(`[info] Server is started at ${event.host}:${event.port}`)
     })
 
     this.getContainer().set('events', events)
@@ -165,7 +228,7 @@ export default class SystemExtension extends ModuleExtension {
     const backlog = this.getOptions().get('server.backlog', 511)
     return http.createServer()
                .listen(port, host, backlog, () => {
-                 this.getEvents().emit('http.server.ready', port, host)
+                 this.getEvents().emit(new ServerReadyEvent(host, port))
                })
   }
 
@@ -186,7 +249,7 @@ export default class SystemExtension extends ModuleExtension {
                   cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
                 })
                 .listen(port, host, backlog, () => {
-                  this.getEvents().emit('http.server.ready', port, host)
+                  this.getEvents().emit(new ServerReadyEvent(host, port))
                 })
   }
 
@@ -277,7 +340,7 @@ export default class SystemExtension extends ModuleExtension {
       const controller = route.getOptions().get('controller')
       if (controller instanceof Controller) {
         const action = route.getOptions().get('action')
-        if (action === null || action === '' || typeof controller[action] !== 'function') {
+        if (action === null || action === '' || (typeof action === 'string' && typeof controller[action] !== 'function')) {
           reject(new InternalErrorException('action is not defined in controller', null, {
             'request': request,
             'response': response,
@@ -290,15 +353,28 @@ export default class SystemExtension extends ModuleExtension {
         controller.setResponse(response)
         controller.setRoute(route)
 
-        this.getEvents().emit('http.request.before', controller)
-        const content = controller[action]()
-        this.getEvents().emit('http.request.after', content, controller)
-        resolve(controller.getResponse())
-      } else if (typeof controller === 'function') {
-        this.getEvents().emit('http.request.before', controller)
-        const content = controller(request, response, route, this.getContainer())
-        this.getEvents().emit('http.request.after', content, response)
-        resolve(response)
+        this.getEvents()
+            .emit(new BeforeActionEvent(controller, action), (event) => {
+              let result = null,
+                  controller = event.controller,
+                  action = event.action
+              if (typeof action === 'function') {
+                result = controller.execute(action)
+              } else {
+                result = controller[action]()
+              }
+              if (result instanceof Promise) {
+                result.then((result) => {
+                  this.handleActionResult(result, controller)
+                  resolve(controller.getResponse())
+                }).catch((e) => {
+                  reject(e)
+                })
+              } else {
+                this.handleActionResult(result, controller)
+                resolve(controller.getResponse())
+              }
+            })
       } else {
         reject(new InternalErrorException('controller is not defined or not an instance of Foundation/Controller', null, {
           'request': request,
@@ -310,6 +386,25 @@ export default class SystemExtension extends ModuleExtension {
   }
 
   /**
+   * Handle result of controller's action
+   * @param {*} result
+   * @param {Controller} controller
+   */
+  handleActionResult(result, controller) {
+    if (typeof result === 'object') {
+      let response = controller.getResponse()
+      if (response instanceof Response) {
+        response.getBody().setContent(JSON.stringify(result))
+        response.getBody().setContentType(Body.CONTENT_JSON)
+      }
+    } else if (result instanceof Response) {
+      controller.setResponse(result)
+    } else {
+      throw new InternalErrorException('[Foundation/Extension/SystemExtension#handleActionResult] result has unexpected format')
+    }
+  }
+
+  /**
    * Send response
    * @param {Response} response
    * @param {Connection} conn
@@ -317,14 +412,15 @@ export default class SystemExtension extends ModuleExtension {
    */
   sendResponse(response, conn) {
     return new Promise((resolve, reject) => {
-      try {
-        this.getEvents().emit('http.response.send.before', response)
-        response.send(conn.res)
-        this.getEvents().emit('http.response.send.after')
-        resolve(response)
-      } catch (e) {
-        reject(e)
-      }
+      this.getEvents()
+        .emit(new BeforeSendResponseEvent(response, conn), (event) => {
+          try {
+            event.response.send(event.conn.res)
+            resolve(event.response)
+          } catch (e) {
+            reject(e)
+          }
+        })
     })
   }
 
@@ -336,11 +432,11 @@ export default class SystemExtension extends ModuleExtension {
    */
   handleError(e, conn, request = null) {
     if (e instanceof Exception) {
-      this.getEvents().emit('http.request.exception', e, conn)
+      this.getEvents().emit(new IncomingRequestExceptionEvent(e, conn))
     } else if (e instanceof Error) {
-      this.getEvents().emit('system.error', conn.res, new InternalErrorException(e.message, null, {
+      this.getEvents().emit(new SystemErrorEvent(conn, new InternalErrorException(e.message, null, {
         request: request
-      }))
+      })))
     }
   }
 
@@ -352,61 +448,47 @@ export default class SystemExtension extends ModuleExtension {
    * @listens http.request.after listens for result after perform controller's action
    */
   handleOutgoingResponse() {
-    this.getEvents().on('system.error', (res, e) => {
+    this.getEvents().on('system.error', (event, done) => {
       let response = new Response({
         message: 'Oops! There is something wrong.'
       }, Response.HTTP_INTERNAL_ERROR)
       let traces = []
-      if (e instanceof InternalErrorException && e.has('request')) {
-        const request = e.get('request')
+      if (event.error instanceof InternalErrorException && event.error.has('request')) {
+        const request = event.error.get('request')
         traces = [
           `[trace] (Request.URI) ${request.getMethod()} ${request.getPath()}`,
           `[trace] (Request.Header) ${request.getHeader().toString()}`,
           `[trace] (Request.ClientAddress) ${request.getClient().get(Request.CLIENT_HOST)}`
         ]
       }
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message, traces)
-      this.getEvents().emit('http.response.send', response, res)
+      this.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.message, traces)
+      this.getEvents().emit(new BeforeSendResponseEvent(response, event.conn))
+      done()
     })
-    this.getEvents().on('http.request.exception', (e, conn) => {
+    this.getEvents().on('http.request.exception', (event, done) => {
       let response = null
-      if (e instanceof InternalErrorException) {
+      if (event.exception instanceof InternalErrorException) {
         response = new Response({
           error: {
-            message: e.getMessage()
+            message: event.exception.getMessage()
           }
         }, Response.HTTP_INTERNAL_ERROR)
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, e.getMessage(), [JSON.stringify(e.getArguments().all())])
-      } else if (e instanceof HttpException) {
+        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.getMessage(), [JSON.stringify(event.exception.getArguments().all())])
+      } else if (event.exception instanceof HttpException) {
         response = new Response({
           error: {
-            code: e.getCode(),
-            message: e.getMessage()
+            code: event.exception.getCode(),
+            message: event.exception.getMessage()
           }
-        }, e.getStatusCode())
-      } else if (e instanceof Error) {
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, e.getMessage())
+        }, event.exception.getStatusCode())
+      } else if (event.exception instanceof Error) {
+        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.getMessage())
       }
 
       if (response instanceof Response) {
-        this.sendResponse(response, conn)
+        this.sendResponse(response, event.conn)
       }
-    })
-    this.getEvents().on('http.request.after', (content, controller) => {
-      if (typeof content !== 'object') {
-        return false
-      }
-      let response = null
-      if (controller instanceof Controller) {
-        response = controller.getResponse()
-      } else if (controller instanceof Response) {
-        response = controller
-      }
-
-      if (response instanceof Response) {
-        response.getBody().setContent(JSON.stringify(content))
-        response.getBody().setContentType(Body.CONTENT_JSON)
-      }
+      done()
     })
   }
 }

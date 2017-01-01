@@ -20,11 +20,21 @@ class MyController extends Controller {
   }
 }
 
-app.get('/hello/{user}', null, (request) => {
+app.getContainer().get('events').once('http.response.send.before', (event, done) => {
+  event.response.getBody().setContent(JSON.stringify({
+    status: true,
+    message: 'Hello World!'
+  }))
+  done()
+})
+
+app.get('/hello/{user}', null, function() {
+  const request = this.getRequest()
   return {
     message: `Hello ${request.get('user')}!`
   }
 })
-app.put('/hello', null, (request) => {
+app.put('/hello', null, function() {
+  const request = this.getRequest()
   return request.getBody().getParsedContent().all()
 })

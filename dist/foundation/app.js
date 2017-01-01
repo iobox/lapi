@@ -20,6 +20,10 @@ var _container = require('./container');
 
 var _container2 = _interopRequireDefault(_container);
 
+var _controller = require('./controller');
+
+var _controller2 = _interopRequireDefault(_controller);
+
 var _request = require('../http/request');
 
 var _request2 = _interopRequireDefault(_request);
@@ -205,7 +209,8 @@ var App = function (_Kernel) {
       route.setRequirements(requirements || {});
       if (typeof callback === 'function') {
         route.setOptions({
-          controller: callback || function () {}
+          controller: new _controller2.default(),
+          action: callback
         });
       } else if ((typeof callback === 'undefined' ? 'undefined' : _typeof(callback)) === 'object') {
         route.setOptions(callback);

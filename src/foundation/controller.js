@@ -78,4 +78,13 @@ export default class Controller extends Kernel {
       throw new InvalidArgumentException('[Foundation/Controller#setResponse] request must be an instance of Response')
     }
   }
+
+  /**
+   * This implementation means to be a solution for quick routing in App.
+   * Therefore, override this method is prohibited
+   * @param {function} action
+   */
+  execute(action, ...args) {
+    return action.apply(this, args)
+  }
 }

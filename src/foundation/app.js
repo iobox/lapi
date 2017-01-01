@@ -1,6 +1,7 @@
 import Bag from './bag'
 import Kernel from './kernel'
 import Container from './container'
+import Controller from './controller'
 import Request from '../http/request'
 import Route from '../http/routing/route'
 import ModuleExtension from './extension/module'
@@ -103,7 +104,8 @@ export default class App extends Kernel {
     route.setRequirements(requirements || {})
     if (typeof callback === 'function') {
       route.setOptions({
-        controller: callback || function() {}
+        controller: new Controller(),
+        action: callback
       })
     } else if (typeof callback === 'object') {
       route.setOptions(callback)

@@ -53,11 +53,21 @@ var MyController = function (_Controller) {
   return MyController;
 }(_controller2.default);
 
-app.get('/hello/{user}', null, function (request) {
+app.getContainer().get('events').once('http.response.send.before', function (event, done) {
+  event.response.getBody().setContent(JSON.stringify({
+    status: true,
+    message: 'Hello World!'
+  }));
+  done();
+});
+
+app.get('/hello/{user}', null, function () {
+  var request = this.getRequest();
   return {
     message: 'Hello ' + request.get('user') + '!'
   };
 });
-app.put('/hello', null, function (request) {
+app.put('/hello', null, function () {
+  var request = this.getRequest();
   return request.getBody().getParsedContent().all();
 });
