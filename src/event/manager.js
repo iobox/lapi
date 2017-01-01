@@ -146,7 +146,7 @@ export default class EventManager {
     } else if (typeof events === 'object') {
       this._events = new Bag(events)
     } else {
-      throw new InvalidArgumentException('[Event/Manager#setEvents] events must be an instance of Bag or an object')
+      throw new InvalidArgumentException('[Event/EventManager#setEvents] events must be an instance of Bag or an object')
     }
   }
 
@@ -159,7 +159,7 @@ export default class EventManager {
    */
   subscribe(name, listener) {
     if (!(listener instanceof EventListener)) {
-      throw new Exception('[Event/Manager#subscribe] listener must be an instance of Event/EventListener')
+      throw new Exception('[Event/EventManager#subscribe] listener must be an instance of Event/EventListener')
     }
     this.on(name, listener.getRunner(), listener.getPriority(), listener.getLimit())
   }
@@ -172,7 +172,7 @@ export default class EventManager {
    */
   unsubscribe(name, listener) {
     if (!(listener instanceof EventListener)) {
-      throw new Error('[Event/Manager#subscribe] listener must be an instance of Event/EventListener')
+      throw new Error('[Event/EventManager#unsubscribe] listener must be an instance of Event/EventListener')
     }
     this.off(name, listener.getPriority())
   }
@@ -242,7 +242,7 @@ export default class EventManager {
         }
       }
     } else {
-      throw new Exception('[Event/Manager#off] name must be specified.')
+      throw new Exception('[Event/EventManager#off] name must be specified.')
     }
   }
 
@@ -283,17 +283,18 @@ export default class EventManager {
    * Emit (Fire) an event
    *
    * @param {Event} event Event to be fired
+   * @param {null|function} done A callback when event is emitted
    */
-  emit(event) {
+  emit(event, done = null) {
     if (!(event instanceof Event)) {
-      throw new Error(`[Event::emit] event must be an instance of Event`)
+      throw new Error(`[Event/EventManager#emit] event must be an instance of Event`)
     }
     const name = event.getName()
     if (!this.getEvents().has(name)) {
-      // do nothing, as there is no listeners
-      return false
+      this.getEvents().set(name, getEventItem())
+    } else {
+      this.sort(name)
     }
-    this.sort(name)
 
     let listeners = this.getEvents().get(name).listeners
     const total   = listeners.length
@@ -306,15 +307,21 @@ export default class EventManager {
 
     // run tasks
     if (parallels.length) {
+      const onComplete = (err, results) => {
+        onAsyncCompleted.apply(this, [event, err, results])
+        if (done) done(event)
+      }
       if (event.isParallel() === true) {
         async.parallel(parallels, (err, results) => {
-          onAsyncCompleted.apply(this, [event, err, results])
+          onComplete(err, results)
         })
       } else {
         async.series(parallels, (err, results) => {
-          onAsyncCompleted.apply(this, [event, err, results])
+          onComplete(err, results)
         })
       }
+    } else {
+      if (done) done(event)
     }
   }
 }

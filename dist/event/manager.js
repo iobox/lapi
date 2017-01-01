@@ -216,7 +216,7 @@ var EventManager = function () {
       } else if ((typeof events === 'undefined' ? 'undefined' : _typeof(events)) === 'object') {
         this._events = new _bag2.default(events);
       } else {
-        throw new _invalidArgument2.default('[Event/Manager#setEvents] events must be an instance of Bag or an object');
+        throw new _invalidArgument2.default('[Event/EventManager#setEvents] events must be an instance of Bag or an object');
       }
     }
 
@@ -232,7 +232,7 @@ var EventManager = function () {
     key: 'subscribe',
     value: function subscribe(name, listener) {
       if (!(listener instanceof _listener2.default)) {
-        throw new _exception2.default('[Event/Manager#subscribe] listener must be an instance of Event/EventListener');
+        throw new _exception2.default('[Event/EventManager#subscribe] listener must be an instance of Event/EventListener');
       }
       this.on(name, listener.getRunner(), listener.getPriority(), listener.getLimit());
     }
@@ -248,7 +248,7 @@ var EventManager = function () {
     key: 'unsubscribe',
     value: function unsubscribe(name, listener) {
       if (!(listener instanceof _listener2.default)) {
-        throw new Error('[Event/Manager#subscribe] listener must be an instance of Event/EventListener');
+        throw new Error('[Event/EventManager#unsubscribe] listener must be an instance of Event/EventListener');
       }
       this.off(name, listener.getPriority());
     }
@@ -330,7 +330,7 @@ var EventManager = function () {
           }
         }
       } else {
-        throw new _exception2.default('[Event/Manager#off] name must be specified.');
+        throw new _exception2.default('[Event/EventManager#off] name must be specified.');
       }
     }
 
@@ -378,6 +378,7 @@ var EventManager = function () {
      * Emit (Fire) an event
      *
      * @param {Event} event Event to be fired
+     * @param {null|function} done A callback when event is emitted
      */
 
   }, {
@@ -385,15 +386,17 @@ var EventManager = function () {
     value: function emit(event) {
       var _this2 = this;
 
+      var done = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
       if (!(event instanceof _event2.default)) {
-        throw new Error('[Event::emit] event must be an instance of Event');
+        throw new Error('[Event/EventManager#emit] event must be an instance of Event');
       }
       var name = event.getName();
       if (!this.getEvents().has(name)) {
-        // do nothing, as there is no listeners
-        return false;
+        this.getEvents().set(name, getEventItem());
+      } else {
+        this.sort(name);
       }
-      this.sort(name);
 
       var listeners = this.getEvents().get(name).listeners;
       var total = listeners.length;
@@ -413,15 +416,23 @@ var EventManager = function () {
 
       // run tasks
       if (parallels.length) {
-        if (event.isParallel() === true) {
-          _async2.default.parallel(parallels, function (err, results) {
+        (function () {
+          var onComplete = function onComplete(err, results) {
             onAsyncCompleted.apply(_this2, [event, err, results]);
-          });
-        } else {
-          _async2.default.series(parallels, function (err, results) {
-            onAsyncCompleted.apply(_this2, [event, err, results]);
-          });
-        }
+            if (done) done(event);
+          };
+          if (event.isParallel() === true) {
+            _async2.default.parallel(parallels, function (err, results) {
+              onComplete(err, results);
+            });
+          } else {
+            _async2.default.series(parallels, function (err, results) {
+              onComplete(err, results);
+            });
+          }
+        })();
+      } else {
+        if (done) done(event);
       }
     }
   }]);
