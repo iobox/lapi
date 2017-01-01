@@ -2,7 +2,6 @@ import Event from '../../src/event/event'
 import EventManager from '../../src/event/manager'
 import EventListener from '../../src/event/listener'
 var expect = require('chai').expect
-var sleep = require('sleep')
 
 /** @test {EventManager} */
 describe('event/manager.js', () => {
@@ -53,11 +52,11 @@ describe('event/manager.js', () => {
 
   /** @test {EventManager#emit} */
   it('[emit] run in parallel', () => {
-    event.parallel = true
+    event.parallel(true)
     event.tasks = []
     em.on(name, (e, done) => {
       setTimeout(() => {
-        e.tasks.push(300);
+        e.tasks.push(300)
         done()
       }, 50)
     }).complete((e) => {
@@ -73,7 +72,7 @@ describe('event/manager.js', () => {
   })
 
   it('[emit] run in series', () => {
-    event.parallel = false
+    event.parallel(false)
     event.tasks = []
     em.on(name, (e, done) => {
       setTimeout(() => {
@@ -81,7 +80,7 @@ describe('event/manager.js', () => {
         done()
       }, 150)
     }).complete((e) => {
-      expect(e.tasks).to.deep.equal([300, 100, 200])
+      expect(e.tasks).to.deep.equal([300, 100])
     })
   
     em.once(name, (e, done) => {
