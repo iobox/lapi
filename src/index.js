@@ -7,7 +7,8 @@ let app = new App()
 app.extend(new SystemExtension())
 var options = {
   'server.port': 8080,
-  'logger.driver': 'console'
+  'logger.driver': 'console',
+  'logger.options': true
 }
 app.run(options)
 

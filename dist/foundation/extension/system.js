@@ -325,7 +325,7 @@ var SystemExtension = function (_ModuleExtension) {
             logger = new _file2.default(options);
             break;
           case 'console':
-            logger = new _console2.default();
+            logger = new _console2.default(options);
             break;
           default:
             break;
@@ -456,7 +456,7 @@ var SystemExtension = function (_ModuleExtension) {
       }).then(function (response) {
         return _this12.sendResponse(response, _this12.conn);
       }).catch(function (e) {
-        return _this12.handleError(e, _this12.conn);
+        return _this12.handleError(e, _this12.conn, _this12.request);
       });
     }
 
@@ -510,13 +510,17 @@ var SystemExtension = function (_ModuleExtension) {
       var _this13 = this;
 
       return new Promise(function (resolve, reject) {
-        var router = _this13.getContainer().get('http.router'),
-            route = router.route(request);
+        try {
+          var router = _this13.getContainer().get('http.router'),
+              route = router.route(request);
 
-        if (route instanceof _route2.default) {
-          resolve(route);
-        } else {
-          reject(new _notFound2.default('Sorry! There is no routes found'));
+          if (route instanceof _route2.default) {
+            resolve(route);
+          } else {
+            reject(new _notFound2.default('Sorry! There is no routes found'));
+          }
+        } catch (e) {
+          reject(e);
         }
       });
     }
@@ -579,7 +583,7 @@ var SystemExtension = function (_ModuleExtension) {
 
           _this14.getEvents().emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted);
         } else {
-          reject(new _internalError2.default('controller is not defined or not an instance of Foundation/Controller', null, {
+          reject(new _internalError2.default('[Foundation/Extension/SystemExtension#dispatchRequest] controller is not defined or not an instance of Foundation/Controller', null, {
             'request': request,
             'response': response,
             'route': route
@@ -677,7 +681,7 @@ var SystemExtension = function (_ModuleExtension) {
             traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
           }
         }
-        _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message, traces);
+        _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.error.getMessage(), traces);
         _this16.sendResponse(response, event.conn);
         done();
       });

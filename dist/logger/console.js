@@ -53,7 +53,7 @@ var ConsoleLogger = function (_LoggerInterface) {
       var traces = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
       var now = new Date();
-      message = '[' + now.toJSON() + '] [' + type + '] ' + message + '\n';
+      message = '[' + now.toJSON() + '] [' + type + '] ' + message;
       switch (type) {
         case _interface2.default.TYPE_ERROR:
           console.log(color.red(message));
@@ -71,10 +71,11 @@ var ConsoleLogger = function (_LoggerInterface) {
         (function () {
           var gray = color.xterm(219);
           traces.forEach(function (line) {
-            console.log(gray('[' + now.toJSON() + '] [trace]'), line, "\n");
+            console.log(gray('[' + now.toJSON() + '] [trace]'), line);
           });
         })();
       }
+      console.log('');
     }
   }]);
 

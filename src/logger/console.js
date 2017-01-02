@@ -17,7 +17,7 @@ export default class ConsoleLogger extends LoggerInterface {
 
   write(type = LoggerInterface.TYPE_INFO, message = '', traces = []) {
     const now = new Date()
-    message = `[${now.toJSON()}] [${type}] ${message}\n`
+    message = `[${now.toJSON()}] [${type}] ${message}`
     switch (type) {
       case LoggerInterface.TYPE_ERROR:
         console.log(color.red(message))
@@ -34,8 +34,9 @@ export default class ConsoleLogger extends LoggerInterface {
     if (this.isTraceable()) {
       const gray = color.xterm(219)
       traces.forEach((line) => {
-        console.log(gray(`[${now.toJSON()}] [trace]`), line, "\n")
+        console.log(gray(`[${now.toJSON()}] [trace]`), line)
       })
     }
+    console.log('')
   }
 }

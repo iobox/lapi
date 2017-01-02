@@ -173,7 +173,7 @@ export default class SystemExtension extends ModuleExtension {
           logger = new FileLogger(options)
           break
         case 'console':
-          logger = new ConsoleLogger()
+          logger = new ConsoleLogger(options)
           break
         default:
           break
@@ -280,7 +280,7 @@ export default class SystemExtension extends ModuleExtension {
         })
         .then((route) => this.dispatchRequest(route, this.request))
         .then((response) => this.sendResponse(response, this.conn))
-        .catch((e) => this.handleError(e, this.conn))
+        .catch((e) => this.handleError(e, this.conn, this.request))
   }
 
   /**
@@ -321,13 +321,17 @@ export default class SystemExtension extends ModuleExtension {
    */
   routeRequest(request) {
     return new Promise((resolve, reject) => {
-      const router = this.getContainer().get('http.router'),
-            route  = router.route(request)
+      try {
+        const router = this.getContainer().get('http.router'),
+              route  = router.route(request)
 
-      if (route instanceof Route) {
-        resolve(route)
-      } else {
-        reject(new NotFoundException('Sorry! There is no routes found'))
+        if (route instanceof Route) {
+          resolve(route)
+        } else {
+          reject(new NotFoundException('Sorry! There is no routes found'))
+        }
+      } catch (e) {
+        reject(e)
       }
     })
   }
@@ -386,7 +390,7 @@ export default class SystemExtension extends ModuleExtension {
         this.getEvents()
             .emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted)
       } else {
-        reject(new InternalErrorException('controller is not defined or not an instance of Foundation/Controller', null, {
+        reject(new InternalErrorException('[Foundation/Extension/SystemExtension#dispatchRequest] controller is not defined or not an instance of Foundation/Controller', null, {
           'request': request,
           'response': response,
           'route': route
@@ -471,7 +475,7 @@ export default class SystemExtension extends ModuleExtension {
           ]
         }
       }
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.message, traces)
+      this.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.getMessage(), traces)
       this.sendResponse(response, event.conn)
       done()
     })

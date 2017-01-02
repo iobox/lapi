@@ -30,7 +30,8 @@ var app = new _app2.default();
 app.extend(new _system2.default());
 var options = {
   'server.port': 8080,
-  'logger.driver': 'console'
+  'logger.driver': 'console',
+  'logger.options': true
 };
 app.run(options);
 
