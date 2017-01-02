@@ -16,7 +16,7 @@ var _body = require('../../http/body');
 
 var _body2 = _interopRequireDefault(_body);
 
-var _exception = require('../exception');
+var _exception = require('../../exception/exception');
 
 var _exception2 = _interopRequireDefault(_exception);
 

@@ -1,4 +1,4 @@
-import Exception from '../foundation/exception'
+import Exception from '../exception/exception'
 
 /**
  * Represent for an event emitted by EventManager

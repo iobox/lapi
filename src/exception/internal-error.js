@@ -1,4 +1,4 @@
-import Exception from '../foundation/exception'
+import Exception from './exception'
 import Bag from '../foundation/bag'
 
 export default class InternalErrorException extends Exception {

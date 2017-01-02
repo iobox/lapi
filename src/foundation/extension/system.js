@@ -1,6 +1,6 @@
 import Bag from '../bag'
 import Body from '../../http/body'
-import Exception from '../exception'
+import Exception from '../../exception/exception'
 import Header from '../../http/header'
 import Controller from '../controller'
 import ModuleExtension from './module'

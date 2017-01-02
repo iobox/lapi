@@ -1,5 +1,5 @@
 import Event from './event'
-import Exception from '../foundation/exception'
+import Exception from '../exception/exception'
 
 /**
  * Event Listener

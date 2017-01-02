@@ -1,4 +1,4 @@
-import Exception from '../../foundation/exception'
+import Exception from '../../exception/exception'
 
 export default class HttpException extends Exception {
   /**

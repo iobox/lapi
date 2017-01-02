@@ -16,16 +16,19 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var InvalidArgumentException = function (_Exception) {
-  _inherits(InvalidArgumentException, _Exception);
+var NotImplementedException = function (_Exception) {
+  _inherits(NotImplementedException, _Exception);
 
-  function InvalidArgumentException() {
-    _classCallCheck(this, InvalidArgumentException);
+  function NotImplementedException() {
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var code = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-    return _possibleConstructorReturn(this, (InvalidArgumentException.__proto__ || Object.getPrototypeOf(InvalidArgumentException)).apply(this, arguments));
+    _classCallCheck(this, NotImplementedException);
+
+    return _possibleConstructorReturn(this, (NotImplementedException.__proto__ || Object.getPrototypeOf(NotImplementedException)).call(this, message || 'A requested method or operation is not implemented', code));
   }
 
-  return InvalidArgumentException;
+  return NotImplementedException;
 }(_exception2.default);
 
-exports.default = InvalidArgumentException;
+exports.default = NotImplementedException;

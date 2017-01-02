@@ -24,7 +24,7 @@ var _listener = require('./listener');
 
 var _listener2 = _interopRequireDefault(_listener);
 
-var _exception = require('../foundation/exception');
+var _exception = require('../exception/exception');
 
 var _exception2 = _interopRequireDefault(_exception);
 

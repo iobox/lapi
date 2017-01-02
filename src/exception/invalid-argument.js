@@ -1,3 +1,3 @@
-import Exception from '../foundation/exception'
+import Exception from './exception'
 
 export default class InvalidArgumentException extends Exception {}

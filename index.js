@@ -1,21 +1,31 @@
 // AUTO GENERATED ==>
 var $exports = {
  "Collection": "collection.js",
+ "Db": {
+  "Model": {
+   "ModelInterface": "db/model/interface.js",
+   "MongoModel": "db/model/mongo.js"
+  },
+  "Repository": {
+   "RepositoryInterface": "db/repository/interface.js"
+  }
+ },
  "Event": {
   "Event": "event/event.js",
   "EventListener": "event/listener.js",
   "EventManager": "event/manager.js"
  },
  "Exception": {
+  "Exception": "exception/exception.js",
   "InternalErrorException": "exception/internal-error.js",
-  "InvalidArgumentException": "exception/invalid-argument.js"
+  "InvalidArgumentException": "exception/invalid-argument.js",
+  "NotImplementedException": "exception/not-implemented.js"
  },
  "Foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
   "Container": "foundation/container.js",
   "Controller": "foundation/controller.js",
-  "Exception": "foundation/exception.js",
   "Extension": {
    "ContainerExtension": "foundation/extension/container.js",
    "ExtensionInterface": "foundation/extension/interface.js",
@@ -49,6 +59,7 @@ var $exports = {
   }
  },
  "Logger": {
+  "ConsoleLogger": "logger/console.js",
   "FileLogger": "logger/file.js",
   "LoggerInterface": "logger/interface.js"
  },
