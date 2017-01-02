@@ -26,6 +26,17 @@ export default class FileLogger extends LoggerInterface {
   write(type = LoggerInterface.TYPE_INFO, message = '', traces = []) {
     let options = {encoding: 'utf8', flag: 'a'}
     const now = new Date()
+    if (typeof message === 'object') {
+      if (typeof message['toString'] === 'function') {
+        message = message.toString()
+      } else {
+        try {
+          message = JSON.stringify(message)
+        } catch (e) {
+          message = ''
+        }
+      }
+    }
     message = `[${now.toJSON()}] [${type}] ${message}\n`
     fs.writeFileSync(this.getPath(), message, options)
     traces.forEach((line) => {
