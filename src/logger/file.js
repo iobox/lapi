@@ -25,12 +25,11 @@ export default class FileLogger extends LoggerInterface {
 
   write(type = LoggerInterface.TYPE_INFO, message = '', traces = []) {
     let options = {encoding: 'utf8', flag: 'a'}
-    const now = new Date(),
-          date = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`
-    message = `${date} [${type}] ${message}\n`
+    const now = new Date()
+    message = `[${now.toJSON()}] [${type}] ${message}\n`
     fs.writeFileSync(this.getPath(), message, options)
     traces.forEach((line) => {
-      fs.writeFileSync(this.getPath(), `${date} ${line}\n`, options)
+      fs.writeFileSync(this.getPath(), `[${now.toJSON()}] ${line}\n`, options)
     })
   }
 }

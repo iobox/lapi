@@ -18,65 +18,67 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var fs = require('fs');
+var color = require('cli-color');
 
-var FileLogger = function (_LoggerInterface) {
-  _inherits(FileLogger, _LoggerInterface);
+var ConsoleLogger = function (_LoggerInterface) {
+  _inherits(ConsoleLogger, _LoggerInterface);
 
-  function FileLogger() {
-    var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  function ConsoleLogger() {
+    var trace = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
-    _classCallCheck(this, FileLogger);
+    _classCallCheck(this, ConsoleLogger);
 
-    var _this = _possibleConstructorReturn(this, (FileLogger.__proto__ || Object.getPrototypeOf(FileLogger)).call(this));
+    var _this = _possibleConstructorReturn(this, (ConsoleLogger.__proto__ || Object.getPrototypeOf(ConsoleLogger)).call(this));
 
-    _this.setPath(path);
+    _this._trace = trace;
     return _this;
   }
 
   /**
-   * Get path
-   * @returns {string}
+   * Allow to trace or not
+   * @returns {boolean}
    */
 
 
-  _createClass(FileLogger, [{
-    key: 'getPath',
-    value: function getPath() {
-      return this._path;
-    }
-
-    /**
-     * Set path
-     * @param {string} path
-     */
-
-  }, {
-    key: 'setPath',
-    value: function setPath(path) {
-      this._path = path;
+  _createClass(ConsoleLogger, [{
+    key: 'isTraceable',
+    value: function isTraceable() {
+      return this._trace;
     }
   }, {
     key: 'write',
     value: function write() {
       var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : _interface2.default.TYPE_INFO;
-
-      var _this2 = this;
-
       var message = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
       var traces = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
 
-      var options = { encoding: 'utf8', flag: 'a' };
       var now = new Date();
       message = '[' + now.toJSON() + '] [' + type + '] ' + message + '\n';
-      fs.writeFileSync(this.getPath(), message, options);
-      traces.forEach(function (line) {
-        fs.writeFileSync(_this2.getPath(), '[' + now.toJSON() + '] ' + line + '\n', options);
-      });
+      switch (type) {
+        case _interface2.default.TYPE_ERROR:
+          console.log(color.red(message));
+          break;
+        case _interface2.default.TYPE_WARNING:
+          console.log(color.yellow(message));
+          break;
+        case _interface2.default.TYPE_DEBUG:
+        case _interface2.default.TYPE_INFO:
+        default:
+          console.log(color.blue(message));
+          break;
+      }
+      if (this.isTraceable()) {
+        (function () {
+          var gray = color.xterm(219);
+          traces.forEach(function (line) {
+            console.log(gray('[' + now.toJSON() + '] [trace]'), line, "\n");
+          });
+        })();
+      }
     }
   }]);
 
-  return FileLogger;
+  return ConsoleLogger;
 }(_interface2.default);
 
-exports.default = FileLogger;
+exports.default = ConsoleLogger;

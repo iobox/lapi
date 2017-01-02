@@ -7,8 +7,7 @@ let app = new App()
 app.extend(new SystemExtension())
 var options = {
   'server.port': 8080,
-  'logger.driver': 'file',
-  'logger.options': './logs.txt'
+  'logger.driver': 'console'
 }
 app.run(options)
 

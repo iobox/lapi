@@ -1,4 +1,5 @@
 import InvalidArgumentException from '../exception/invalid-argument'
+import InternalErrorException from '../exception/internal-error'
 
 function copy(...args) {
   return Object.assign({}, ...args)
@@ -187,13 +188,37 @@ export default class Bag {
     if (Array.isArray(keys)) {
       data = this.only(keys)
     } else {
-      data = copy(this._data)
+      data = this.all()
     }
 
     Object.keys(data).forEach((key) => {
       string += (string === '' ? '' : delimiter) + `${key}=${data[key]}`
     })
     return string
+  }
+
+  /**
+   * Convert bag to JSON string
+   * @param {Array} keys Only for some keys
+   * @param {boolean} throws Throws exception on error
+   */
+  toJSON(keys = null, throws = true) {
+    let data = {}
+    if (Array.isArray(keys)) {
+      data = this.only(keys)
+    } else {
+      data = this.all()
+    }
+
+    try {
+      JSON.stringify(data)
+    } catch (e) {
+      if (throws) {
+        throw new InternalErrorException(`[Foundation/Bag#toJson] ${e.message}`)
+      } else {
+        return JSON.stringify({})
+      }
+    }
   }
 
   /**

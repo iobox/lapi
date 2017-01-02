@@ -12,6 +12,10 @@ var _invalidArgument = require('../exception/invalid-argument');
 
 var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
 
+var _internalError = require('../exception/internal-error');
+
+var _internalError2 = _interopRequireDefault(_internalError);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -247,13 +251,43 @@ var Bag = function () {
       if (Array.isArray(keys)) {
         data = this.only(keys);
       } else {
-        data = copy(this._data);
+        data = this.all();
       }
 
       Object.keys(data).forEach(function (key) {
         string += (string === '' ? '' : delimiter) + (key + '=' + data[key]);
       });
       return string;
+    }
+
+    /**
+     * Convert bag to JSON string
+     * @param {Array} keys Only for some keys
+     * @param {boolean} throws Throws exception on error
+     */
+
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      var keys = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+      var throws = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+      var data = {};
+      if (Array.isArray(keys)) {
+        data = this.only(keys);
+      } else {
+        data = this.all();
+      }
+
+      try {
+        JSON.stringify(data);
+      } catch (e) {
+        if (throws) {
+          throw new _internalError2.default('[Foundation/Bag#toJson] ' + e.message);
+        } else {
+          return JSON.stringify({});
+        }
+      }
     }
 
     /**

@@ -30,8 +30,7 @@ var app = new _app2.default();
 app.extend(new _system2.default());
 var options = {
   'server.port': 8080,
-  'logger.driver': 'file',
-  'logger.options': './logs.txt'
+  'logger.driver': 'console'
 };
 app.run(options);
 

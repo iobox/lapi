@@ -76,6 +76,10 @@ var _event = require('../../event/event');
 
 var _event2 = _interopRequireDefault(_event);
 
+var _console = require('../../logger/console');
+
+var _console2 = _interopRequireDefault(_console);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -319,6 +323,9 @@ var SystemExtension = function (_ModuleExtension) {
         switch (driver) {
           case 'file':
             logger = new _file2.default(options);
+            break;
+          case 'console':
+            logger = new _console2.default();
             break;
           default:
             break;
@@ -667,7 +674,7 @@ var SystemExtension = function (_ModuleExtension) {
         if (event.error instanceof _internalError2.default && event.error.has('request')) {
           var request = event.error.get('request');
           if (request instanceof _request2.default) {
-            traces = ['[trace] (Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '[trace] (Request.Header) ' + request.getHeader().toString(), '[trace] (Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
+            traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
           }
         }
         _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message, traces);
@@ -682,7 +689,7 @@ var SystemExtension = function (_ModuleExtension) {
               message: event.exception.getMessage()
             }
           }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage(), [JSON.stringify(event.exception.getArguments().all())]);
+          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage(), [event.exception.getArguments().all()]);
         } else if (event.exception instanceof _http2.default) {
           response = new _response2.default({
             error: {
@@ -691,7 +698,7 @@ var SystemExtension = function (_ModuleExtension) {
             }
           }, event.exception.getStatusCode());
         } else if (event.exception instanceof Error) {
-          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage());
+          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.message);
         }
 
         if (response instanceof _response2.default) {

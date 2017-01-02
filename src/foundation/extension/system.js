@@ -15,6 +15,7 @@ import HttpException from '../../http/exception/http'
 import NotFoundException from '../../http/exception/not-found'
 import EventManager from '../../event/manager'
 import Event from '../../event/event'
+import ConsoleLogger from '../../logger/console'
 
 const http = require('http')
 const https = require('https')
@@ -170,6 +171,9 @@ export default class SystemExtension extends ModuleExtension {
       switch (driver) {
         case 'file':
           logger = new FileLogger(options)
+          break
+        case 'console':
+          logger = new ConsoleLogger()
           break
         default:
           break
@@ -461,9 +465,9 @@ export default class SystemExtension extends ModuleExtension {
         const request = event.error.get('request')
         if (request instanceof Request) {
           traces = [
-            `[trace] (Request.URI) ${request.getMethod()} ${request.getPath()}`,
-            `[trace] (Request.Header) ${request.getHeader().toString()}`,
-            `[trace] (Request.ClientAddress) ${request.getClient().get(Request.CLIENT_HOST)}`
+            `(Request.URI) ${request.getMethod()} ${request.getPath()}`,
+            `(Request.Header) ${request.getHeader().toString()}`,
+            `(Request.ClientAddress) ${request.getClient().get(Request.CLIENT_HOST)}`
           ]
         }
       }
@@ -479,7 +483,11 @@ export default class SystemExtension extends ModuleExtension {
             message: event.exception.getMessage()
           }
         }, Response.HTTP_INTERNAL_ERROR)
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.getMessage(), [JSON.stringify(event.exception.getArguments().all())])
+        this.getLogger().write(
+          LoggerInterface.TYPE_ERROR,
+          event.exception.getMessage(),
+          [event.exception.getArguments().all()]
+        )
       } else if (event.exception instanceof HttpException) {
         response = new Response({
           error: {
@@ -488,7 +496,7 @@ export default class SystemExtension extends ModuleExtension {
           }
         }, event.exception.getStatusCode())
       } else if (event.exception instanceof Error) {
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.getMessage())
+        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.message)
       }
 
       if (response instanceof Response) {
