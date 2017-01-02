@@ -14,6 +14,10 @@ var _controller = require('./foundation/controller');
 
 var _controller2 = _interopRequireDefault(_controller);
 
+var _notFound = require('./http/exception/not-found');
+
+var _notFound2 = _interopRequireDefault(_notFound);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -43,6 +47,7 @@ var MyController = function (_Controller) {
   _createClass(MyController, [{
     key: 'getUserAction',
     value: function getUserAction() {
+      throw new _notFound2.default('This page could not be found!');
       return {
         user: this.getRequest().get('user'),
         email: this.getRequest().get('email')
@@ -53,14 +58,18 @@ var MyController = function (_Controller) {
   return MyController;
 }(_controller2.default);
 
-app.getContainer().get('events').once('http.response.send.before', function (event, done) {
-  event.response.getBody().setContent(JSON.stringify({
-    status: true,
-    message: 'Hello World!'
-  }));
-  done();
-});
+// app.getContainer().get('events').once('http.response.send.before', (event, done) => {
+//   event.response.getBody().setContent(JSON.stringify({
+//     status: true,
+//     message: 'Hello World!'
+//   }))
+//   done()
+// })
 
+app.get('/controller/action', null, {
+  controller: new MyController(),
+  action: 'getUserAction'
+});
 app.get('/hello/{user}', null, function () {
   var request = this.getRequest();
   return {

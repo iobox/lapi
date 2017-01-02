@@ -186,13 +186,13 @@ var AfterSendResponseEvent = function (_Event5) {
 var SystemErrorEvent = function (_Event6) {
   _inherits(SystemErrorEvent, _Event6);
 
-  function SystemErrorEvent(conn, error) {
+  function SystemErrorEvent(error, conn) {
     _classCallCheck(this, SystemErrorEvent);
 
     var _this6 = _possibleConstructorReturn(this, (SystemErrorEvent.__proto__ || Object.getPrototypeOf(SystemErrorEvent)).call(this, 'system.error', true));
 
-    _this6.conn = conn;
     _this6.error = error;
+    _this6.conn = conn;
     return _this6;
   }
 
@@ -256,7 +256,7 @@ var SystemExtension = function (_ModuleExtension) {
 
     /**
      * Get events manager
-     * @returns {EventEmitter}
+     * @returns {EventManager}
      */
 
   }, {
@@ -544,27 +544,33 @@ var SystemExtension = function (_ModuleExtension) {
           controller.setResponse(response);
           controller.setRoute(route);
 
-          _this14.getEvents().emit(new BeforeActionEvent(controller, action), function (event) {
+          var onBeforeActionEventEmitted = function onBeforeActionEventEmitted(event) {
             var result = null,
                 controller = event.controller,
                 action = event.action;
-            if (typeof action === 'function') {
-              result = controller.execute(action);
-            } else {
-              result = controller[action]();
-            }
-            if (result instanceof Promise) {
-              result.then(function (result) {
+            try {
+              if (typeof action === 'function') {
+                result = controller.execute(action);
+              } else {
+                result = controller[action]();
+              }
+              if (result instanceof Promise) {
+                result.then(function (result) {
+                  _this14.handleActionResult(result, controller);
+                  resolve(controller.getResponse());
+                }).catch(function (e) {
+                  reject(e);
+                });
+              } else {
                 _this14.handleActionResult(result, controller);
                 resolve(controller.getResponse());
-              }).catch(function (e) {
-                reject(e);
-              });
-            } else {
-              _this14.handleActionResult(result, controller);
-              resolve(controller.getResponse());
+              }
+            } catch (e) {
+              reject(e);
             }
-          });
+          };
+
+          _this14.getEvents().emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted);
         } else {
           reject(new _internalError2.default('controller is not defined or not an instance of Foundation/Controller', null, {
             'request': request,
@@ -636,18 +642,16 @@ var SystemExtension = function (_ModuleExtension) {
       if (e instanceof _exception2.default) {
         this.getEvents().emit(new IncomingRequestExceptionEvent(e, conn));
       } else if (e instanceof Error) {
-        this.getEvents().emit(new SystemErrorEvent(conn, new _internalError2.default(e.message, null, {
+        this.getEvents().emit(new SystemErrorEvent(new _internalError2.default(e.message, null, {
           request: request
-        })));
+        }), conn));
       }
     }
 
     /**
      * Handle outgoing response
-     * @listens http.response.send listens for sending outgoing response event
-     * @listens http.request.not_found listens for exception when there is no matched routes
-     * @listens http.request.exception listens for exception from handling request
-     * @listens http.request.after listens for result after perform controller's action
+     * @listens {SystemErrorEvent} listens for any errors
+     * @listens {IncomingRequestExceptionEvent} listens for exception from handling request
      */
 
   }, {
@@ -662,10 +666,12 @@ var SystemExtension = function (_ModuleExtension) {
         var traces = [];
         if (event.error instanceof _internalError2.default && event.error.has('request')) {
           var request = event.error.get('request');
-          traces = ['[trace] (Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '[trace] (Request.Header) ' + request.getHeader().toString(), '[trace] (Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
+          if (request instanceof _request2.default) {
+            traces = ['[trace] (Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '[trace] (Request.Header) ' + request.getHeader().toString(), '[trace] (Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
+          }
         }
         _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message, traces);
-        _this16.getEvents().emit(new BeforeSendResponseEvent(response, event.conn));
+        _this16.sendResponse(response, event.conn);
         done();
       });
       this.getEvents().on('http.request.exception', function (event, done) {

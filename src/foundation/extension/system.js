@@ -77,10 +77,10 @@ class AfterSendResponseEvent extends Event {
 }
 
 class SystemErrorEvent extends Event {
-  constructor(conn, error) {
+  constructor(error, conn) {
     super('system.error', true)
-    this.conn = conn
     this.error = error
+    this.conn = conn
   }
 }
 
@@ -119,7 +119,7 @@ export default class SystemExtension extends ModuleExtension {
 
   /**
    * Get events manager
-   * @returns {EventEmitter}
+   * @returns {EventManager}
    */
   getEvents() {
     const events = this.getContainer().get('events')
@@ -353,28 +353,34 @@ export default class SystemExtension extends ModuleExtension {
         controller.setResponse(response)
         controller.setRoute(route)
 
-        this.getEvents()
-            .emit(new BeforeActionEvent(controller, action), (event) => {
-              let result = null,
-                  controller = event.controller,
-                  action = event.action
-              if (typeof action === 'function') {
-                result = controller.execute(action)
-              } else {
-                result = controller[action]()
-              }
-              if (result instanceof Promise) {
-                result.then((result) => {
-                  this.handleActionResult(result, controller)
-                  resolve(controller.getResponse())
-                }).catch((e) => {
-                  reject(e)
-                })
-              } else {
+        const onBeforeActionEventEmitted = (event) => {
+          let result = null,
+              controller = event.controller,
+              action = event.action
+          try {
+            if (typeof action === 'function') {
+              result = controller.execute(action)
+            } else {
+              result = controller[action]()
+            }
+            if (result instanceof Promise) {
+              result.then((result) => {
                 this.handleActionResult(result, controller)
                 resolve(controller.getResponse())
-              }
-            })
+              }).catch((e) => {
+                reject(e)
+              })
+            } else {
+              this.handleActionResult(result, controller)
+              resolve(controller.getResponse())
+            }
+          } catch (e) {
+            reject(e)
+          }
+        }
+
+        this.getEvents()
+            .emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted)
       } else {
         reject(new InternalErrorException('controller is not defined or not an instance of Foundation/Controller', null, {
           'request': request,
@@ -434,18 +440,16 @@ export default class SystemExtension extends ModuleExtension {
     if (e instanceof Exception) {
       this.getEvents().emit(new IncomingRequestExceptionEvent(e, conn))
     } else if (e instanceof Error) {
-      this.getEvents().emit(new SystemErrorEvent(conn, new InternalErrorException(e.message, null, {
+      this.getEvents().emit(new SystemErrorEvent(new InternalErrorException(e.message, null, {
         request: request
-      })))
+      }), conn))
     }
   }
 
   /**
    * Handle outgoing response
-   * @listens http.response.send listens for sending outgoing response event
-   * @listens http.request.not_found listens for exception when there is no matched routes
-   * @listens http.request.exception listens for exception from handling request
-   * @listens http.request.after listens for result after perform controller's action
+   * @listens {SystemErrorEvent} listens for any errors
+   * @listens {IncomingRequestExceptionEvent} listens for exception from handling request
    */
   handleOutgoingResponse() {
     this.getEvents().on('system.error', (event, done) => {
@@ -455,14 +459,16 @@ export default class SystemExtension extends ModuleExtension {
       let traces = []
       if (event.error instanceof InternalErrorException && event.error.has('request')) {
         const request = event.error.get('request')
-        traces = [
-          `[trace] (Request.URI) ${request.getMethod()} ${request.getPath()}`,
-          `[trace] (Request.Header) ${request.getHeader().toString()}`,
-          `[trace] (Request.ClientAddress) ${request.getClient().get(Request.CLIENT_HOST)}`
-        ]
+        if (request instanceof Request) {
+          traces = [
+            `[trace] (Request.URI) ${request.getMethod()} ${request.getPath()}`,
+            `[trace] (Request.Header) ${request.getHeader().toString()}`,
+            `[trace] (Request.ClientAddress) ${request.getClient().get(Request.CLIENT_HOST)}`
+          ]
+        }
       }
       this.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.message, traces)
-      this.getEvents().emit(new BeforeSendResponseEvent(response, event.conn))
+      this.sendResponse(response, event.conn)
       done()
     })
     this.getEvents().on('http.request.exception', (event, done) => {
