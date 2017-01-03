@@ -1,31 +1,41 @@
 import NotImplementedException from '../../exception/not-implemented'
-import ModelInterface from '../model/interface'
-
+/**
+ * @interface
+ */
 export default class RepositoryInterface {
   /**
    * Find records by condition
    * @param {Object} condition
-   * @returns {ModelInterface[]}
+   * @returns {Promise}
    */
   find(condition) {
     throw new NotImplementedException()
   }
 
   /**
+   * Find record by Id
+   * @param {string|number} id
+   * @returns {Promise}
+   */
+  findId(id) {
+    throw new NotImplementedException()
+  }
+
+  /**
    * Find one record
    * @param {Object} condition
-   * @returns {ModelInterface}
+   * @returns {Promise}
    */
   findOne(condition) {
     throw new NotImplementedException()
   }
 
   /**
-   * Create and return a model
+   * Insert and return a model
    * @param {Object} model
-   * @returns {ModelInterface}
+   * @returns {Promise}
    */
-  create(model) {
+  insert(model) {
     throw new NotImplementedException()
   }
 
@@ -33,6 +43,7 @@ export default class RepositoryInterface {
    * Update records
    * @param {Object} data
    * @param {Object} condition
+   * @returns {Promise}
    */
   update(data, condition) {
     throw new NotImplementedException()
@@ -41,6 +52,7 @@ export default class RepositoryInterface {
   /**
    * Delete records
    * @param {Object} condition
+   * @returns {Promise}
    */
   delete(condition) {
     throw new NotImplementedException()

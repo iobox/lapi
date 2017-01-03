@@ -1,5 +1,2 @@
 import Bag from './bag'
-
-export default class Container extends Bag {
-  
-}
+export default class Container extends Bag {}

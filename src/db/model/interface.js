@@ -1,4 +1,7 @@
 import NotImplementedException from '../../exception/not-implemented'
+/**
+ * @interface
+ */
 export default class ModelInterface {
   /**
    * Return identity of Model
