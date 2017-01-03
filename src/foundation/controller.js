@@ -1,10 +1,10 @@
-import Kernel from './kernel'
+import ContainerAware from './container/container-aware'
 import Request from '../http/request'
-import Response from '../http/response'
+import Response from '../http/response/response'
 import InvalidArgumentException from '../exception/invalid-argument'
 import Route from '../http/routing/route'
 
-export default class Controller extends Kernel {
+export default class Controller extends ContainerAware {
   /**
    * Constructor
    * @param {?Request} [request=null]
@@ -82,9 +82,12 @@ export default class Controller extends Kernel {
   /**
    * This implementation means to be a solution for quick routing in App.
    * Therefore, override this method is prohibited
+   *
    * @param {function} action
+   * @param {Array} args
+   * @returns {*}
    */
-  execute(action, ...args) {
+  action(action, ...args) {
     return action.apply(this, args)
   }
 }

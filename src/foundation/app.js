@@ -1,16 +1,15 @@
 import Bag from './bag'
-import Kernel from './kernel'
-import Container from './container'
+import ContainerAware from './container/container-aware'
+import Container from './container/container'
 import Controller from './controller'
 import Request from '../http/request'
 import Route from '../http/routing/route'
 import ModuleExtension from './extension/module'
 import ExtensionManager from './extension/manager'
-import ContainerExtension from './extension/container'
-import ExtensionInterface from './extension/interface'
+import Extension from './extension/extension'
 import InvalidArgumentException from '../exception/invalid-argument'
 
-export default class App extends Kernel {
+export default class App extends ContainerAware {
   /**
    * Constructor
    * @param {Container} [container=null]
@@ -67,7 +66,7 @@ export default class App extends Kernel {
 
   /**
    * Extend application with extension
-   * @param {ExtensionInterface} extension
+   * @param {Extension} extension
    */
   extend(extension) {
     this.getExtensionManager().extend(extension)
@@ -81,7 +80,7 @@ export default class App extends Kernel {
     this.setOptions(options || new Bag())
 
     for (let extension of this.getExtensionManager().getExtensions()) {
-      if (extension instanceof ContainerExtension) {
+      if (extension instanceof Extension) {
         extension.setContainer(this.getContainer())
       }
       if (extension instanceof ModuleExtension) {

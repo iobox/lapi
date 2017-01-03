@@ -1,6 +1,10 @@
-import ContainerExtension from './container'
+import Extension from './extension'
 
-export default class ModuleExtension extends ContainerExtension {
+export default class ModuleExtension extends Extension {
+  getName() {
+    return 'foundation.extension.module'
+  }
+  
   /**
    * This method is called for setting up module.
    * Therefore, it could be used to listen application's events.

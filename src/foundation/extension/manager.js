@@ -1,4 +1,4 @@
-import ExtensionInterface from './interface'
+import Extension from './extension'
 
 export default class ExtensionManager {
   constructor() {
@@ -12,7 +12,7 @@ export default class ExtensionManager {
   
   /**
    * Return all extensions
-   * @returns {ExtensionInterface[]}
+   * @returns {Extension[]}
    */
   getExtensions() {
     return this._extensions
@@ -20,7 +20,7 @@ export default class ExtensionManager {
 
   /**
    * Set and replace all extensions
-   * @param {ExtensionInterface[]} extensions
+   * @param {Extension[]} extensions
    * @throws {Error} throw an Error if extensions is not an Array
    */
   setExtensions(extensions) {
@@ -33,11 +33,11 @@ export default class ExtensionManager {
 
   /**
    * Extend QueryManager with an extension
-   * @param {ExtensionInterface} extension
-   * @throws {Error} throw an Error if extension is not an instance of ExtensionInterface
+   * @param {Extension} extension
+   * @throws {Error} throw an Error if extension is not an instance of Extension
    */
   extend(extension) {
-    if (extension instanceof ExtensionInterface) {
+    if (extension instanceof Extension) {
       this._extensions.push(extension)
     } else {
       throw new Error('[Foundation/Extension/Manager#extend] extension must be an instance of Foundation/Extension/Interface')

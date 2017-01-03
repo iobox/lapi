@@ -3,7 +3,7 @@ import Validator from '../../../src/http/query/validator'
 import Request from '../../../src/http/request'
 import Bag from '../../../src/foundation/bag'
 import ExtensionManager from '../../../src/foundation/extension/manager'
-import QueryExtensionInterface from '../../../src/http/query/extension/interface'
+import QueryExtensionInterface from '../../../src/http/query/extension/extension'
 import InvalidArgumentException from '../../../src/exception/invalid-argument'
 
 /** @test {Validator} */

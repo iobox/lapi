@@ -260,7 +260,7 @@ export default class Request extends Message {
    */
   static _setUpUri(request, resource) {
     if (resource.url !== undefined) {
-      request.setUri(resource.url)
+      request.setUri(`http://${request.getHeader().get(Header.HOST)}${resource.url}`)
     }
   }
 
@@ -285,11 +285,11 @@ export default class Request extends Message {
   static _setUpServer(request, resource) {
     if (resource.connection !== undefined) {
       const connection = resource.connection
-      request.getClient().set(Request.SERVER_HOST, connection.address().address)
-      request.getClient().set(Request.SERVER_PORT, connection.address().port)
-      request.getClient().set(Request.ADDRESS_FAMILY, connection.address().family)
-      request.getClient().set(Request.LOCAL_HOST, connection.localAddress)
-      request.getClient().set(Request.LOCAL_PORT, connection.localPort)
+      request.getServer().set(Request.SERVER_HOST, connection.address().address)
+      request.getServer().set(Request.SERVER_PORT, connection.address().port)
+      request.getServer().set(Request.ADDRESS_FAMILY, connection.address().family)
+      request.getServer().set(Request.LOCAL_HOST, connection.localAddress)
+      request.getServer().set(Request.LOCAL_PORT, connection.localPort)
     }
   }
 

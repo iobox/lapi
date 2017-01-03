@@ -1,5 +1,5 @@
 import HttpException from './http'
-import Response from '../response'
+import Response from '../response/response'
 
 export default class NotFoundException extends HttpException {
   constructor(message = '', code = null, statusCode = Response.HTTP_NOT_FOUND) {

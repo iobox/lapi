@@ -203,7 +203,8 @@ export default class Bag {
    * @param {boolean} throws Throws exception on error
    */
   toJSON(keys = null, throws = true) {
-    let data = {}
+    let d
+    ata = {}
     if (Array.isArray(keys)) {
       data = this.only(keys)
     } else {

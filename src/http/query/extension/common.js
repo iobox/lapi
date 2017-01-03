@@ -1,11 +1,6 @@
-import ExtensionInterface from './interface'
+import QueryExtension from './extension'
 import Bag from '../../../foundation/bag'
-
-/**
- * @implements {src/foundation/extension/interface.js~ExtensionInterface}
- * @implements {src/http/query/extension/interface.js~ExtensionInterface}
- */
-export default class CommonExtension extends ExtensionInterface {
+export default class CommonExtension extends QueryExtension {
   getName() {
     return 'http.query.extension.common'
   }

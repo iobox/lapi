@@ -1,7 +1,6 @@
-import Body from './body'
-import Message from './message'
-import Header from './header'
-import InvalidArgumentException from './exception/invalid-argument'
+import Message from './../message'
+import Header from './../header'
+import NotImplementedException from '../../exception/not-implemented'
 
 /**
  * HTTP Response
@@ -13,18 +12,10 @@ export default class Response extends Message {
    * @param {!number} [statusCode=200] Response's status code, default is OK
    * @param {?Object} [header={}] Initial headers
    */
-  constructor(content = {}, statusCode = Response.HTTP_OK, header = {}) {
+  constructor(content = '', statusCode = Response.HTTP_OK, header = {}) {
     super()
 
-    if (typeof content === 'object') {
-      this.getBody().setContent(JSON.stringify(content))
-      this.getBody().setContentType(Body.CONTENT_JSON)
-    } else if (typeof content === 'string') {
-      this.getBody().setContent(content)
-      this.getBody().setContentType(Body.CONTENT_HTML)
-    } else {
-      throw new InvalidArgumentException('[Http/Response#constructor] content must be either an object or a string')
-    }
+    this.getBody().setContent(content)
     this.setStatusCode(statusCode)
     this.getHeader().extend(header)
   }
@@ -46,6 +37,22 @@ export default class Response extends Message {
   }
 
   /**
+   * Set body content
+   * @param {*} content
+   */
+  setContent(content) {
+    throw new NotImplementedException()
+  }
+
+  /**
+   * Get body content
+   * @returns {*}
+   */
+  getContent() {
+    throw new NotImplementedException()
+  }
+
+  /**
    * Send response to client
    * @param {?Object} resource Original response's resource. It should be an instance of http.ServerResponse
    */
@@ -55,7 +62,7 @@ export default class Response extends Message {
       resource.setHeader(key, value)
     })
 
-    resource.statusCode    = this.getStatusCode()
+    resource.statusCode = this.getStatusCode()
     resource.end(this.getBody().toString())
   }
 }

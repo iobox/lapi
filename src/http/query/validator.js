@@ -1,7 +1,7 @@
 import Bag from '../../foundation/bag'
 import Request from '../request'
 import ExtensionManager from '../../foundation/extension/manager'
-import QueryExtensionInterface from './extension/interface'
+import QueryExtensionInterface from './extension/extension'
 import InvalidArgumentException from '../../exception/invalid-argument'
 
 export default class Validator {

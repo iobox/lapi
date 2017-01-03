@@ -1,15 +1,11 @@
 import Container from './container'
-
-export default class Kernel {
+export default class ContainerAware {
   /**
    * Constructor
    * @param {Container} [container=null]
    */
   constructor(container = null) {
-    if (container === null) {
-      container = new Container()
-    }
-    this.setContainer(container)
+    this.setContainer(container || new Container())
   }
 
   /**
@@ -28,7 +24,7 @@ export default class Kernel {
     if (container instanceof Container) {
       this._container = container
     } else {
-      throw new Error('[Foundation/Kernel#setContainer] An instance of Container is required')
+      throw new Error('[Foundation/Container/ContainerAware#setContainer] An instance of Container is required')
     }
   }
 }
