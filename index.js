@@ -2,12 +2,13 @@
 var $exports = {
  "Collection": "collection.js",
  "Db": {
+  "Db": "db/db.js",
   "Model": {
-   "ModelInterface": "db/model/interface.js",
-   "MongoModel": "db/model/mongo.js"
+   "Model": "db/model/model.js"
   },
+  "MongoDb": "db/mongo.js",
   "Repository": {
-   "RepositoryInterface": "db/repository/interface.js"
+   "Repository": "db/repository/repository.js"
   }
  },
  "Event": {
@@ -24,16 +25,17 @@ var $exports = {
  "Foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
-  "Container": "foundation/container.js",
+  "Container": {
+   "ContainerAware": "foundation/container/container-aware.js",
+   "Container": "foundation/container/container.js"
+  },
   "Controller": "foundation/controller.js",
   "Extension": {
-   "ContainerExtension": "foundation/extension/container.js",
-   "ExtensionInterface": "foundation/extension/interface.js",
+   "Extension": "foundation/extension/extension.js",
    "ExtensionManager": "foundation/extension/manager.js",
    "ModuleExtension": "foundation/extension/module.js",
    "SystemExtension": "foundation/extension/system.js"
-  },
-  "Kernel": "foundation/kernel.js"
+  }
  },
  "Http": {
   "Body": "http/body.js",
@@ -47,12 +49,15 @@ var $exports = {
   "Query": {
    "Extension": {
     "CommonExtension": "http/query/extension/common.js",
-    "ExtensionInterface": "http/query/extension/interface.js"
+    "QueryExtension": "http/query/extension/extension.js"
    },
    "Validator": "http/query/validator.js"
   },
   "Request": "http/request.js",
-  "Response": "http/response.js",
+  "Response": {
+   "JsonResponse": "http/response/json.js",
+   "Response": "http/response/response.js"
+  },
   "Routing": {
    "Route": "http/routing/route.js",
    "Router": "http/routing/router.js"
