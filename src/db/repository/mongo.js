@@ -1,10 +1,11 @@
-import RepositoryInterface from './interface'
+import Repository from './repository'
 import MongoModel from '../model/mongo'
 
-export default class MongoRepository extends RepositoryInterface {
+export default class MongoRepository extends Repository {
   findId(id) {
-    const key = MongoModel.ID
-    return this.find({key: id})
+    const condition = {}
+    condition[MongoModel.ID] = id
+    return this.find(condition)
   }
 
   find(condition) {

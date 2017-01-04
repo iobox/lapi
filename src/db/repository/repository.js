@@ -1,10 +1,8 @@
 import NotImplementedException from '../../exception/not-implemented'
-/**
- * @interface
- */
-export default class RepositoryInterface {
+export default class Repository {
   /**
    * Find records by condition
+   * @abstract
    * @param {Object} condition
    * @returns {Promise}
    */
@@ -14,6 +12,7 @@ export default class RepositoryInterface {
 
   /**
    * Find record by Id
+   * @abstract
    * @param {string|number} id
    * @returns {Promise}
    */
@@ -23,6 +22,7 @@ export default class RepositoryInterface {
 
   /**
    * Find one record
+   * @abstract
    * @param {Object} condition
    * @returns {Promise}
    */
@@ -32,6 +32,7 @@ export default class RepositoryInterface {
 
   /**
    * Insert and return a model
+   * @abstract
    * @param {Object} model
    * @returns {Promise}
    */
@@ -41,6 +42,7 @@ export default class RepositoryInterface {
 
   /**
    * Update records
+   * @abstract
    * @param {Object} data
    * @param {Object} condition
    * @returns {Promise}
@@ -51,6 +53,7 @@ export default class RepositoryInterface {
 
   /**
    * Delete records
+   * @abstract
    * @param {Object} condition
    * @returns {Promise}
    */

@@ -1,9 +1,5 @@
-import Bag from '../../foundation/bag'
-
-/**
- * @implements {ModelInterface}
- */
-export default class MongoModel extends Bag {
+import Model from './model'
+export default class MongoModel extends Model {
   getId() {
     return this.get(MongoModel.ID)
   }

@@ -68,11 +68,6 @@ class BeforeSendResponseEvent extends Event {
     this.conn = conn
   }
 }
-class AfterSendResponseEvent extends Event {
-  constructor() {
-    super('http.response.send.after', true)
-  }
-}
 class SystemErrorEvent extends Event {
   constructor(error, conn) {
     super('system.error', true)
