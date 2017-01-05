@@ -2,15 +2,16 @@ import Db from '../db'
 import Bag from '../../foundation/bag'
 var MongoClient = require('mongodb')
 export default class MongoDb extends Db {
-  constructor(url) {
+  constructor(url, options = null) {
     super()
     this._url = url
+    this._options = options
   }
 
   open() {
     return new Promise((resolve, reject) => {
       if (!this.getConnection()) {
-        MongoClient.connect(this._url, (err, db) => {
+        MongoClient.connect(this._url, this._options, (err, db) => {
           if (err) {
             reject(err)
           } else {

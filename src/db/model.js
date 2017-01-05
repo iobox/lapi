@@ -44,6 +44,7 @@ export default class Model extends Bag {
    * @returns {Promise}
    */
   save() {
+    this.constructor.getRepository().update(this.all(), this.constructor.getSchema().getKey(this))
   }
 
   /**
