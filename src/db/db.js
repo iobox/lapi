@@ -21,6 +21,22 @@ export default class Db {
   }
 
   /**
+   * Open a new connection to database
+   * @returns {Promise}
+   */
+  open() {
+    throw new NotImplementedException('[Db/db#open] this method must be implemented')
+  }
+
+  /**
+   * Close existent connection
+   * @returns {Promise}
+   */
+  close() {
+    throw new NotImplementedException('[Db/db#close] this method must be implemented')
+  }
+
+  /**
    * Find record(s)
    * @param {string} collection
    * @param {Object} condition

@@ -1,5 +1,5 @@
-import Db from './db'
-import Bag from '../foundation/bag'
+import Db from '../db'
+import Bag from '../../foundation/bag'
 var MongoClient = require('mongodb')
 export default class MongoDb extends Db {
   constructor(url) {
@@ -7,7 +7,7 @@ export default class MongoDb extends Db {
     this._url = url
   }
 
-  connect() {
+  open() {
     return new Promise((resolve, reject) => {
       if (!this.getConnection()) {
         MongoClient.connect(this._url, (err, db) => {
@@ -20,6 +20,19 @@ export default class MongoDb extends Db {
         })
       } else {
         resolve(this.getConnection())
+      }
+    })
+  }
+  
+  close() {
+    return new Promise((resolve, reject) => {
+      try {
+        if (this.getConnection()) {
+          this.getConnection().close()
+          resolve()
+        }
+      } catch (e) {
+        reject(e)
       }
     })
   }

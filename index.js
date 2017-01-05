@@ -3,13 +3,12 @@ var $exports = {
  "Collection": "collection.js",
  "Db": {
   "Db": "db/db.js",
-  "Model": {
-   "Model": "db/model/model.js"
+  "Driver": {
+   "MongoDb": "db/driver/mongo.js"
   },
-  "MongoDb": "db/mongo.js",
-  "Repository": {
-   "Repository": "db/repository/repository.js"
-  }
+  "Model": "db/model.js",
+  "Repository": "db/repository.js",
+  "Schema": "db/schema.js"
  },
  "Event": {
   "Event": "event/event.js",
@@ -20,6 +19,7 @@ var $exports = {
   "Exception": "exception/exception.js",
   "InternalErrorException": "exception/internal-error.js",
   "InvalidArgumentException": "exception/invalid-argument.js",
+  "NotFoundException": "exception/not-found.js",
   "NotImplementedException": "exception/not-implemented.js"
  },
  "Foundation": {
