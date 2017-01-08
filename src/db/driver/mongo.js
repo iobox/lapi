@@ -29,8 +29,14 @@ export default class MongoDb extends Db {
     return new Promise((resolve, reject) => {
       try {
         if (this.getConnection()) {
-          this.getConnection().close()
-          resolve()
+          this.getConnection().close(true, (err, result) => {
+            if (err) {
+              reject(err)
+            } else {
+              this.setConnection(null)
+              resolve(result)
+            }
+          })
         }
       } catch (e) {
         reject(e)
@@ -41,7 +47,7 @@ export default class MongoDb extends Db {
   find(collection, condition, options = null) {
     return new Promise((resolve, reject) => {
       options = new Bag(options || {})
-      this.connect().then((db) => {
+      this.open().then((db) => {
         let query = db.collection(collection).find(condition)
         if (options.has('skip')) {
           query.skip(options.get('skip'))
@@ -77,7 +83,7 @@ export default class MongoDb extends Db {
 
   insertOne(collection, data, options = null) {
     return new Promise((resolve, reject) => {
-      this.connect().then((db) => {
+      this.open().then((db) => {
         db.collection(collection).insertOne(data, options, (err, result) => {
           if (err) {
             reject(err)
@@ -91,7 +97,7 @@ export default class MongoDb extends Db {
 
   insertMany(collection, data, options = null) {
     return new Promise((resolve, reject) => {
-      this.connect().then((db) => {
+      this.open().then((db) => {
         db.collection(collection).insertMany(data, options, (err, result) => {
           if (err) {
             reject(err)
@@ -105,7 +111,7 @@ export default class MongoDb extends Db {
 
   update(collection, condition, data, options = null) {
     return new Promise((resolve, reject) => {
-      this.connect().then((db) => {
+      this.open().then((db) => {
         options = new Bag(options || {})
         if (options.get('multi', true)) {
           db.collection(collection).updateMany(condition, {
@@ -134,7 +140,7 @@ export default class MongoDb extends Db {
 
   delete(collection, condition, options = null) {
     return new Promise((resolve, reject) => {
-      this.connect().then((db) => {
+      this.open().then((db) => {
         options = new Bag(options || {})
         if (options.get('multi', true)) {
           db.collection(collection).deleteMany(condition, options.only(['w', 'wtimeout', 'j']), (err, result) => {

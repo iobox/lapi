@@ -76,6 +76,12 @@ describe('bag.js', function() {
     expect(bag.all()).to.deep.equal(data)
   })
 
+  /** @test {Bag#raw} */
+  it('[raw] should return all values of bag', () => {
+    expect(bag.raw()).to.deep.equal(data)
+    expect(bag.raw(['a', 'b'])).to.deep.equal({a: 'hello', b: 'world'})
+  })
+
   /** @test {Bag#only} */
   it('[only] should return {a: \'hello\', b: \'world\'} when getting only values of keys \'a\' and \'b\'', () => {
     expect(bag.only(['a', 'b'])).to.deep.equal({a: 'hello', b: 'world'})

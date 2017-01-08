@@ -151,7 +151,9 @@ export default class Bag {
    * @returns {{}}
    */
   all() {
-    return copy(this._data)
+    let bag = {}
+    this.keys.forEach(key => bag[key] = this.get(key))
+    return bag
   }
 
   /**
@@ -164,9 +166,20 @@ export default class Bag {
     if (!Array.isArray(keys)) {
       throw new InvalidArgumentException('[Foundation/Bag#only] keys must be an array')
     }
-    let items = {}
-    keys.forEach(key => items[key] = this._data[key])
-    return items
+    let bag = {}
+    keys.forEach(key => bag[key] = this.get(key))
+    return bag
+  }
+
+  raw(keys) {
+    let raw = {}
+    if (keys !== undefined && !Array.isArray(keys)) {
+        throw new InvalidArgumentException('[Foundation/Bag#raw] keys must be an array')
+    } else if (keys === undefined) {
+      keys = this.keys
+    }
+    keys.forEach(key => raw[key] = this.has(key) ? this._data[key] : null)
+    return raw
   }
 
   /**
@@ -200,11 +213,10 @@ export default class Bag {
   /**
    * Convert bag to JSON string
    * @param {Array} keys Only for some keys
-   * @param {boolean} throws Throws exception on error
+   * @param {boolean} [throws=true] Throws exception on error
    */
   toJSON(keys = null, throws = true) {
-    let d
-    ata = {}
+    let data = {}
     if (Array.isArray(keys)) {
       data = this.only(keys)
     } else {
@@ -215,7 +227,7 @@ export default class Bag {
       JSON.stringify(data)
     } catch (e) {
       if (throws) {
-        throw new InternalErrorException(`[Foundation/Bag#toJson] ${e.message}`)
+        throw new InternalErrorException(`[Foundation/Bag#toJSON] ${e.message}`)
       } else {
         return JSON.stringify({})
       }

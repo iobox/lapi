@@ -1,4 +1,4 @@
-import ContainerAware from './container/container-aware'
+import ContainerAware from '../di/container-aware'
 import Request from '../http/request'
 import Response from '../http/response/response'
 import InvalidArgumentException from '../exception/invalid-argument'

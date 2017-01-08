@@ -1,7 +1,7 @@
 // AUTO GENERATED ==>
 var $exports = {
  "Collection": "collection.js",
- "Db": {
+ "DB": {
   "Db": "db/db.js",
   "Driver": {
    "MongoDb": "db/driver/mongo.js"
@@ -9,6 +9,10 @@ var $exports = {
   "Model": "db/model.js",
   "Repository": "db/repository.js",
   "Schema": "db/schema.js"
+ },
+ "DI": {
+  "ContainerAware": "di/container-aware.js",
+  "Container": "di/container.js"
  },
  "Event": {
   "Event": "event/event.js",
@@ -25,10 +29,6 @@ var $exports = {
  "Foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
-  "Container": {
-   "ContainerAware": "foundation/container/container-aware.js",
-   "Container": "foundation/container/container.js"
-  },
   "Controller": "foundation/controller.js",
   "Extension": {
    "Extension": "foundation/extension/extension.js",

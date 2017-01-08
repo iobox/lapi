@@ -41,6 +41,7 @@ export default class Db {
    * @param {string} collection
    * @param {Object} condition
    * @param {Object} [options=null]
+   * @returns {Promise}
    */
   find(collection, condition, options = null) {
     throw new NotImplementedException('[Db/db#find] this method must be implemented')
@@ -51,6 +52,7 @@ export default class Db {
    * @param {string} collection
    * @param {Object} condition
    * @param {Object} [options=null]
+   * @returns {Promise}
    */
   findOne(collection, condition, options = null) {
     throw new NotImplementedException('[Db/db#findOne] this method must be implemented')
@@ -61,6 +63,7 @@ export default class Db {
    * @param {string} collection
    * @param {Array|Object} data if data is an array, it would be multiple insertion
    * @param {Object} [options=null]
+   * @returns {Promise}
    */
   insert(collection, data, options = null) {
     throw new NotImplementedException('[Db/db#insert] this method must be implemented')
@@ -72,6 +75,7 @@ export default class Db {
    * @param {Object} condition Condition to update
    * @param {Object} data Only contains new changes
    * @param {Object} [options=null] Additional configuration for updating
+   * @returns {Promise}
    */
   update(collection, condition, data, options = null) {
     throw new NotImplementedException('[Db/db#update] this method must be implemented')
@@ -82,6 +86,7 @@ export default class Db {
    * @param {string} collection
    * @param {Object} condition
    * @param {Object} [options=null]
+   * @returns {Promise}
    */
   delete(collection, condition, options = null) {
     throw new NotImplementedException('[Db/db#delete] this method must be implemented')

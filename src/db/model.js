@@ -40,11 +40,21 @@ export default class Model extends Bag {
   }
 
   /**
+   * Get value by key
+   * @param {!string} key
+   * @param {?*} def
+   * @returns {?*}
+   */
+  get(key, def = null) {
+    return this.has(key) ? this.constructor.getSchema().getValue(key, this) : def
+  }
+
+  /**
    * Save model
    * @returns {Promise}
    */
   save() {
-    this.constructor.getRepository().update(this.all(), this.constructor.getSchema().getKey(this))
+    this.constructor.getRepository().update(this.all(), this.constructor.getSchema().getIdentity(this))
   }
 
   /**
@@ -52,5 +62,6 @@ export default class Model extends Bag {
    * @returns {Promise}
    */
   destroy() {
+    this.constructor.getRepository().delete(this.constructor.getSchema().getIdentity(this))
   }
 }

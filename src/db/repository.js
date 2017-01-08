@@ -3,11 +3,14 @@ import InvalidArgumentException from '../exception/invalid-argument'
 import NotFoundException from '../exception/not-found'
 import Db from './db'
 import Model from './model'
-import ContainerAware from '../foundation/container/container-aware'
+import ContainerAware from '../di/container-aware'
 export default class Repository extends ContainerAware {
-  constructor(container = null) {
-    super()
-    this._model = null
+  /**
+   * Get Model
+   * @returns {Model}
+   */
+  static getModel() {
+    throw new NotImplementedException()
   }
 
   /**
@@ -18,34 +21,13 @@ export default class Repository extends ContainerAware {
    */
   getDb() {
     if (!this.getContainer().has('db')) {
-      throw new NotFoundException('[Db/Repository#getDb] db is not registered in Container')
+      throw new NotFoundException('[Db/Repository#getDb] db is not registered in DI/Container')
     }
     const db = this.getContainer().get('db')
     if (!(db instanceof Db)) {
-      throw new InvalidArgumentException('[Db/Repository#getDb] db is null or not an instance of Db')
+      throw new InvalidArgumentException('[Db/Repository#getDb] db is null or not an instance of Db/Db')
     }
-    return this._db
-  }
-
-  /**
-   * Get Model
-   * @returns {Model}
-   */
-  getModel() {
-    return this._model
-  }
-
-  /**
-   * Set Model
-   * @param {Model} model
-   * @throws {InvalidArgumentException} throws an exception if model is not an instance of Model
-   */
-  setModel(model) {
-    if (model instanceof Model) {
-      this._model = model
-    } else {
-      throw new InvalidArgumentException('[Db/Repository#setModel] model must be an instance of Model')
-    }
+    return db
   }
   
   /**
@@ -54,7 +36,7 @@ export default class Repository extends ContainerAware {
    * @returns {Promise}
    */
   find(condition) {
-    return this.getDb().find(this.getModel().getName(), condition)
+    return this.getDb().find(this.constructor.getModel().getName(), condition)
   }
 
   /**
@@ -79,12 +61,12 @@ export default class Repository extends ContainerAware {
 
   /**
    * Insert and return a model
-   * @abstract
    * @param {Object} model
+   * @param {?Object} [options=null]
    * @returns {Promise}
    */
-  insert(model) {
-    throw new NotImplementedException()
+  insert(model, options = null) {
+    return this.getDb().insert(this.constructor.getModel().getName(), model.all(), options)
   }
 
   /**
@@ -92,19 +74,21 @@ export default class Repository extends ContainerAware {
    * @abstract
    * @param {Object} data
    * @param {Object} condition
+   * @param {?Object} [options=null]
    * @returns {Promise}
    */
-  update(data, condition) {
-    throw new NotImplementedException()
+  update(data, condition, options = null) {
+    return this.getDb().update(this.constructor.getModel().getName(), data, condition, options)
   }
 
   /**
    * Delete records
    * @abstract
    * @param {Object} condition
+   * @param {?Object} [options=null]
    * @returns {Promise}
    */
-  delete(condition) {
-    throw new NotImplementedException()
+  delete(condition, options = null) {
+    return this.getDb().delete(this.constructor.getModel().getName(), condition, options)
   }
 }

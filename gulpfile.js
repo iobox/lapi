@@ -104,7 +104,11 @@ gulp.task('indexing', function () {
       if (part === srcDir) {
         return false
       }
-      part = Str.ucfirst(part)
+      if (part.length === 2) {
+        part = part.toUpperCase()
+      } else {
+        part = Str.ucfirst(part)
+      }
       if (part.match(/(\.js)$/)) {
         part = require('./' + path.join.apply(null, parts)).default.name
         parts[0] = ''
