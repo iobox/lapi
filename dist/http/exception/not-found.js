@@ -8,7 +8,7 @@ var _http = require('./http');
 
 var _http2 = _interopRequireDefault(_http);
 
-var _response = require('../response');
+var _response = require('../response/response');
 
 var _response2 = _interopRequireDefault(_response);
 

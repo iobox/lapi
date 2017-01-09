@@ -4,9 +4,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _bag = require('./bag');
+var _exception = require('./exception');
 
-var _bag2 = _interopRequireDefault(_bag);
+var _exception2 = _interopRequireDefault(_exception);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16,16 +16,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Container = function (_Bag) {
-  _inherits(Container, _Bag);
+var NotFoundException = function (_Exception) {
+  _inherits(NotFoundException, _Exception);
 
-  function Container() {
-    _classCallCheck(this, Container);
+  function NotFoundException() {
+    _classCallCheck(this, NotFoundException);
 
-    return _possibleConstructorReturn(this, (Container.__proto__ || Object.getPrototypeOf(Container)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (NotFoundException.__proto__ || Object.getPrototypeOf(NotFoundException)).apply(this, arguments));
   }
 
-  return Container;
-}(_bag2.default);
+  return NotFoundException;
+}(_exception2.default);
 
-exports.default = Container;
+exports.default = NotFoundException;

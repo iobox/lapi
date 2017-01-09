@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _interface = require('./interface');
+var _extension = require('./extension');
 
-var _interface2 = _interopRequireDefault(_interface);
+var _extension2 = _interopRequireDefault(_extension);
 
 var _bag = require('../../../foundation/bag');
 
@@ -22,12 +22,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/**
- * @implements {src/foundation/extension/interface.js~ExtensionInterface}
- * @implements {src/http/query/extension/interface.js~ExtensionInterface}
- */
-var CommonExtension = function (_ExtensionInterface) {
-  _inherits(CommonExtension, _ExtensionInterface);
+var CommonExtension = function (_QueryExtension) {
+  _inherits(CommonExtension, _QueryExtension);
 
   function CommonExtension() {
     _classCallCheck(this, CommonExtension);
@@ -93,6 +89,6 @@ var CommonExtension = function (_ExtensionInterface) {
   }]);
 
   return CommonExtension;
-}(_interface2.default);
+}(_extension2.default);
 
 exports.default = CommonExtension;

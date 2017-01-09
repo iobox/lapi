@@ -197,7 +197,13 @@ var Bag = function () {
   }, {
     key: 'all',
     value: function all() {
-      return copy(this._data);
+      var _this2 = this;
+
+      var bag = {};
+      this.keys.forEach(function (key) {
+        return bag[key] = _this2.get(key);
+      });
+      return bag;
     }
 
     /**
@@ -210,16 +216,32 @@ var Bag = function () {
   }, {
     key: 'only',
     value: function only(keys) {
-      var _this2 = this;
+      var _this3 = this;
 
       if (!Array.isArray(keys)) {
         throw new _invalidArgument2.default('[Foundation/Bag#only] keys must be an array');
       }
-      var items = {};
+      var bag = {};
       keys.forEach(function (key) {
-        return items[key] = _this2._data[key];
+        return bag[key] = _this3.get(key);
       });
-      return items;
+      return bag;
+    }
+  }, {
+    key: 'raw',
+    value: function raw(keys) {
+      var _this4 = this;
+
+      var raw = {};
+      if (keys !== undefined && !Array.isArray(keys)) {
+        throw new _invalidArgument2.default('[Foundation/Bag#raw] keys must be an array');
+      } else if (keys === undefined) {
+        keys = this.keys;
+      }
+      keys.forEach(function (key) {
+        return raw[key] = _this4.has(key) ? _this4._data[key] : null;
+      });
+      return raw;
     }
 
     /**
@@ -263,7 +285,7 @@ var Bag = function () {
     /**
      * Convert bag to JSON string
      * @param {Array} keys Only for some keys
-     * @param {boolean} throws Throws exception on error
+     * @param {boolean} [throws=true] Throws exception on error
      */
 
   }, {
@@ -283,7 +305,7 @@ var Bag = function () {
         JSON.stringify(data);
       } catch (e) {
         if (throws) {
-          throw new _internalError2.default('[Foundation/Bag#toJson] ' + e.message);
+          throw new _internalError2.default('[Foundation/Bag#toJSON] ' + e.message);
         } else {
           return JSON.stringify({});
         }
@@ -300,15 +322,15 @@ var Bag = function () {
   }, {
     key: 'forEach',
     value: function forEach(callback) {
-      var _this3 = this;
+      var _this5 = this;
 
       var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
       this.keys.forEach(function (key) {
         if (target === null) {
-          callback(key, _this3.get(key));
+          callback(key, _this5.get(key));
         } else {
-          callback.apply(target, [key, _this3.get(key)]);
+          callback.apply(target, [key, _this5.get(key)]);
         }
       });
     }

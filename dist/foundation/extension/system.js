@@ -36,7 +36,7 @@ var _request = require('../../http/request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _response = require('../../http/response');
+var _response = require('../../http/response/response');
 
 var _response2 = _interopRequireDefault(_response);
 
@@ -79,6 +79,10 @@ var _event2 = _interopRequireDefault(_event);
 var _console = require('../../logger/console');
 
 var _console2 = _interopRequireDefault(_console);
+
+var _json = require('../../http/response/json');
+
+var _json2 = _interopRequireDefault(_json);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -175,45 +179,33 @@ var BeforeSendResponseEvent = function (_Event4) {
   return BeforeSendResponseEvent;
 }(_event2.default);
 
-var AfterSendResponseEvent = function (_Event5) {
-  _inherits(AfterSendResponseEvent, _Event5);
-
-  function AfterSendResponseEvent() {
-    _classCallCheck(this, AfterSendResponseEvent);
-
-    return _possibleConstructorReturn(this, (AfterSendResponseEvent.__proto__ || Object.getPrototypeOf(AfterSendResponseEvent)).call(this, 'http.response.send.after', true));
-  }
-
-  return AfterSendResponseEvent;
-}(_event2.default);
-
-var SystemErrorEvent = function (_Event6) {
-  _inherits(SystemErrorEvent, _Event6);
+var SystemErrorEvent = function (_Event5) {
+  _inherits(SystemErrorEvent, _Event5);
 
   function SystemErrorEvent(error, conn) {
     _classCallCheck(this, SystemErrorEvent);
 
-    var _this6 = _possibleConstructorReturn(this, (SystemErrorEvent.__proto__ || Object.getPrototypeOf(SystemErrorEvent)).call(this, 'system.error', true));
+    var _this5 = _possibleConstructorReturn(this, (SystemErrorEvent.__proto__ || Object.getPrototypeOf(SystemErrorEvent)).call(this, 'system.error', true));
 
-    _this6.error = error;
-    _this6.conn = conn;
-    return _this6;
+    _this5.error = error;
+    _this5.conn = conn;
+    return _this5;
   }
 
   return SystemErrorEvent;
 }(_event2.default);
 
-var IncomingRequestExceptionEvent = function (_Event7) {
-  _inherits(IncomingRequestExceptionEvent, _Event7);
+var IncomingRequestExceptionEvent = function (_Event6) {
+  _inherits(IncomingRequestExceptionEvent, _Event6);
 
   function IncomingRequestExceptionEvent(exception, conn) {
     _classCallCheck(this, IncomingRequestExceptionEvent);
 
-    var _this7 = _possibleConstructorReturn(this, (IncomingRequestExceptionEvent.__proto__ || Object.getPrototypeOf(IncomingRequestExceptionEvent)).call(this, 'http.request.exception'));
+    var _this6 = _possibleConstructorReturn(this, (IncomingRequestExceptionEvent.__proto__ || Object.getPrototypeOf(IncomingRequestExceptionEvent)).call(this, 'http.request.exception'));
 
-    _this7.exception = exception;
-    _this7.conn = conn;
-    return _this7;
+    _this6.exception = exception;
+    _this6.conn = conn;
+    return _this6;
   }
 
   return IncomingRequestExceptionEvent;
@@ -229,16 +221,23 @@ var SystemExtension = function (_ModuleExtension) {
   }
 
   _createClass(SystemExtension, [{
-    key: 'setUp',
+    key: 'getName',
+    value: function getName() {
+      return 'foundation.extension.module.system';
+    }
 
     /**
      * To set up some common objects, such as db, controller, request, response
      */
+
+  }, {
+    key: 'setUp',
     value: function setUp() {
-      this.setUpEvents();
-      this.setUpLogger();
-      this.setUpRouter();
-      this.setUpServer();
+      var _this8 = this;
+
+      this.setUpEvents().then(this.setUpLogger()).then(this.setUpRouter()).then(this.setUpServer()).catch(function (e) {
+        return _this8.handleSetUpError(e);
+      });
     }
 
     /**
@@ -297,16 +296,27 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpEvents',
     value: function setUpEvents() {
-      var events = new _manager2.default();
-      var self = this;
-      events.on('error', function (event) {
-        self.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message);
-      });
-      events.on('http.server.ready', function (event) {
-        console.log('[info] Server is started at ' + event.host + ':' + event.port);
-      });
+      var _this9 = this;
 
-      this.getContainer().set('events', events);
+      return new Promise(function (resolve, reject) {
+        try {
+          (function () {
+            var events = new _manager2.default();
+            var self = _this9;
+            events.on('error', function (event) {
+              self.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message);
+            });
+            events.on('http.server.ready', function (event) {
+              console.log('[info] Server is started at ' + event.host + ':' + event.port);
+            });
+
+            _this9.getContainer().set('events', events);
+            resolve(events);
+          })();
+        } catch (e) {
+          reject(e);
+        }
+      });
     }
 
     /**
@@ -316,26 +326,32 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpLogger',
     value: function setUpLogger() {
-      var logger = null;
-      var driver = this.getOptions().get('logger.driver', null);
-      if (driver) {
-        var options = this.getOptions().get('logger.options', null);
-        switch (driver) {
-          case 'file':
-            logger = new _file2.default(options);
-            break;
-          case 'console':
-            logger = new _console2.default(options);
-            break;
-          default:
-            break;
+      var _this10 = this;
+
+      return new Promise(function (resolve, reject) {
+        var logger = null;
+        var driver = _this10.getOptions().get('logger.driver', null);
+        if (driver) {
+          var options = _this10.getOptions().get('logger.options', null);
+          switch (driver) {
+            case 'file':
+              logger = new _file2.default(options);
+              break;
+            case 'console':
+              logger = new _console2.default(options);
+              break;
+            default:
+              reject(new _internalError2.default('Invalid logger driver'));
+              break;
+          }
         }
-      }
-      if (logger instanceof _interface2.default) {
-        this.getContainer().set('logger', logger);
-      } else {
-        this.getContainer().set('logger', new _interface2.default());
-      }
+        if (logger instanceof _interface2.default) {
+          _this10.getContainer().set('logger', logger);
+        } else {
+          _this10.getContainer().set('logger', new _interface2.default());
+        }
+        resolve(logger);
+      });
     }
 
     /**
@@ -345,8 +361,14 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpRouter',
     value: function setUpRouter() {
-      var routes = this.getOptions().get('routes', []);
-      this.getContainer().set('http.router', new _router2.default(routes));
+      var _this11 = this;
+
+      return new Promise(function (resolve, reject) {
+        var routes = _this11.getOptions().get('routes', []),
+            router = new _router2.default(routes);
+        _this11.getContainer().set('http.router', router);
+        resolve(router);
+      });
     }
 
     /**
@@ -356,31 +378,36 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpServer',
     value: function setUpServer() {
-      var _this9 = this;
+      var _this12 = this;
 
-      var protocol = this.getOptions().get('server.protocol', 'http');
-      var server = null;
-      try {
-        if (protocol === 'https') {
-          // set up HTTPS server
-          server = this._setUpServerHttps();
-        } else {
-          // set up HTTP server
-          server = this._setUpServerHttp();
+      return new Promise(function (resolve, reject) {
+        var protocol = _this12.getOptions().get('server.protocol', 'http');
+        var server = null;
+        try {
+          if (protocol === 'https') {
+            // set up HTTPS server
+            server = _this12._setUpServerHttps();
+          } else {
+            // set up HTTP server
+            server = _this12._setUpServerHttp();
+          }
+        } catch (e) {
+          reject(e);
         }
-      } catch (e) {
-        this.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
-      }
 
-      if (server) {
-        server.on('clientError', function (err, socket) {
-          socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-        });
-        server.on('request', function (req, res) {
-          return _this9.handleIncomingRequest(req, res);
-        });
-        this.handleOutgoingResponse();
-      }
+        if (server) {
+          server.on('clientError', function (err, socket) {
+            socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+          });
+          server.on('request', function (req, res) {
+            _this12.handleIncomingRequest(req, res);
+          });
+          _this12.handleOutgoingResponse();
+          resolve(server);
+        } else {
+          reject(new _internalError2.default('Unable to set up a server'));
+        }
+      });
     }
 
     /**
@@ -392,13 +419,13 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: '_setUpServerHttp',
     value: function _setUpServerHttp() {
-      var _this10 = this;
+      var _this13 = this;
 
       var host = this.getOptions().get('server.host', null);
       var port = this.getOptions().get('server.port', 80);
       var backlog = this.getOptions().get('server.backlog', 511);
       return http.createServer().listen(port, host, backlog, function () {
-        _this10.getEvents().emit(new ServerReadyEvent(host, port));
+        _this13.getEvents().emit(new ServerReadyEvent(host, port));
       });
     }
 
@@ -411,7 +438,7 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: '_setUpServerHttps',
     value: function _setUpServerHttps() {
-      var _this11 = this;
+      var _this14 = this;
 
       var host = this.getOptions().get('server.host', null);
       var port = this.getOptions().get('server.port', 443);
@@ -423,8 +450,18 @@ var SystemExtension = function (_ModuleExtension) {
         key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
         cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
       }).listen(port, host, backlog, function () {
-        _this11.getEvents().emit(new ServerReadyEvent(host, port));
+        _this14.getEvents().emit(new ServerReadyEvent(host, port));
       });
+    }
+  }, {
+    key: 'handleSetUpError',
+    value: function handleSetUpError(e) {
+      var logger = new _console2.default();
+      if (e instanceof _exception2.default) {
+        logger.write(_interface2.default.TYPE_ERROR, e.getMessage());
+      } else {
+        logger.write(_interface2.default.TYPE_ERROR, e.message);
+      }
     }
 
     /**
@@ -444,35 +481,32 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'handleIncomingRequest',
     value: function handleIncomingRequest(req, res) {
-      var _this12 = this;
+      var _this15 = this;
 
-      this.conn = new Connection(req, res);
-      this.request = null;
-      this.makeRequest(this.conn).then(function (request) {
-        _this12.request = request;
-        return _this12.routeRequest(request);
+      var conn = new Connection(req, res);
+      var request = null;
+
+      this.initRequest(conn).then(function (req) {
+        request = req;
+        return _this15.routeRequest(request);
       }).then(function (route) {
-        return _this12.dispatchRequest(route, _this12.request);
+        return _this15.dispatchRequest(route, request);
       }).then(function (response) {
-        return _this12.sendResponse(response, _this12.conn);
+        return _this15.sendResponse(response, conn);
       }).catch(function (e) {
-        return _this12.handleError(e, _this12.conn, _this12.request);
+        return _this15.handleError(e, conn, request);
       });
     }
-
-    /**
-     * Make new request from resource
-     * @param {Connection} conn
-     * @returns {Promise}
-     */
-
   }, {
-    key: 'makeRequest',
-    value: function makeRequest(conn) {
+    key: 'initRequest',
+    value: function initRequest(conn) {
+      var _this16 = this;
+
       return new Promise(function (resolve, reject) {
         try {
           (function () {
             var request = _request2.default.from(conn.req);
+            request.getUri().set(_request2.default.URI_PROTOCOL, _this16.getOptions().get('server.protocol', 'http'));
             if (request.getMethod() === _request2.default.METHOD_GET) {
               resolve(request);
             } else {
@@ -498,6 +532,7 @@ var SystemExtension = function (_ModuleExtension) {
         }
       });
     }
+
     /**
      * Route request
      * @param {Request} request
@@ -507,11 +542,11 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'routeRequest',
     value: function routeRequest(request) {
-      var _this13 = this;
+      var _this17 = this;
 
       return new Promise(function (resolve, reject) {
         try {
-          var router = _this13.getContainer().get('http.router'),
+          var router = _this17.getContainer().get('http.router'),
               route = router.route(request);
 
           if (route instanceof _route2.default) {
@@ -535,10 +570,10 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'dispatchRequest',
     value: function dispatchRequest(route, request) {
-      var _this14 = this;
+      var _this18 = this;
 
       return new Promise(function (resolve, reject) {
-        var response = new _response2.default();
+        var response = new _json2.default();
         var controller = route.getOptions().get('controller');
         if (controller instanceof _controller2.default) {
           var action = route.getOptions().get('action');
@@ -550,7 +585,7 @@ var SystemExtension = function (_ModuleExtension) {
             }));
           }
 
-          controller.setContainer(_this14.getContainer());
+          controller.setContainer(_this18.getContainer());
           controller.setRequest(request);
           controller.setResponse(response);
           controller.setRoute(route);
@@ -561,19 +596,19 @@ var SystemExtension = function (_ModuleExtension) {
                 action = event.action;
             try {
               if (typeof action === 'function') {
-                result = controller.execute(action);
+                result = controller.action(action);
               } else {
                 result = controller[action]();
               }
               if (result instanceof Promise) {
                 result.then(function (result) {
-                  _this14.handleActionResult(result, controller);
+                  _this18.handleActionResult(result, controller);
                   resolve(controller.getResponse());
                 }).catch(function (e) {
                   reject(e);
                 });
               } else {
-                _this14.handleActionResult(result, controller);
+                _this18.handleActionResult(result, controller);
                 resolve(controller.getResponse());
               }
             } catch (e) {
@@ -581,7 +616,7 @@ var SystemExtension = function (_ModuleExtension) {
             }
           };
 
-          _this14.getEvents().emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted);
+          _this18.getEvents().emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted);
         } else {
           reject(new _internalError2.default('[Foundation/Extension/SystemExtension#dispatchRequest] controller is not defined or not an instance of Foundation/Controller', null, {
             'request': request,
@@ -603,9 +638,8 @@ var SystemExtension = function (_ModuleExtension) {
     value: function handleActionResult(result, controller) {
       if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
         var response = controller.getResponse();
-        if (response instanceof _response2.default) {
-          response.getBody().setContent(JSON.stringify(result));
-          response.getBody().setContentType(_body2.default.CONTENT_JSON);
+        if (response instanceof _json2.default) {
+          response.setContent(result);
         }
       } else if (result instanceof _response2.default) {
         controller.setResponse(result);
@@ -613,21 +647,13 @@ var SystemExtension = function (_ModuleExtension) {
         throw new _internalError2.default('[Foundation/Extension/SystemExtension#handleActionResult] result has unexpected format');
       }
     }
-
-    /**
-     * Send response
-     * @param {Response} response
-     * @param {Connection} conn
-     * @returns {Promise}
-     */
-
   }, {
     key: 'sendResponse',
     value: function sendResponse(response, conn) {
-      var _this15 = this;
+      var _this19 = this;
 
       return new Promise(function (resolve, reject) {
-        _this15.getEvents().emit(new BeforeSendResponseEvent(response, conn), function (event) {
+        _this19.getEvents().emit(new BeforeSendResponseEvent(response, conn), function (event) {
           try {
             event.response.send(event.conn.res);
             resolve(event.response);
@@ -668,10 +694,10 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'handleOutgoingResponse',
     value: function handleOutgoingResponse() {
-      var _this16 = this;
+      var _this20 = this;
 
       this.getEvents().on('system.error', function (event, done) {
-        var response = new _response2.default({
+        var response = new _json2.default({
           message: 'Oops! There is something wrong.'
         }, _response2.default.HTTP_INTERNAL_ERROR);
         var traces = [];
@@ -681,19 +707,19 @@ var SystemExtension = function (_ModuleExtension) {
             traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
           }
         }
-        _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.error.getMessage(), traces);
-        _this16.sendResponse(response, event.conn);
+        _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.error.getMessage(), traces);
+        _this20.sendResponse(response, event.conn);
         done();
       });
       this.getEvents().on('http.request.exception', function (event, done) {
         var response = null;
         if (event.exception instanceof _internalError2.default) {
-          response = new _response2.default({
+          response = new _json2.default({
             error: {
               message: event.exception.getMessage()
             }
           }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage(), [event.exception.getArguments().all()]);
+          _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage(), [event.exception.getArguments().all()]);
         } else if (event.exception instanceof _http2.default) {
           response = new _response2.default({
             error: {
@@ -702,11 +728,11 @@ var SystemExtension = function (_ModuleExtension) {
             }
           }, event.exception.getStatusCode());
         } else if (event.exception instanceof Error) {
-          _this16.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.message);
+          _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.message);
         }
 
         if (response instanceof _response2.default) {
-          _this16.sendResponse(response, event.conn);
+          _this20.sendResponse(response, event.conn);
         }
         done();
       });

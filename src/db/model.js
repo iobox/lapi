@@ -1,7 +1,9 @@
-import NotImplementedException from '../exception/not-implemented'
 import Bag from '../foundation/bag'
 import Repository from './repository'
 import Schema from './schema'
+
+import NotImplementedException from '../exception/not-implemented'
+import NotFoundException from '../exception/not-found'
 export default class Model extends Bag {
   /**
    * Return identity of Model
@@ -9,7 +11,7 @@ export default class Model extends Bag {
    * @returns {string|number}
    */
   getId() {
-    throw new NotImplementedException()
+    throw new NotImplementedException('[Db/Model#getId] method getId must be implemented')
   }
 
   /**
@@ -18,7 +20,7 @@ export default class Model extends Bag {
    * @returns {string}
    */
   static getName() {
-    throw new NotImplementedException()
+    throw new NotImplementedException('[Db/Model.getName] static method getName must be implemented')
   }
 
   /**
@@ -27,7 +29,7 @@ export default class Model extends Bag {
    * @returns {Repository}
    */
   static getRepository() {
-    throw new NotImplementedException()
+    throw new NotImplementedException('[Db/Model.getRepository] static method getRepository must be implemented')
   }
 
   /**
@@ -40,13 +42,92 @@ export default class Model extends Bag {
   }
 
   /**
+   * Get identity's condition
+   * @returns {Object}
+   */
+  getIdentity() {
+    let identity = {}
+    this.constructor.getSchema().forEach((field, options) => {
+      if (options.has(Schema.KEY) && options.get(Schema.KEY) === true) {
+        identity[field] = this.get(field)
+      }
+    })
+    return identity
+  }
+
+  /**
    * Get value by key
-   * @param {!string} key
+   * @param {!string} field
    * @param {?*} def
    * @returns {?*}
    */
-  get(key, def = null) {
-    return this.has(key) ? this.constructor.getSchema().getValue(key, this) : def
+  get(field, def = null) {
+    if (!this.has(field)) {
+      return def
+    }
+    
+    const schema = this.constructor.getSchema()
+    if (!schema.has(field)) {
+      throw new NotFoundException(`[Db/Model#get] field "${field}" is not registered in Db/Schema`)
+    }
+
+    const options = schema.get(field)
+    let value = super.get(field)
+    if (options.has(Schema.FUNC_GET)) {
+      value = options.get(Schema.FUNC_GET)(value)
+    }
+
+    return value
+  }
+
+  /**
+   * Set value of field
+   * @param {!string} field
+   * @param {?*} value
+   */
+  set(field, value) {
+    const schema = this.constructor.getSchema()
+    if (schema.has(field)) {
+      const options = schema.get(field)
+      if (options.has(Schema.FUNC_SET)) {
+        value = options.get(Schema.FUNC_SET)(value)
+      }  else if (options.has(Schema.TYPE)) {
+        switch (options.get(Schema.TYPE)) {
+          case Schema.TYPE_INT:
+            value = parseInt(value)
+            break
+          case Schema.TYPE_FLOAT:
+            value = parseFloat(value)
+            break
+          case Schema.TYPE_BUFFER:
+            break
+          case Schema.TYPE_ARRAY:
+          case Array:
+            if (!Array.isArray(value)) {
+              value = [value]
+            }
+            break
+          case Schema.TYPE_DATE:
+          case Schema.TYPE_DATETIME:
+            if (!(value instanceof Date)) {
+              value = new Date(value)
+            }
+            break
+          case Schema.TYPE_STRING:
+          case String:
+            if (typeof value === 'object' && typeof value['toString'] === 'function') {
+              value = value.toString()
+            }
+            break
+          case Schema.TYPE_NUMBER:
+          case Number:
+            break
+          default:
+            break
+        }
+      }
+    }
+    super.set(field, value)
   }
 
   /**
@@ -54,7 +135,7 @@ export default class Model extends Bag {
    * @returns {Promise}
    */
   save() {
-    this.constructor.getRepository().update(this.all(), this.constructor.getSchema().getIdentity(this))
+    return this.constructor.getRepository().update(this.all(), this.getIdentity())
   }
 
   /**
@@ -62,6 +143,6 @@ export default class Model extends Bag {
    * @returns {Promise}
    */
   destroy() {
-    this.constructor.getRepository().delete(this.constructor.getSchema().getIdentity(this))
+    return this.constructor.getRepository().delete(this.getIdentity())
   }
 }

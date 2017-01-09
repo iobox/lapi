@@ -14,20 +14,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Kernel = function () {
+var ContainerAware = function () {
   /**
    * Constructor
    * @param {Container} [container=null]
    */
-  function Kernel() {
+  function ContainerAware() {
     var container = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-    _classCallCheck(this, Kernel);
+    _classCallCheck(this, ContainerAware);
 
-    if (container === null) {
-      container = new _container2.default();
-    }
-    this.setContainer(container);
+    this.setContainer(container || new _container2.default());
   }
 
   /**
@@ -36,7 +33,7 @@ var Kernel = function () {
    */
 
 
-  _createClass(Kernel, [{
+  _createClass(ContainerAware, [{
     key: 'getContainer',
     value: function getContainer() {
       return this._container;
@@ -53,12 +50,12 @@ var Kernel = function () {
       if (container instanceof _container2.default) {
         this._container = container;
       } else {
-        throw new Error('[Foundation/Kernel#setContainer] An instance of Container is required');
+        throw new Error('[Foundation/Container/ContainerAware#setContainer] An instance of Container is required');
       }
     }
   }]);
 
-  return Kernel;
+  return ContainerAware;
 }();
 
-exports.default = Kernel;
+exports.default = ContainerAware;

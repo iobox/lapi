@@ -6,15 +6,15 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _kernel = require('./kernel');
+var _containerAware = require('../di/container-aware');
 
-var _kernel2 = _interopRequireDefault(_kernel);
+var _containerAware2 = _interopRequireDefault(_containerAware);
 
 var _request = require('../http/request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _response = require('../http/response');
+var _response = require('../http/response/response');
 
 var _response2 = _interopRequireDefault(_response);
 
@@ -34,8 +34,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Controller = function (_Kernel) {
-  _inherits(Controller, _Kernel);
+var Controller = function (_ContainerAware) {
+  _inherits(Controller, _ContainerAware);
 
   /**
    * Constructor
@@ -140,21 +140,24 @@ var Controller = function (_Kernel) {
     /**
      * This implementation means to be a solution for quick routing in App.
      * Therefore, override this method is prohibited
+     *
      * @param {function} action
+     * @param {Array} args
+     * @returns {*}
      */
 
   }, {
-    key: 'execute',
-    value: function execute(action) {
+    key: 'action',
+    value: function action(_action) {
       for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
         args[_key - 1] = arguments[_key];
       }
 
-      return action.apply(this, args);
+      return _action.apply(this, args);
     }
   }]);
 
   return Controller;
-}(_kernel2.default);
+}(_containerAware2.default);
 
 exports.default = Controller;

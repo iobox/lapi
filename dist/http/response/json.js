@@ -6,9 +6,13 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _extension = require('./extension');
+var _body = require('../body');
 
-var _extension2 = _interopRequireDefault(_extension);
+var _body2 = _interopRequireDefault(_body);
+
+var _response = require('./response');
+
+var _response2 = _interopRequireDefault(_response);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -18,43 +22,48 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var ModuleExtension = function (_Extension) {
-  _inherits(ModuleExtension, _Extension);
+var JsonResponse = function (_Response) {
+  _inherits(JsonResponse, _Response);
 
-  function ModuleExtension() {
-    _classCallCheck(this, ModuleExtension);
+  function JsonResponse() {
+    var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var statusCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _response2.default.HTTP_OK;
+    var header = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-    return _possibleConstructorReturn(this, (ModuleExtension.__proto__ || Object.getPrototypeOf(ModuleExtension)).apply(this, arguments));
+    _classCallCheck(this, JsonResponse);
+
+    var _this = _possibleConstructorReturn(this, (JsonResponse.__proto__ || Object.getPrototypeOf(JsonResponse)).call(this, '', statusCode, header));
+
+    _this.getBody().setContent(JSON.stringify(data));
+    _this.getBody().setContentType(_body2.default.CONTENT_JSON);
+    return _this;
   }
 
-  _createClass(ModuleExtension, [{
-    key: 'getName',
-    value: function getName() {
-      return 'foundation.extension.module';
+  /**
+   * Set content
+   * @param {Object} content
+   */
+
+
+  _createClass(JsonResponse, [{
+    key: 'setContent',
+    value: function setContent(content) {
+      this.getBody().setContent(JSON.stringify(content));
     }
 
     /**
-     * This method is called for setting up module.
-     * Therefore, it could be used to listen application's events.
-     * At this stage, the module would already receive application's container.
+     * Get content
+     * @returns {Object}
      */
 
   }, {
-    key: 'setUp',
-    value: function setUp() {}
-
-    /**
-     * This method is called when outgoing response is sent,
-     * and application is going to close connection.
-     * It is useful for do some shutdown actions, such as closing database connection.
-     */
-
-  }, {
-    key: 'tearDown',
-    value: function tearDown() {}
+    key: 'getContent',
+    value: function getContent() {
+      return this.getBody().getParsedContent();
+    }
   }]);
 
-  return ModuleExtension;
-}(_extension2.default);
+  return JsonResponse;
+}(_response2.default);
 
-exports.default = ModuleExtension;
+exports.default = JsonResponse;

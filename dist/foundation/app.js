@@ -12,11 +12,11 @@ var _bag = require('./bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
-var _kernel = require('./kernel');
+var _containerAware = require('../di/container-aware');
 
-var _kernel2 = _interopRequireDefault(_kernel);
+var _containerAware2 = _interopRequireDefault(_containerAware);
 
-var _container = require('./container');
+var _container = require('../di/container');
 
 var _container2 = _interopRequireDefault(_container);
 
@@ -40,13 +40,9 @@ var _manager = require('./extension/manager');
 
 var _manager2 = _interopRequireDefault(_manager);
 
-var _container3 = require('./extension/container');
+var _extension = require('./extension/extension');
 
-var _container4 = _interopRequireDefault(_container3);
-
-var _interface = require('./extension/interface');
-
-var _interface2 = _interopRequireDefault(_interface);
+var _extension2 = _interopRequireDefault(_extension);
 
 var _invalidArgument = require('../exception/invalid-argument');
 
@@ -60,8 +56,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var App = function (_Kernel) {
-  _inherits(App, _Kernel);
+var App = function (_ContainerAware) {
+  _inherits(App, _ContainerAware);
 
   /**
    * Constructor
@@ -137,7 +133,7 @@ var App = function (_Kernel) {
 
     /**
      * Extend application with extension
-     * @param {ExtensionInterface} extension
+     * @param {Extension} extension
      */
 
   }, {
@@ -166,7 +162,7 @@ var App = function (_Kernel) {
         for (var _iterator = this.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var extension = _step.value;
 
-          if (extension instanceof _container4.default) {
+          if (extension instanceof _extension2.default) {
             extension.setContainer(this.getContainer());
           }
           if (extension instanceof _module2.default) {
@@ -305,6 +301,6 @@ var App = function (_Kernel) {
   }]);
 
   return App;
-}(_kernel2.default);
+}(_containerAware2.default);
 
 exports.default = App;

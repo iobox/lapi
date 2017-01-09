@@ -6,9 +6,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _interface = require('./interface');
+var _extension = require('./extension');
 
-var _interface2 = _interopRequireDefault(_interface);
+var _extension2 = _interopRequireDefault(_extension);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28,7 +28,7 @@ var ExtensionManager = function () {
 
   /**
    * Return all extensions
-   * @returns {ExtensionInterface[]}
+   * @returns {Extension[]}
    */
 
 
@@ -40,7 +40,7 @@ var ExtensionManager = function () {
 
     /**
      * Set and replace all extensions
-     * @param {ExtensionInterface[]} extensions
+     * @param {Extension[]} extensions
      * @throws {Error} throw an Error if extensions is not an Array
      */
 
@@ -56,14 +56,14 @@ var ExtensionManager = function () {
 
     /**
      * Extend QueryManager with an extension
-     * @param {ExtensionInterface} extension
-     * @throws {Error} throw an Error if extension is not an instance of ExtensionInterface
+     * @param {Extension} extension
+     * @throws {Error} throw an Error if extension is not an instance of Extension
      */
 
   }, {
     key: 'extend',
     value: function extend(extension) {
-      if (extension instanceof _interface2.default) {
+      if (extension instanceof _extension2.default) {
         this._extensions.push(extension);
       } else {
         throw new Error('[Foundation/Extension/Manager#extend] extension must be an instance of Foundation/Extension/Interface');

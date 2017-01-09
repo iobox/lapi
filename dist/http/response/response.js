@@ -4,25 +4,19 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _body = require('./body');
-
-var _body2 = _interopRequireDefault(_body);
-
-var _message = require('./message');
+var _message = require('./../message');
 
 var _message2 = _interopRequireDefault(_message);
 
-var _header = require('./header');
+var _header = require('./../header');
 
 var _header2 = _interopRequireDefault(_header);
 
-var _invalidArgument = require('./exception/invalid-argument');
+var _notImplemented = require('../../exception/not-implemented');
 
-var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
+var _notImplemented2 = _interopRequireDefault(_notImplemented);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -45,7 +39,7 @@ var Response = function (_Message) {
    * @param {?Object} [header={}] Initial headers
    */
   function Response() {
-    var content = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var content = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
     var statusCode = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : Response.HTTP_OK;
     var header = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
@@ -53,15 +47,7 @@ var Response = function (_Message) {
 
     var _this = _possibleConstructorReturn(this, (Response.__proto__ || Object.getPrototypeOf(Response)).call(this));
 
-    if ((typeof content === 'undefined' ? 'undefined' : _typeof(content)) === 'object') {
-      _this.getBody().setContent(JSON.stringify(content));
-      _this.getBody().setContentType(_body2.default.CONTENT_JSON);
-    } else if (typeof content === 'string') {
-      _this.getBody().setContent(content);
-      _this.getBody().setContentType(_body2.default.CONTENT_HTML);
-    } else {
-      throw new _invalidArgument2.default('[Http/Response#constructor] content must be either an object or a string');
-    }
+    _this.getBody().setContent(content);
     _this.setStatusCode(statusCode);
     _this.getHeader().extend(header);
     return _this;
@@ -88,6 +74,28 @@ var Response = function (_Message) {
     key: 'setStatusCode',
     value: function setStatusCode(statusCode) {
       this._statusCode = statusCode;
+    }
+
+    /**
+     * Set body content
+     * @param {*} content
+     */
+
+  }, {
+    key: 'setContent',
+    value: function setContent(content) {
+      throw new _notImplemented2.default();
+    }
+
+    /**
+     * Get body content
+     * @returns {*}
+     */
+
+  }, {
+    key: 'getContent',
+    value: function getContent() {
+      throw new _notImplemented2.default();
     }
 
     /**

@@ -20,9 +20,9 @@ var _manager = require('../../foundation/extension/manager');
 
 var _manager2 = _interopRequireDefault(_manager);
 
-var _interface = require('./extension/interface');
+var _extension = require('./extension/extension');
 
-var _interface2 = _interopRequireDefault(_interface);
+var _extension2 = _interopRequireDefault(_extension);
 
 var _invalidArgument = require('../../exception/invalid-argument');
 
@@ -217,7 +217,7 @@ var Validator = function () {
             for (var _iterator = self.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
               var extension = _step.value;
               /* Loop through extensions */
-              if (extension instanceof _interface2.default) {
+              if (extension instanceof _extension2.default) {
                 /* Only process if extension is an instance of QueryExtensionInterface */
                 // Check whether or not appropriate key is registered, and it must be a name of extension's method
                 if (extension.register().indexOf(method) >= 0 && typeof extension[method] === 'function') {

@@ -365,7 +365,7 @@ var Request = function (_Message) {
     key: '_setUpUri',
     value: function _setUpUri(request, resource) {
       if (resource.url !== undefined) {
-        request.setUri(resource.url);
+        request.setUri('http://' + request.getHeader().get(_header2.default.HOST) + resource.url);
       }
     }
 
@@ -396,11 +396,11 @@ var Request = function (_Message) {
     value: function _setUpServer(request, resource) {
       if (resource.connection !== undefined) {
         var connection = resource.connection;
-        request.getClient().set(Request.SERVER_HOST, connection.address().address);
-        request.getClient().set(Request.SERVER_PORT, connection.address().port);
-        request.getClient().set(Request.ADDRESS_FAMILY, connection.address().family);
-        request.getClient().set(Request.LOCAL_HOST, connection.localAddress);
-        request.getClient().set(Request.LOCAL_PORT, connection.localPort);
+        request.getServer().set(Request.SERVER_HOST, connection.address().address);
+        request.getServer().set(Request.SERVER_PORT, connection.address().port);
+        request.getServer().set(Request.ADDRESS_FAMILY, connection.address().family);
+        request.getServer().set(Request.LOCAL_HOST, connection.localAddress);
+        request.getServer().set(Request.LOCAL_PORT, connection.localPort);
       }
     }
 

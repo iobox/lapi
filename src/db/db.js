@@ -1,25 +1,5 @@
 import NotImplementedException from '../exception/not-implemented'
 export default class Db {
-  constructor() {
-    this._db = null
-  }
-
-  /**
-   * Get connection
-   * @returns {*}
-   */
-  getConnection() {
-    return this._db
-  }
-
-  /**
-   * Set connection
-   * @param {*} db
-   */
-  setConnection(db) {
-    this._db = db
-  }
-
   /**
    * Open a new connection to database
    * @returns {Promise}
