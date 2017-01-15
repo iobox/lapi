@@ -6,10 +6,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _event = require('./event');
-
-var _event2 = _interopRequireDefault(_event);
-
 var _exception = require('../exception/exception');
 
 var _exception2 = _interopRequireDefault(_exception);
@@ -127,21 +123,21 @@ var EventListener = function () {
 
     /**
      * Callback function to be called right after event is fired and stopped completely
-     * @param {Event} event
+     * @param {Array} results Results of emitting process
      */
 
   }, {
     key: 'onComplete',
-    value: function onComplete(event) {}
+    value: function onComplete(results) {}
 
     /**
      * Callback function to be run if there is an error when processing event
-     * @param {Event} event An error may be acquired using event.getError
+     * @param {Error} error An error may be acquired using event.getError
      */
 
   }, {
     key: 'onError',
-    value: function onError(event) {}
+    value: function onError(error) {}
   }]);
 
   return EventListener;

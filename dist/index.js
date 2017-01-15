@@ -6,9 +6,9 @@ var _app = require('./foundation/app');
 
 var _app2 = _interopRequireDefault(_app);
 
-var _system = require('./foundation/extension/system');
+var _kernel = require('./foundation/extension/kernel');
 
-var _system2 = _interopRequireDefault(_system);
+var _kernel2 = _interopRequireDefault(_kernel);
 
 var _controller = require('./foundation/controller');
 
@@ -27,7 +27,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var app = new _app2.default();
-app.extend(new _system2.default());
+app.extend(new _kernel2.default());
 var options = {
   'server.port': 8080,
   'logger.driver': 'console',
@@ -47,7 +47,7 @@ var MyController = function (_Controller) {
   _createClass(MyController, [{
     key: 'getUserAction',
     value: function getUserAction() {
-      throw new _notFound2.default('This page could not be found!');
+      // throw new NotFoundException('This page could not be found!')
       return {
         user: this.getRequest().get('user'),
         email: this.getRequest().get('email')
@@ -73,7 +73,8 @@ app.get('/controller/action', null, {
 app.get('/hello/{user}', null, function () {
   var request = this.getRequest();
   return {
-    message: 'Hello ' + request.get('user') + '!'
+    message: 'Hello^ ' + request.get('user') + '!',
+    queries: request.getQuery().all()
   };
 });
 app.put('/hello', null, function () {

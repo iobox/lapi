@@ -1,4 +1,3 @@
-import Event from './event'
 import Exception from '../exception/exception'
 
 /**
@@ -86,15 +85,15 @@ export default class EventListener {
 
   /**
    * Callback function to be called right after event is fired and stopped completely
-   * @param {Event} event
+   * @param {Array} results Results of emitting process
    */
-  onComplete(event) {}
+  onComplete(results) {}
 
   /**
    * Callback function to be run if there is an error when processing event
-   * @param {Event} event An error may be acquired using event.getError
+   * @param {Error} error An error may be acquired using event.getError
    */
-  onError(event) {}
+  onError(error) {}
 }
 EventListener.LIMIT_NONE  = null
 EventListener.LIMIT_ONCE  = 1

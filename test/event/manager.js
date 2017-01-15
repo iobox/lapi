@@ -1,19 +1,17 @@
-import Event from '../../src/event/event'
 import EventManager from '../../src/event/manager'
 import EventListener from '../../src/event/listener'
 var expect = require('chai').expect
+var assert = require('assert')
 
 /** @test {EventManager} */
 describe('event/manager.js', () => {
   let em,
-      event,
       name = 'event_name',
-      func = (e, done) => {done()},
+      func = (args, next) => {next()},
       listener
   
   beforeEach(() => {
     em = new EventManager()
-    event = new Event(name)
     listener = new EventListener(func)
   })
 
@@ -42,62 +40,71 @@ describe('event/manager.js', () => {
   })
 
   /** @test {EventManager#emit} */
-  it('[emit] should ring the bell', () => {
+  it('[emit] should ring the bell', (done) => {
     let bell = {ring: false}
-    em.on(name, (e) => {e.bell.ring = true})
-    event.bell = bell
-    em.emit(event)
-    expect(bell.ring).to.be.true
+    em.on(name, (args, next) => {
+      args.get('bell').ring = true
+      next()
+    })
+    em.emit(name, {'bell' : bell})
+      .then(() => {
+        expect(bell.ring).to.be.true
+        done()
+      })
+      .catch((e) => {
+        done(e)
+      })
   })
 
   /** @test {EventManager#emit} */
-  it('[emit] run in parallel', () => {
-    event.parallel(true)
-    event.tasks = []
-    em.on(name, (e, done) => {
+  it('[emit] run in parallel', (done) => {
+    let tasks = []
+    em.on(name, (args, next) => {
       setTimeout(() => {
-        e.tasks.push(300)
-        done()
+        args.get('tasks').push(300)
+        next()
       }, 50)
-    }).complete((e) => {
-      expect(e.tasks).to.deep.equal([100, 300])
-    })
-
-    em.once(name, (e, done) => {
-      e.tasks.push(100)
+    }).complete(() => {
+      expect(tasks).to.deep.equal([100, 300])
       done()
     })
 
-    em.emit(event)
+    em.once(name, (args, next) => {
+      args.get('tasks').push(100)
+      next()
+    })
+
+    em.emit(name, {tasks: tasks}, false)
   })
 
-  it('[emit] run in series', () => {
-    event.parallel(false)
-    event.tasks = []
-    em.on(name, (e, done) => {
+  /** @test {EventManager#emit} */
+  it('[emit] run in series', (done) => {
+    let tasks = []
+    em.on(name, (args, next) => {
       setTimeout(() => {
-        e.tasks.push(300);
-        done()
+        args.get('tasks').push(300)
+        next()
       }, 150)
-    }).complete((e) => {
-      expect(e.tasks).to.deep.equal([300, 100])
+    }).complete(() => {
+      expect(tasks).to.deep.equal([300, 100])
+      done()
     })
   
-    em.once(name, (e, done) => {
+    em.once(name, (args, next) => {
       setTimeout(() => {
-        e.tasks.push(100);
-        done()
+        args.get('tasks').push(100);
+        next()
       }, 50)
     })
   
-    em.emit(event)
+    em.emit(name, {tasks: tasks}, true)
   })
 
   /** @test {EventManager#once} */
   it('[once] should register listener to run at once', () => {
     em.once(name, func)
     expect(em.getEvents().get(name).listeners.length).to.equal(1)
-    em.emit(event)
+    em.emit(name)
     expect(em.getEvents().get(name).listeners.length).to.equal(0)
   })
 
@@ -105,9 +112,9 @@ describe('event/manager.js', () => {
   it('[twice] should register listener to run twice', () => {
     em.twice(name, func)
     expect(em.getEvents().get(name).listeners.length).to.equal(1)
-    em.emit(event)
+    em.emit(name)
     expect(em.getEvents().get(name).listeners.length).to.equal(1)
-    em.emit(event)
+    em.emit(name)
     expect(em.getEvents().get(name).listeners.length).to.equal(0)
   })
 

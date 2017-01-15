@@ -12,10 +12,6 @@ var _bag = require('../bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
-var _body = require('../../http/body');
-
-var _body2 = _interopRequireDefault(_body);
-
 var _exception = require('../../exception/exception');
 
 var _exception2 = _interopRequireDefault(_exception);
@@ -72,10 +68,6 @@ var _manager = require('../../event/manager');
 
 var _manager2 = _interopRequireDefault(_manager);
 
-var _event = require('../../event/event');
-
-var _event2 = _interopRequireDefault(_event);
-
 var _console = require('../../logger/console');
 
 var _console2 = _interopRequireDefault(_console);
@@ -107,120 +99,16 @@ var Connection = function Connection(req, res) {
   this.res = res;
 };
 
-var ServerReadyEvent = function (_Event) {
-  _inherits(ServerReadyEvent, _Event);
+var KernelExtension = function (_ModuleExtension) {
+  _inherits(KernelExtension, _ModuleExtension);
 
-  function ServerReadyEvent(host, port) {
-    _classCallCheck(this, ServerReadyEvent);
+  function KernelExtension() {
+    _classCallCheck(this, KernelExtension);
 
-    var _this = _possibleConstructorReturn(this, (ServerReadyEvent.__proto__ || Object.getPrototypeOf(ServerReadyEvent)).call(this, 'http.server.ready', true));
-
-    _this.host = host;
-    _this.port = port;
-    return _this;
+    return _possibleConstructorReturn(this, (KernelExtension.__proto__ || Object.getPrototypeOf(KernelExtension)).apply(this, arguments));
   }
 
-  return ServerReadyEvent;
-}(_event2.default);
-
-var UnexpectedErrorEvent = function (_Event2) {
-  _inherits(UnexpectedErrorEvent, _Event2);
-
-  function UnexpectedErrorEvent(error) {
-    _classCallCheck(this, UnexpectedErrorEvent);
-
-    var _this2 = _possibleConstructorReturn(this, (UnexpectedErrorEvent.__proto__ || Object.getPrototypeOf(UnexpectedErrorEvent)).call(this, 'error', true));
-
-    _this2.error = error;
-    return _this2;
-  }
-
-  return UnexpectedErrorEvent;
-}(_event2.default);
-
-var BeforeActionEvent = function (_Event3) {
-  _inherits(BeforeActionEvent, _Event3);
-
-  /**
-   * Constructor
-   * @param {Controller} controller
-   */
-  function BeforeActionEvent(controller, action) {
-    _classCallCheck(this, BeforeActionEvent);
-
-    var _this3 = _possibleConstructorReturn(this, (BeforeActionEvent.__proto__ || Object.getPrototypeOf(BeforeActionEvent)).call(this, 'foundation.controller.action.before'));
-
-    _this3.controller = controller;
-    _this3.action = action;
-    return _this3;
-  }
-
-  return BeforeActionEvent;
-}(_event2.default);
-
-var BeforeSendResponseEvent = function (_Event4) {
-  _inherits(BeforeSendResponseEvent, _Event4);
-
-  /**
-   * Constructor
-   * @param {Response} response
-   * @param {Connection} conn
-   */
-  function BeforeSendResponseEvent(response, conn) {
-    _classCallCheck(this, BeforeSendResponseEvent);
-
-    var _this4 = _possibleConstructorReturn(this, (BeforeSendResponseEvent.__proto__ || Object.getPrototypeOf(BeforeSendResponseEvent)).call(this, 'http.response.send.before'));
-
-    _this4.response = response;
-    _this4.conn = conn;
-    return _this4;
-  }
-
-  return BeforeSendResponseEvent;
-}(_event2.default);
-
-var SystemErrorEvent = function (_Event5) {
-  _inherits(SystemErrorEvent, _Event5);
-
-  function SystemErrorEvent(error, conn) {
-    _classCallCheck(this, SystemErrorEvent);
-
-    var _this5 = _possibleConstructorReturn(this, (SystemErrorEvent.__proto__ || Object.getPrototypeOf(SystemErrorEvent)).call(this, 'system.error', true));
-
-    _this5.error = error;
-    _this5.conn = conn;
-    return _this5;
-  }
-
-  return SystemErrorEvent;
-}(_event2.default);
-
-var IncomingRequestExceptionEvent = function (_Event6) {
-  _inherits(IncomingRequestExceptionEvent, _Event6);
-
-  function IncomingRequestExceptionEvent(exception, conn) {
-    _classCallCheck(this, IncomingRequestExceptionEvent);
-
-    var _this6 = _possibleConstructorReturn(this, (IncomingRequestExceptionEvent.__proto__ || Object.getPrototypeOf(IncomingRequestExceptionEvent)).call(this, 'http.request.exception'));
-
-    _this6.exception = exception;
-    _this6.conn = conn;
-    return _this6;
-  }
-
-  return IncomingRequestExceptionEvent;
-}(_event2.default);
-
-var SystemExtension = function (_ModuleExtension) {
-  _inherits(SystemExtension, _ModuleExtension);
-
-  function SystemExtension() {
-    _classCallCheck(this, SystemExtension);
-
-    return _possibleConstructorReturn(this, (SystemExtension.__proto__ || Object.getPrototypeOf(SystemExtension)).apply(this, arguments));
-  }
-
-  _createClass(SystemExtension, [{
+  _createClass(KernelExtension, [{
     key: 'getName',
     value: function getName() {
       return 'foundation.extension.module.system';
@@ -233,10 +121,10 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUp',
     value: function setUp() {
-      var _this8 = this;
+      var _this2 = this;
 
       this.setUpEvents().then(this.setUpLogger()).then(this.setUpRouter()).then(this.setUpServer()).catch(function (e) {
-        return _this8.handleSetUpError(e);
+        return _this2.handleSetUpError(e);
       });
     }
 
@@ -296,21 +184,22 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpEvents',
     value: function setUpEvents() {
-      var _this9 = this;
+      var _this3 = this;
 
       return new Promise(function (resolve, reject) {
         try {
           (function () {
             var events = new _manager2.default();
-            var self = _this9;
+            var self = _this3;
             events.on('error', function (event) {
               self.getLogger().write(_interface2.default.TYPE_ERROR, event.error.message);
             });
-            events.on('http.server.ready', function (event) {
-              console.log('[info] Server is started at ' + event.host + ':' + event.port);
+            events.on('http.server.ready', function (args, next) {
+              console.log('[info] Server is started at ' + args.get('host') + ':' + args.get('port'));
+              next();
             });
 
-            _this9.getContainer().set('events', events);
+            _this3.getContainer().set('events', events);
             resolve(events);
           })();
         } catch (e) {
@@ -326,13 +215,13 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpLogger',
     value: function setUpLogger() {
-      var _this10 = this;
+      var _this4 = this;
 
       return new Promise(function (resolve, reject) {
         var logger = null;
-        var driver = _this10.getOptions().get('logger.driver', null);
+        var driver = _this4.getOptions().get('logger.driver', null);
         if (driver) {
-          var options = _this10.getOptions().get('logger.options', null);
+          var options = _this4.getOptions().get('logger.options', null);
           switch (driver) {
             case 'file':
               logger = new _file2.default(options);
@@ -346,9 +235,9 @@ var SystemExtension = function (_ModuleExtension) {
           }
         }
         if (logger instanceof _interface2.default) {
-          _this10.getContainer().set('logger', logger);
+          _this4.getContainer().set('logger', logger);
         } else {
-          _this10.getContainer().set('logger', new _interface2.default());
+          _this4.getContainer().set('logger', new _interface2.default());
         }
         resolve(logger);
       });
@@ -361,13 +250,17 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpRouter',
     value: function setUpRouter() {
-      var _this11 = this;
+      var _this5 = this;
 
       return new Promise(function (resolve, reject) {
-        var routes = _this11.getOptions().get('routes', []),
-            router = new _router2.default(routes);
-        _this11.getContainer().set('http.router', router);
-        resolve(router);
+        try {
+          var routes = _this5.getOptions().get('routes', []),
+              router = new _router2.default(routes);
+          _this5.getContainer().set('http.router', router);
+          resolve(router);
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 
@@ -378,18 +271,18 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'setUpServer',
     value: function setUpServer() {
-      var _this12 = this;
+      var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        var protocol = _this12.getOptions().get('server.protocol', 'http');
+        var protocol = _this6.getOptions().get('server.protocol', 'http');
         var server = null;
         try {
           if (protocol === 'https') {
             // set up HTTPS server
-            server = _this12._setUpServerHttps();
+            server = _this6._setUpServerHttps();
           } else {
             // set up HTTP server
-            server = _this12._setUpServerHttp();
+            server = _this6._setUpServerHttp();
           }
         } catch (e) {
           reject(e);
@@ -400,9 +293,9 @@ var SystemExtension = function (_ModuleExtension) {
             socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
           });
           server.on('request', function (req, res) {
-            _this12.handleIncomingRequest(req, res);
+            return _this6.handleRequest(req, res);
           });
-          _this12.handleOutgoingResponse();
+          _this6.bindEvents();
           resolve(server);
         } else {
           reject(new _internalError2.default('Unable to set up a server'));
@@ -419,13 +312,16 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: '_setUpServerHttp',
     value: function _setUpServerHttp() {
-      var _this13 = this;
+      var _this7 = this;
 
       var host = this.getOptions().get('server.host', null);
       var port = this.getOptions().get('server.port', 80);
       var backlog = this.getOptions().get('server.backlog', 511);
       return http.createServer().listen(port, host, backlog, function () {
-        _this13.getEvents().emit(new ServerReadyEvent(host, port));
+        _this7.getEvents().emit('http.server.ready', {
+          host: host,
+          port: port
+        });
       });
     }
 
@@ -438,7 +334,7 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: '_setUpServerHttps',
     value: function _setUpServerHttps() {
-      var _this14 = this;
+      var _this8 = this;
 
       var host = this.getOptions().get('server.host', null);
       var port = this.getOptions().get('server.port', 443);
@@ -450,7 +346,10 @@ var SystemExtension = function (_ModuleExtension) {
         key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
         cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
       }).listen(port, host, backlog, function () {
-        _this14.getEvents().emit(new ServerReadyEvent(host, port));
+        _this8.getEvents().emit('http.server.ready', {
+          host: host,
+          port: port
+        });
       });
     }
   }, {
@@ -469,44 +368,37 @@ var SystemExtension = function (_ModuleExtension) {
      * @param {http.IncomingRequest|https.IncomingRequest} req
      * @param {http.ServerResponse|https.ServerResponse} res
      * @throws {InternalErrorException} throws an exception when controller or action is not defined
-     *
-     * @emits http.request.before emits an event before performing controller's action
-     * @emits http.request.after emits an event after performing controller's action
-     * @emits http.response.send emits an event to send response if there is no errors
-     * @emits http.request.not_found emits an event when no matched routes is found
-     * @emits http.request.exception emits an event when an exception is thrown
-     * @emits system.error emits an event when there is an unexpected error
      */
 
   }, {
-    key: 'handleIncomingRequest',
-    value: function handleIncomingRequest(req, res) {
-      var _this15 = this;
+    key: 'handleRequest',
+    value: function handleRequest(req, res) {
+      var _this9 = this;
 
       var conn = new Connection(req, res);
       var request = null;
 
       this.initRequest(conn).then(function (req) {
         request = req;
-        return _this15.routeRequest(request);
+        return _this9.routeRequest(request);
       }).then(function (route) {
-        return _this15.dispatchRequest(route, request);
+        return _this9.dispatchRequest(route, request);
       }).then(function (response) {
-        return _this15.sendResponse(response, conn);
+        return _this9.sendResponse(response, conn);
       }).catch(function (e) {
-        return _this15.handleError(e, conn, request);
+        return _this9.handleRequestError(e, conn, request);
       });
     }
   }, {
     key: 'initRequest',
     value: function initRequest(conn) {
-      var _this16 = this;
+      var _this10 = this;
 
       return new Promise(function (resolve, reject) {
         try {
           (function () {
             var request = _request2.default.from(conn.req);
-            request.getUri().set(_request2.default.URI_PROTOCOL, _this16.getOptions().get('server.protocol', 'http'));
+            request.getUri().set(_request2.default.URI_PROTOCOL, _this10.getOptions().get('server.protocol', 'http'));
             if (request.getMethod() === _request2.default.METHOD_GET) {
               resolve(request);
             } else {
@@ -542,11 +434,11 @@ var SystemExtension = function (_ModuleExtension) {
   }, {
     key: 'routeRequest',
     value: function routeRequest(request) {
-      var _this17 = this;
+      var _this11 = this;
 
       return new Promise(function (resolve, reject) {
         try {
-          var router = _this17.getContainer().get('http.router'),
+          var router = _this11.getContainer().get('http.router'),
               route = router.route(request);
 
           if (route instanceof _route2.default) {
@@ -565,36 +457,40 @@ var SystemExtension = function (_ModuleExtension) {
      * @param {Route} route
      * @param {Request} request
      * @returns {Promise}
+     * @emits foundation.controller.action.before
      */
 
   }, {
     key: 'dispatchRequest',
     value: function dispatchRequest(route, request) {
-      var _this18 = this;
+      var _this12 = this;
 
       return new Promise(function (resolve, reject) {
         var response = new _json2.default();
         var controller = route.getOptions().get('controller');
         if (controller instanceof _controller2.default) {
-          var action = route.getOptions().get('action');
-          if (action === null || action === '' || typeof action === 'string' && typeof controller[action] !== 'function') {
-            reject(new _internalError2.default('action is not defined in controller', null, {
-              'request': request,
-              'response': response,
-              'route': route
-            }));
-          }
+          (function () {
+            var action = route.getOptions().get('action');
+            if (action === null || action === '' || typeof action === 'string' && typeof controller[action] !== 'function') {
+              reject(new _internalError2.default('action is not defined in controller', null, {
+                'request': request,
+                'response': response,
+                'route': route
+              }));
+            }
 
-          controller.setContainer(_this18.getContainer());
-          controller.setRequest(request);
-          controller.setResponse(response);
-          controller.setRoute(route);
+            controller.setContainer(_this12.getContainer());
+            controller.setRequest(request);
+            controller.setResponse(response);
+            controller.setRoute(route);
 
-          var onBeforeActionEventEmitted = function onBeforeActionEventEmitted(event) {
-            var result = null,
-                controller = event.controller,
-                action = event.action;
-            try {
+            _this12.getEvents().emit('foundation.controller.action.before', {
+              controller: controller,
+              action: action,
+              request: request,
+              route: route
+            }).then(function () {
+              var result = null;
               if (typeof action === 'function') {
                 result = controller.action(action);
               } else {
@@ -602,21 +498,17 @@ var SystemExtension = function (_ModuleExtension) {
               }
               if (result instanceof Promise) {
                 result.then(function (result) {
-                  _this18.handleActionResult(result, controller);
+                  _this12.handleActionResult(result, controller);
                   resolve(controller.getResponse());
                 }).catch(function (e) {
                   reject(e);
                 });
               } else {
-                _this18.handleActionResult(result, controller);
+                _this12.handleActionResult(result, controller);
                 resolve(controller.getResponse());
               }
-            } catch (e) {
-              reject(e);
-            }
-          };
-
-          _this18.getEvents().emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted);
+            }).catch(reject);
+          })();
         } else {
           reject(new _internalError2.default('[Foundation/Extension/SystemExtension#dispatchRequest] controller is not defined or not an instance of Foundation/Controller', null, {
             'request': request,
@@ -647,99 +539,131 @@ var SystemExtension = function (_ModuleExtension) {
         throw new _internalError2.default('[Foundation/Extension/SystemExtension#handleActionResult] result has unexpected format');
       }
     }
+
+    /**
+     * Send response to client
+     * @param {Response} response
+     * @param {Connection} conn
+     * @returns {Promise}
+     * @emits {string} emits event "http.response.send.before"
+     */
+
   }, {
     key: 'sendResponse',
     value: function sendResponse(response, conn) {
-      var _this19 = this;
+      var _this13 = this;
 
       return new Promise(function (resolve, reject) {
-        _this19.getEvents().emit(new BeforeSendResponseEvent(response, conn), function (event) {
+        _this13.getEvents().emit('http.response.send.before', {
+          response: response,
+          conn: conn
+        }).then(function () {
           try {
-            event.response.send(event.conn.res);
-            resolve(event.response);
+            response.send(conn.res);
+            resolve(response);
           } catch (e) {
-            reject(e);
+            _this13.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
+            conn.res.end('');
           }
+        }).catch(function (e) {
+          return reject(e);
         });
       });
     }
 
     /**
-     * Handle errors
+     * Handle request errors
      * @param {Error|Exception} e
      * @param {Connection} conn
      * @param {?Request} [request=null]
+     * @emits http.request.exception
+     * @emits system.error
      */
 
   }, {
-    key: 'handleError',
-    value: function handleError(e, conn) {
+    key: 'handleRequestError',
+    value: function handleRequestError(e, conn) {
       var request = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
       if (e instanceof _exception2.default) {
-        this.getEvents().emit(new IncomingRequestExceptionEvent(e, conn));
+        this.getEvents().emit('http.request.exception', {
+          exception: e,
+          conn: conn
+        });
       } else if (e instanceof Error) {
-        this.getEvents().emit(new SystemErrorEvent(new _internalError2.default(e.message, null, {
-          request: request
-        }), conn));
+        this.getEvents().emit('system.error', {
+          exception: new _internalError2.default(e.message, null, {
+            request: request
+          }),
+          conn: conn
+        });
       }
     }
 
     /**
-     * Handle outgoing response
-     * @listens {SystemErrorEvent} listens for any errors
-     * @listens {IncomingRequestExceptionEvent} listens for exception from handling request
+     * Bind events
+     * @listens foundation.controller.action.before
+     * @listens system.error
+     * @listens http.request.exception
      */
 
   }, {
-    key: 'handleOutgoingResponse',
-    value: function handleOutgoingResponse() {
-      var _this20 = this;
+    key: 'bindEvents',
+    value: function bindEvents() {
+      var _this14 = this;
 
-      this.getEvents().on('system.error', function (event, done) {
+      this.getEvents().on('foundation.controller.action.before', function (args, next) {
+        var request = args.get('request'),
+            route = args.get('route');
+        _this14.getLogger().write(_interface2.default.TYPE_INFO, request.getMethod() + ' ' + request.getPath() + ' ' + request.getQuery().toString() + ' matches ' + route.getName(), [route.getMatches()]);
+        next();
+      });
+      this.getEvents().on('system.error', function (args, next) {
         var response = new _json2.default({
           message: 'Oops! There is something wrong.'
         }, _response2.default.HTTP_INTERNAL_ERROR);
         var traces = [];
-        if (event.error instanceof _internalError2.default && event.error.has('request')) {
-          var request = event.error.get('request');
+        var exception = args.get('exception');
+        if (exception instanceof _internalError2.default && exception.has('request')) {
+          var request = exception.get('request');
           if (request instanceof _request2.default) {
             traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
           }
         }
-        _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.error.getMessage(), traces);
-        _this20.sendResponse(response, event.conn);
-        done();
+        _this14.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), traces);
+        _this14.sendResponse(response, args.get('conn'));
+        next();
       });
-      this.getEvents().on('http.request.exception', function (event, done) {
+      this.getEvents().on('http.request.exception', function (args, next) {
         var response = null;
-        if (event.exception instanceof _internalError2.default) {
+        var exception = args.get('exception');
+        if (exception instanceof _internalError2.default) {
           response = new _json2.default({
             error: {
-              message: event.exception.getMessage()
+              message: exception.getMessage()
             }
           }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.getMessage(), [event.exception.getArguments().all()]);
-        } else if (event.exception instanceof _http2.default) {
-          response = new _response2.default({
+          _this14.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), [exception.getArguments().all()]);
+        } else if (exception instanceof _http2.default) {
+          response = new _json2.default({
             error: {
-              code: event.exception.getCode(),
-              message: event.exception.getMessage()
+              code: exception.getCode(),
+              message: exception.getMessage()
             }
-          }, event.exception.getStatusCode());
-        } else if (event.exception instanceof Error) {
-          _this20.getLogger().write(_interface2.default.TYPE_ERROR, event.exception.message);
+          }, exception.getStatusCode());
+        } else if (exception instanceof Error) {
+          _this14.getLogger().write(_interface2.default.TYPE_ERROR, exception.message);
         }
 
         if (response instanceof _response2.default) {
-          _this20.sendResponse(response, event.conn);
+          _this14.sendResponse(response, args.get('conn'));
         }
-        done();
+        next();
       });
     }
   }]);
 
-  return SystemExtension;
+  return KernelExtension;
 }(_module2.default);
 
-exports.default = SystemExtension;
+exports.default = KernelExtension;

@@ -34,8 +34,7 @@ var JsonResponse = function (_Response) {
 
     var _this = _possibleConstructorReturn(this, (JsonResponse.__proto__ || Object.getPrototypeOf(JsonResponse)).call(this, '', statusCode, header));
 
-    _this.getBody().setContent(JSON.stringify(data));
-    _this.getBody().setContentType(_body2.default.CONTENT_JSON);
+    _this.setContent(data);
     return _this;
   }
 
@@ -48,6 +47,7 @@ var JsonResponse = function (_Response) {
   _createClass(JsonResponse, [{
     key: 'setContent',
     value: function setContent(content) {
+      this.getBody().setContentType(_body2.default.CONTENT_JSON);
       this.getBody().setContent(JSON.stringify(content));
     }
 

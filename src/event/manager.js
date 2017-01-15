@@ -1,45 +1,8 @@
 import async from 'async'
-import Event from './event'
 import Bag from '../foundation/bag'
 import EventListener from './listener'
 import Exception from '../exception/exception'
 import InvalidArgumentException from '../exception/invalid-argument'
-
-/**
- * Handle event when asynchronous calls have been completed
- * @param {Event} event Current running event
- * @param {Exception} err A string represent for error
- * @param {Array} results An array of results of tasks
- */
-function onAsyncCompleted(event, err, results) {
-  let events = this.getEvents().get(event.getName()),
-      listeners = events.listeners,
-      listener = null, limit = null
-
-  for (let i = 0; i < listeners.length; i++) {
-    listener = listeners[i], limit = listener.getLimit()
-
-    if (limit !== EventListener.LIMIT_NONE) {
-      // reduce listener's limit
-      events.listeners[i].setLimit(--limit)
-    }
-    
-    if (err) {
-      // there is an expected error when running tasks in parallel/series
-      event.setError(err)
-      listener.onError(event)
-    } else {
-      // it seems to be fine, set results if any to event
-      event.setResults(results)
-      listener.onComplete(event)
-    }
-
-    if (limit === 0) {
-      // remove this listener
-      removeEventListener.apply(this, [event.getName(), i])
-    }
-  }
-}
 
 /**
  * Get structure of an event item
@@ -52,15 +15,6 @@ const getEventItem = (listeners = [], sorted = false) => {
     listeners: listeners,
     sorted: sorted
   }
-}
-
-/**
- * Remove a listener by name and position
- * @param {string} name Name of event
- * @param {number} position Position of the listener in queue
- */
-function removeEventListener(name, position) {
-  this.getEvents().get(name).listeners.splice(position, 1)
 }
 
 class CallableEventListener extends EventListener {
@@ -98,15 +52,15 @@ class CallableEventListener extends EventListener {
     this._onError = onError
   }
 
-  onComplete(event) {
+  onComplete(results) {
     if (this._onComplete) {
-      this._onComplete(event)
+      this._onComplete(results)
     }
   }
 
-  onError(event) {
+  onError(error) {
     if (this._onError) {
-      this._onError(event)
+      this._onError(error)
     }
   }
 }
@@ -238,7 +192,7 @@ export default class EventManager {
       for (let i = 0; i < listeners.length; i++) {
         let listener = listeners[i]
         if (listener.getPriority() === priority) {
-          removeEventListener.apply(this, [name, i])
+          listeners.splice(i, 1)
         }
       }
     } else {
@@ -272,7 +226,7 @@ export default class EventManager {
       }
 
       if (i !== pos) {
-        temporary = events.listeners[i]
+        temporary             = events.listeners[i]
         events.listeners[i]   = events.listeners[pos]
         events.listeners[pos] = temporary
       }
@@ -282,18 +236,25 @@ export default class EventManager {
   /**
    * Emit (Fire) an event
    *
-   * @param {Event} event Event to be fired
-   * @param {null|function} done A callback when event is emitted
+   * @param {string} name Event's name to be fired
+   * @param {Bag|Object} parameters Parameters for event
+   * @param {boolean} [series=false] Run listeners in series or parallel
+   * @returns {Promise}
    */
-  emit(event, done = null) {
-    if (!(event instanceof Event)) {
-      throw new Error(`[Event/EventManager#emit] event must be an instance of Event`)
-    }
-    const name = event.getName()
+  emit(name, parameters = null, series = false) {
     if (!this.getEvents().has(name)) {
       this.getEvents().set(name, getEventItem())
     } else {
       this.sort(name)
+    }
+    if (parameters === undefined || parameters === null) {
+      parameters = new Bag()
+    } else if (typeof parameters === 'object') {
+      if (!(parameters instanceof Bag)) {
+        parameters = new Bag(parameters)
+      }
+    } else {
+      throw new InvalidArgumentException('[Event/EventManager#emit] args must be an instance of Bag or an object')
     }
 
     let listeners = this.getEvents().get(name).listeners
@@ -302,26 +263,67 @@ export default class EventManager {
     for (let i = 0; i < total; i++) {
       // Set a callback function to allow listener to add its result to final results
       // which is an array and processed as a third parameter after all tasks are run
-      parallels.push((callback) => listeners[i].getRunner()(event, callback))
+      parallels.push((next) => listeners[i].getRunner()(parameters, next))
     }
 
     // run tasks
-    if (parallels.length) {
-      const onComplete = (err, results) => {
-        onAsyncCompleted.apply(this, [event, err, results])
-        if (done) done(event)
-      }
-      if (event.isParallel() === true) {
-        async.parallel(parallels, (err, results) => {
-          onComplete(err, results)
-        })
+    return new Promise((resolve, reject) => {
+      if (parallels.length) {
+        try {
+          const args = [parallels, (err, results) => {
+            this._onAsyncCompleted(name, err, results)
+            if (err) {
+              reject(err)
+            } else {
+              resolve(results)
+            }
+          }]
+          if (series === true) {
+            async.series.apply(this, args)
+          } else {
+            async.parallel.apply(this, args)
+          }
+        } catch (e) {
+          reject(e)
+        }
       } else {
-        async.series(parallels, (err, results) => {
-          onComplete(err, results)
-        })
+        resolve()
       }
-    } else {
-      if (done) done(event)
+    })
+  }
+
+  /**
+   * Handle event when asynchronous calls have been completed
+   * @param {string} name Event's name
+   * @param {Exception} err A string represent for error
+   * @param {Array} results An array of results of tasks
+   * @private
+   */
+  _onAsyncCompleted(name, err, results) {
+    let event                  = this.getEvents().get(name),
+        listeners              = event.listeners,
+        listener = null, limit = null
+
+    for (let i = 0; i < listeners.length; i++) {
+      listener = listeners[i], limit = listener.getLimit()
+
+      if (limit !== EventListener.LIMIT_NONE) {
+        // reduce listener's limit
+        event.listeners[i].setLimit(--limit)
+      }
+
+      if (err) {
+        // there is an expected error when running tasks in parallel/series
+        listener.onError(err)
+      } else {
+        // it seems to be fine, set results if any to event
+        listener.onComplete(results)
+      }
+
+      if (limit === 0) {
+        // remove this listener
+        event.listeners.splice(i, 1)
+      }
     }
   }
 }

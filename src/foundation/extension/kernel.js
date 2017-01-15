@@ -1,5 +1,4 @@
 import Bag from '../bag'
-import Body from '../../http/body'
 import Exception from '../../exception/exception'
 import Header from '../../http/header'
 import Controller from '../controller'
@@ -14,7 +13,6 @@ import LoggerInterface from '../../logger/interface'
 import HttpException from '../../http/exception/http'
 import NotFoundException from '../../http/exception/not-found'
 import EventManager from '../../event/manager'
-import Event from '../../event/event'
 import ConsoleLogger from '../../logger/console'
 import JsonResponse from '../../http/response/json'
 
@@ -32,58 +30,7 @@ class Connection {
   }
 }
 
-class ServerReadyEvent extends Event {
-  constructor(host, port) {
-    super('http.server.ready', true)
-    this.host = host
-    this.port = port
-  }
-}
-class UnexpectedErrorEvent extends Event {
-  constructor(error) {
-    super('error', true)
-    this.error = error
-  }
-}
-class BeforeActionEvent extends Event {
-  /**
-   * Constructor
-   * @param {Controller} controller
-   */
-  constructor(controller, action) {
-    super('foundation.controller.action.before')
-    this.controller = controller
-    this.action = action
-  }
-}
-class BeforeSendResponseEvent extends Event {
-  /**
-   * Constructor
-   * @param {Response} response
-   * @param {Connection} conn
-   */
-  constructor(response, conn) {
-    super('http.response.send.before')
-    this.response = response
-    this.conn = conn
-  }
-}
-class SystemErrorEvent extends Event {
-  constructor(error, conn) {
-    super('system.error', true)
-    this.error = error
-    this.conn = conn
-  }
-}
-class IncomingRequestExceptionEvent extends Event {
-  constructor(exception, conn) {
-    super('http.request.exception')
-    this.exception = exception
-    this.conn = conn
-  }
-}
-
-export default class SystemExtension extends ModuleExtension {
+export default class KernelExtension extends ModuleExtension {
   getName() {
     return 'foundation.extension.module.system'
   }
@@ -150,8 +97,9 @@ export default class SystemExtension extends ModuleExtension {
         events.on('error', (event) => {
           self.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.message)
         })
-        events.on('http.server.ready', (event) => {
-          console.log(`[info] Server is started at ${event.host}:${event.port}`)
+        events.on('http.server.ready', (args, next) => {
+          console.log(`[info] Server is started at ${args.get('host')}:${args.get('port')}`)
+          next()
         })
 
         this.getContainer().set('events', events)
@@ -197,10 +145,14 @@ export default class SystemExtension extends ModuleExtension {
    */
   setUpRouter() {
     return new Promise((resolve, reject) => {
-      const routes = this.getOptions().get('routes', []),
-            router = new Router(routes)
-      this.getContainer().set('http.router', router)
-      resolve(router)
+      try {
+        const routes = this.getOptions().get('routes', []),
+              router = new Router(routes)
+        this.getContainer().set('http.router', router)
+        resolve(router)
+      } catch (e) {
+        reject(e)
+      }
     })
   }
 
@@ -227,10 +179,8 @@ export default class SystemExtension extends ModuleExtension {
         server.on('clientError', (err, socket) => {
           socket.end('HTTP/1.1 400 Bad Request\r\n\r\n')
         })
-        server.on('request', (req, res) => {
-          this.handleIncomingRequest(req, res)
-        })
-        this.handleOutgoingResponse()
+        server.on('request', (req, res) => this.handleRequest(req, res))
+        this.bindEvents()
         resolve(server)
       } else {
         reject(new InternalErrorException('Unable to set up a server'))
@@ -249,7 +199,10 @@ export default class SystemExtension extends ModuleExtension {
     const backlog = this.getOptions().get('server.backlog', 511)
     return http.createServer()
                .listen(port, host, backlog, () => {
-                 this.getEvents().emit(new ServerReadyEvent(host, port))
+                 this.getEvents().emit('http.server.ready', {
+                   host: host,
+                   port: port
+                 })
                })
   }
 
@@ -270,7 +223,10 @@ export default class SystemExtension extends ModuleExtension {
                   cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
                 })
                 .listen(port, host, backlog, () => {
-                  this.getEvents().emit(new ServerReadyEvent(host, port))
+                  this.getEvents().emit('http.server.ready', {
+                    host: host,
+                    port: port
+                  })
                 })
   }
 
@@ -288,15 +244,8 @@ export default class SystemExtension extends ModuleExtension {
    * @param {http.IncomingRequest|https.IncomingRequest} req
    * @param {http.ServerResponse|https.ServerResponse} res
    * @throws {InternalErrorException} throws an exception when controller or action is not defined
-   *
-   * @emits http.request.before emits an event before performing controller's action
-   * @emits http.request.after emits an event after performing controller's action
-   * @emits http.response.send emits an event to send response if there is no errors
-   * @emits http.request.not_found emits an event when no matched routes is found
-   * @emits http.request.exception emits an event when an exception is thrown
-   * @emits system.error emits an event when there is an unexpected error
    */
-  handleIncomingRequest(req, res) {
+  handleRequest(req, res) {
     const conn  = new Connection(req, res)
     let request = null
 
@@ -307,7 +256,7 @@ export default class SystemExtension extends ModuleExtension {
       })
       .then((route) => this.dispatchRequest(route, request))
       .then((response) => this.sendResponse(response, conn))
-      .catch((e) => this.handleError(e, conn, request))
+      .catch((e) => this.handleRequestError(e, conn, request))
   }
 
   initRequest(conn) {
@@ -365,6 +314,7 @@ export default class SystemExtension extends ModuleExtension {
    * @param {Route} route
    * @param {Request} request
    * @returns {Promise}
+   * @emits foundation.controller.action.before
    */
   dispatchRequest(route, request) {
     return new Promise((resolve, reject) => {
@@ -385,34 +335,33 @@ export default class SystemExtension extends ModuleExtension {
         controller.setResponse(response)
         controller.setRoute(route)
 
-        const onBeforeActionEventEmitted = (event) => {
-          let result = null,
-              controller = event.controller,
-              action = event.action
-          try {
-            if (typeof action === 'function') {
-              result = controller.action(action)
-            } else {
-              result = controller[action]()
-            }
-            if (result instanceof Promise) {
-              result.then((result) => {
+        this.getEvents()
+            .emit('foundation.controller.action.before', {
+              controller: controller,
+              action: action,
+              request: request,
+              route: route
+            })
+            .then(() => {
+              let result = null
+              if (typeof action === 'function') {
+                result = controller.action(action)
+              } else {
+                result = controller[action]()
+              }
+              if (result instanceof Promise) {
+                result.then((result) => {
+                  this.handleActionResult(result, controller)
+                  resolve(controller.getResponse())
+                }).catch((e) => {
+                  reject(e)
+                })
+              } else {
                 this.handleActionResult(result, controller)
                 resolve(controller.getResponse())
-              }).catch((e) => {
-                reject(e)
-              })
-            } else {
-              this.handleActionResult(result, controller)
-              resolve(controller.getResponse())
-            }
-          } catch (e) {
-            reject(e)
-          }
-        }
-
-        this.getEvents()
-            .emit(new BeforeActionEvent(controller, action), onBeforeActionEventEmitted)
+              }
+            })
+            .catch(reject)
       } else {
         reject(new InternalErrorException('[Foundation/Extension/SystemExtension#dispatchRequest] controller is not defined or not an instance of Foundation/Controller', null, {
           'request': request,
@@ -441,49 +390,78 @@ export default class SystemExtension extends ModuleExtension {
     }
   }
 
+  /**
+   * Send response to client
+   * @param {Response} response
+   * @param {Connection} conn
+   * @returns {Promise}
+   * @emits {string} emits event "http.response.send.before"
+   */
   sendResponse(response, conn) {
     return new Promise((resolve, reject) => {
       this.getEvents()
-        .emit(new BeforeSendResponseEvent(response, conn), (event) => {
+        .emit('http.response.send.before', {
+          response: response,
+          conn: conn
+        })
+        .then(() => {
           try {
-            event.response.send(event.conn.res)
-            resolve(event.response)
-          } catch (e) {
-            reject(e)
+            response.send(conn.res)
+            resolve(response)
+          } catch(e) {
+            this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+            conn.res.end('')
           }
         })
+        .catch(e => reject(e))
     })
   }
 
   /**
-   * Handle errors
+   * Handle request errors
    * @param {Error|Exception} e
    * @param {Connection} conn
    * @param {?Request} [request=null]
+   * @emits http.request.exception
+   * @emits system.error
    */
-  handleError(e, conn, request = null) {
+  handleRequestError(e, conn, request = null) {
     if (e instanceof Exception) {
-      this.getEvents().emit(new IncomingRequestExceptionEvent(e, conn))
+      this.getEvents().emit('http.request.exception', {
+        exception: e,
+        conn: conn
+      })
     } else if (e instanceof Error) {
-      this.getEvents().emit(new SystemErrorEvent(new InternalErrorException(e.message, null, {
-        request: request
-      }), conn))
+      this.getEvents().emit('system.error', {
+        exception: new InternalErrorException(e.message, null, {
+          request: request
+        }),
+        conn: conn
+      })
     }
   }
 
   /**
-   * Handle outgoing response
-   * @listens {SystemErrorEvent} listens for any errors
-   * @listens {IncomingRequestExceptionEvent} listens for exception from handling request
+   * Bind events
+   * @listens foundation.controller.action.before
+   * @listens system.error
+   * @listens http.request.exception
    */
-  handleOutgoingResponse() {
-    this.getEvents().on('system.error', (event, done) => {
+  bindEvents() {
+    this.getEvents().on('foundation.controller.action.before', (args, next) => {
+      const request = args.get('request'),
+            route   = args.get('route')
+      this.getLogger().write(LoggerInterface.TYPE_INFO, `${request.getMethod()} ${request.getPath()} ${request.getQuery().toString()} matches ${route.getName()}`, [route.getMatches()])
+      next()
+    })
+    this.getEvents().on('system.error', (args, next) => {
       let response = new JsonResponse({
         message: 'Oops! There is something wrong.'
       }, Response.HTTP_INTERNAL_ERROR)
       let traces = []
-      if (event.error instanceof InternalErrorException && event.error.has('request')) {
-        const request = event.error.get('request')
+      const exception = args.get('exception')
+      if (exception instanceof InternalErrorException && exception.has('request')) {
+        const request = exception.get('request')
         if (request instanceof Request) {
           traces = [
             `(Request.URI) ${request.getMethod()} ${request.getPath()}`,
@@ -492,38 +470,39 @@ export default class SystemExtension extends ModuleExtension {
           ]
         }
       }
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, event.error.getMessage(), traces)
-      this.sendResponse(response, event.conn)
-      done()
+      this.getLogger().write(LoggerInterface.TYPE_ERROR, exception.getMessage(), traces)
+      this.sendResponse(response, args.get('conn'))
+      next()
     })
-    this.getEvents().on('http.request.exception', (event, done) => {
+    this.getEvents().on('http.request.exception', (args, next) => {
       let response = null
-      if (event.exception instanceof InternalErrorException) {
+      const exception = args.get('exception')
+      if (exception instanceof InternalErrorException) {
         response = new JsonResponse({
           error: {
-            message: event.exception.getMessage()
+            message: exception.getMessage()
           }
         }, Response.HTTP_INTERNAL_ERROR)
         this.getLogger().write(
           LoggerInterface.TYPE_ERROR,
-          event.exception.getMessage(),
-          [event.exception.getArguments().all()]
+          exception.getMessage(),
+          [exception.getArguments().all()]
         )
-      } else if (event.exception instanceof HttpException) {
-        response = new Response({
+      } else if (exception instanceof HttpException) {
+        response = new JsonResponse({
           error: {
-            code: event.exception.getCode(),
-            message: event.exception.getMessage()
+            code: exception.getCode(),
+            message: exception.getMessage()
           }
-        }, event.exception.getStatusCode())
-      } else if (event.exception instanceof Error) {
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, event.exception.message)
+        }, exception.getStatusCode())
+      } else if (exception instanceof Error) {
+        this.getLogger().write(LoggerInterface.TYPE_ERROR, exception.message)
       }
 
       if (response instanceof Response) {
-        this.sendResponse(response, event.conn)
+        this.sendResponse(response, args.get('conn'))
       }
-      done()
+      next()
     })
   }
 }
