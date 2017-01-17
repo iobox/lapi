@@ -51,9 +51,17 @@ export default class MongoDb extends Db {
   }
 
   findOne(collection, condition, options = null) {
-    return this.find(collection, condition, {
-      skip: 0,
-      limit: 1
+    return new Promise((resolve, reject) => {
+      this.find(collection, condition, {
+        skip: 0,
+        limit: 1
+      }).then(items => {
+        if (items.length === 1) {
+          resolve(items[0])
+        } else {
+          resolve(null)
+        }
+      }).catch(e => reject(e))
     })
   }
 
