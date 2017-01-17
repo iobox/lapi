@@ -3,7 +3,7 @@ var expect = require('chai').expect
 
 /** @test {MongoDb} */
 describe('db/driver/mongo.js', () => {
-  describe('#requires-mongo-at-localhost:27017', () => {
+  describe.skip('requires mongodb at localhost:27017', () => {
     let db = null, collection = 'users'
     beforeEach((done) => {
       db = new MongoDb('mongodb://localhost:27017/test')
@@ -25,7 +25,7 @@ describe('db/driver/mongo.js', () => {
 
     /** @test {MongoDb#open} */
     it('[open] should return a Promise', () => {
-      expect(db.open()).to.be.an.instanceof(Promise)
+      expect(db.open().then((conn) => {conn.close()})).to.be.an.instanceof(Promise)
     })
 
     /** @test {MongoDb#close} */
