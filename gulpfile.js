@@ -45,11 +45,15 @@ gulp.task('build:test', ['clean:test'], function () {
     .pipe(gulp.dest(path.join(buildDir, testDir)))
 })
 
-var setUpTests = function(paths) {
+var setUpTests = function(paths, options) {
+  if (options === undefined) {
+    options = {}
+  }
+  var def = {
+    reporter: 'landing'
+  }
   gulp.src(paths)
-    .pipe(mocha({
-      reporter: 'landing'
-    }))
+    .pipe(mocha(Object.assign(def, options)))
     .on('error', function (e) {
       if (typeof e.stack === 'undefined') return
       console.log(clc.red(`[ERROR] ${e.stack}`))
@@ -57,7 +61,9 @@ var setUpTests = function(paths) {
     })
 }
 gulp.task('test', ['build'], function () {
-  setUpTests(buildTests)
+  setUpTests(buildTests, {
+    reporter: 'dot'
+  })
 })
 gulp.task('test:quick', [], function () {
   setUpTests(tests.map(v => path.join('', v)))
