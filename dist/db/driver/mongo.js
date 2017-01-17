@@ -95,11 +95,23 @@ var MongoDb = function (_Db) {
   }, {
     key: 'findOne',
     value: function findOne(collection, condition) {
+      var _this4 = this;
+
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
-      return this.find(collection, condition, {
-        skip: 0,
-        limit: 1
+      return new Promise(function (resolve, reject) {
+        _this4.find(collection, condition, {
+          skip: 0,
+          limit: 1
+        }).then(function (items) {
+          if (items.length === 1) {
+            resolve(items[0]);
+          } else {
+            resolve(null);
+          }
+        }).catch(function (e) {
+          return reject(e);
+        });
       });
     }
   }, {
@@ -116,12 +128,12 @@ var MongoDb = function (_Db) {
   }, {
     key: 'insertOne',
     value: function insertOne(collection, data) {
-      var _this4 = this;
+      var _this5 = this;
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
       return new Promise(function (resolve, reject) {
-        _this4.open().then(function (db) {
+        _this5.open().then(function (db) {
           db.collection(collection).insertOne(data, options, function (err, result) {
             db.close();
             if (err) {
@@ -138,12 +150,12 @@ var MongoDb = function (_Db) {
   }, {
     key: 'insertMany',
     value: function insertMany(collection, data) {
-      var _this5 = this;
+      var _this6 = this;
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
       return new Promise(function (resolve, reject) {
-        _this5.open().then(function (db) {
+        _this6.open().then(function (db) {
           db.collection(collection).insertMany(data, options, function (err, result) {
             db.close();
             if (err) {
@@ -160,12 +172,12 @@ var MongoDb = function (_Db) {
   }, {
     key: 'update',
     value: function update(collection, condition, data) {
-      var _this6 = this;
+      var _this7 = this;
 
       var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
       return new Promise(function (resolve, reject) {
-        _this6.open().then(function (db) {
+        _this7.open().then(function (db) {
           options = new _bag2.default(options || {});
           if (options.get('multi', true)) {
             db.collection(collection).updateMany(condition, {
@@ -198,12 +210,12 @@ var MongoDb = function (_Db) {
   }, {
     key: 'delete',
     value: function _delete(collection, condition) {
-      var _this7 = this;
+      var _this8 = this;
 
       var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
 
       return new Promise(function (resolve, reject) {
-        _this7.open().then(function (db) {
+        _this8.open().then(function (db) {
           options = new _bag2.default(options || {});
           if (options.get('multi', true)) {
             db.collection(collection).deleteMany(condition, options.only(['w', 'wtimeout', 'j']), function (err, result) {
