@@ -45,25 +45,25 @@ gulp.task('build:test', ['clean:test'], function () {
     .pipe(gulp.dest(path.join(buildDir, testDir)))
 })
 
-gulp.task('test', ['build'], function () {
-  gulp.src(buildTests)
+var setUpTests = function(paths) {
+  gulp.src(paths)
     .pipe(mocha({
-      reporter: 'dot'
-    }))
-})
-gulp.task('test:force', ['build'], function () {
-  gulp.src(buildTests)
-    .pipe(mocha({
-      reporter: 'dot'
+      reporter: 'landing'
     }))
     .on('error', function (e) {
       if (typeof e.stack === 'undefined') return
       console.log(clc.red(`[ERROR] ${e.stack}`))
       this.emit(e)
     })
+}
+gulp.task('test', ['build'], function () {
+  setUpTests(buildTests)
 })
-gulp.task('watch:test', ['test:force'], function () {
-  gulp.watch([].concat(sources, tests), ['test:force'])
+gulp.task('test:quick', [], function () {
+  setUpTests(tests.map(v => path.join('', v)))
+})
+gulp.task('watch:test', ['test:quick'], function () {
+  gulp.watch([].concat(sources, tests), ['test:quick'])
 })
 gulp.task('watch:build', ['build'], function () {
   gulp.watch([].concat(sources, tests), ['build'])
