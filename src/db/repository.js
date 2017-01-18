@@ -8,7 +8,7 @@ import ContainerAware from '../di/container-aware'
 export default class Repository extends ContainerAware {
   /**
    * Get Model
-   * @returns {Model}
+   * @returns {Model.constructor}
    */
   static getModel() {
     throw new NotImplementedException()
@@ -128,12 +128,66 @@ export default class Repository extends ContainerAware {
 
   /**
    * Insert and return a model
-   * @param {Object} model
+   * @param {Object|Array} data
    * @param {?Object} [options=null]
    * @returns {Promise}
    */
-  insert(model, options = null) {
-    return this.getDb().insert(this.constructor.getModel().getName(), model.all(), options)
+  insert(data, options = null) {
+    return new Promise((resolve, reject) => {
+      if (Array.isArray(data)) {
+        this.insertMany(data, options)
+          .then(r => resolve(r))
+          .catch(e => reject(e))
+      } else if (typeof data === 'object') {
+        this.insertOne(data, options)
+          .then(r => resolve(r))
+          .catch(e => reject(e))
+      } else {
+        reject(new InvalidArgumentException('[Db/Repository#insert] data must be an object or an array'))
+      }
+    })
+  }
+
+  insertMany(items, options = null) {
+    return new Promise((resolve, reject) => {
+      const MODEL = this.constructor.getModel()
+      let i = 0, data = []
+      for (let item of items) {
+        if (typeof item !== 'object') {
+          return reject(new InvalidArgumentException('[Db/Repository#insertMany] each item must be an object'))
+        } else if (!(item instanceof Model)) {
+          item = new MODEL(item)
+          data.push(item.toObject())
+        }
+        i++
+      }
+      this.getDb().insert(MODEL.getName(), data, options)
+        .then(r => {
+          const records = r.ops
+          let items = []
+          records.forEach(item => items.push(new MODEL(item)))
+          resolve(items)
+        })
+        .catch(e => reject(e))
+    })
+  }
+
+  insertOne(item, options = null) {
+    return new Promise((resolve, reject) => {
+      const MODEL = this.constructor.getModel()
+      let data = null
+      if (typeof item !== 'object') {
+        return reject(new InvalidArgumentException('[Db/Repository#insertMany] each item must be an object'))
+      } else if (!(item instanceof Model)) {
+        let model = new MODEL(item)
+        data = model.toObject()
+      }
+      this.getDb().insert(MODEL.getName(), data, options)
+        .then(r => {
+          resolve(new MODEL(r.ops[0]))
+        })
+        .catch(e => reject(e))
+    })
   }
 
   /**

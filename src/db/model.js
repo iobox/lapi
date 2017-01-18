@@ -68,7 +68,7 @@ export default class Model extends Bag {
     
     const schema = this.constructor.getSchema()
     if (!schema.has(field)) {
-      throw new NotFoundException(`[Db/Model#get] field "${field}" is not registered in Db/Schema`)
+      return def
     }
 
     const options = schema.get(field)
@@ -128,6 +128,15 @@ export default class Model extends Bag {
       }
     }
     super.set(field, value)
+  }
+
+  toObject() {
+    const SCHEMA = this.constructor.getSchema()
+    let item = {}
+    SCHEMA.forEach((field, options) => {
+      item[field] = this.get(field)
+    })
+    return item
   }
 
   /**

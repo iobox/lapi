@@ -103,7 +103,7 @@ var Model = function (_Bag) {
 
       var schema = this.constructor.getSchema();
       if (!schema.has(field)) {
-        throw new _notFound2.default('[Db/Model#get] field "' + field + '" is not registered in Db/Schema');
+        return def;
       }
 
       var options = schema.get(field);
@@ -166,6 +166,18 @@ var Model = function (_Bag) {
         }
       }
       _get(Model.prototype.__proto__ || Object.getPrototypeOf(Model.prototype), 'set', this).call(this, field, value);
+    }
+  }, {
+    key: 'toObject',
+    value: function toObject() {
+      var _this3 = this;
+
+      var SCHEMA = this.constructor.getSchema();
+      var item = {};
+      SCHEMA.forEach(function (field, options) {
+        item[field] = _this3.get(field);
+      });
+      return item;
     }
 
     /**

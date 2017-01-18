@@ -11,7 +11,7 @@ describe('db/driver/mongo.js', () => {
         .then(() => {
           let tasks = []
           tasks.push(db.insert(collection, {name: 'John', age: 21}))
-          tasks.push(db.insert(collection, {name: 'Mary', age: 18}))
+          tasks.push(db.insert(collection, {name: 'Marry', age: 18}))
           tasks.push(db.insert(collection, {name: 'Bob', age: 18}))
           tasks.push(db.insert(collection, {name: 'Peter', age: 40}))
           Promise.all(tasks).then(() => {done()})

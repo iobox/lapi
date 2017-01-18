@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _notImplemented = require('../exception/not-implemented');
@@ -194,17 +196,112 @@ var Repository = function (_ContainerAware) {
 
     /**
      * Insert and return a model
-     * @param {Object} model
+     * @param {Object|Array} data
      * @param {?Object} [options=null]
      * @returns {Promise}
      */
 
   }, {
     key: 'insert',
-    value: function insert(model) {
+    value: function insert(data) {
+      var _this4 = this;
+
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
-      return this.getDb().insert(this.constructor.getModel().getName(), model.all(), options);
+      return new Promise(function (resolve, reject) {
+        if (Array.isArray(data)) {
+          _this4.insertMany(data, options).then(function (r) {
+            return resolve(r);
+          }).catch(function (e) {
+            return reject(e);
+          });
+        } else if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
+          _this4.insertOne(data, options).then(function (r) {
+            return resolve(r);
+          }).catch(function (e) {
+            return reject(e);
+          });
+        } else {
+          reject(new _invalidArgument2.default('[Db/Repository#insert] data must be an object or an array'));
+        }
+      });
+    }
+  }, {
+    key: 'insertMany',
+    value: function insertMany(items) {
+      var _this5 = this;
+
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      return new Promise(function (resolve, reject) {
+        var MODEL = _this5.constructor.getModel();
+        var i = 0,
+            data = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = items[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var item = _step.value;
+
+            if ((typeof item === 'undefined' ? 'undefined' : _typeof(item)) !== 'object') {
+              return reject(new _invalidArgument2.default('[Db/Repository#insertMany] each item must be an object'));
+            } else if (!(item instanceof _model2.default)) {
+              item = new MODEL(item);
+              data.push(item.toObject());
+            }
+            i++;
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+              _iterator.return();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        _this5.getDb().insert(MODEL.getName(), data, options).then(function (r) {
+          var records = r.ops;
+          var items = [];
+          records.forEach(function (item) {
+            return items.push(new MODEL(item));
+          });
+          resolve(items);
+        }).catch(function (e) {
+          return reject(e);
+        });
+      });
+    }
+  }, {
+    key: 'insertOne',
+    value: function insertOne(item) {
+      var _this6 = this;
+
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      return new Promise(function (resolve, reject) {
+        var MODEL = _this6.constructor.getModel();
+        var data = null;
+        if ((typeof item === 'undefined' ? 'undefined' : _typeof(item)) !== 'object') {
+          return reject(new _invalidArgument2.default('[Db/Repository#insertMany] each item must be an object'));
+        } else if (!(item instanceof _model2.default)) {
+          var model = new MODEL(item);
+          data = model.toObject();
+        }
+        _this6.getDb().insert(MODEL.getName(), data, options).then(function (r) {
+          resolve(new MODEL(r.ops[0]));
+        }).catch(function (e) {
+          return reject(e);
+        });
+      });
     }
 
     /**
@@ -244,7 +341,7 @@ var Repository = function (_ContainerAware) {
 
     /**
      * Get Model
-     * @returns {Model}
+     * @returns {Model.constructor}
      */
     value: function getModel() {
       throw new _notImplemented2.default();

@@ -15,7 +15,6 @@ var $exports = {
   "Container": "di/container.js"
  },
  "Event": {
-  "Event": "event/event.js",
   "EventListener": "event/listener.js",
   "EventManager": "event/manager.js"
  },
@@ -32,9 +31,9 @@ var $exports = {
   "Controller": "foundation/controller.js",
   "Extension": {
    "Extension": "foundation/extension/extension.js",
+   "KernelExtension": "foundation/extension/kernel.js",
    "ExtensionManager": "foundation/extension/manager.js",
-   "ModuleExtension": "foundation/extension/module.js",
-   "SystemExtension": "foundation/extension/system.js"
+   "ModuleExtension": "foundation/extension/module.js"
   }
  },
  "Http": {
