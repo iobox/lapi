@@ -1,7 +1,7 @@
 import async from 'async'
 import Bag from '../foundation/bag'
 import EventListener from './listener'
-import Exception from '../exception/exception'
+import Exception from '../exception'
 import InvalidArgumentException from '../exception/invalid-argument'
 
 /**

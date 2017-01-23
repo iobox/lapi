@@ -1,4 +1,4 @@
-import Extension from '../../../foundation/extension/extension'
+import Extension from '../../../foundation/extension'
 export default class QueryExtension extends Extension {
   /**
    * Return a list of supporting rule's names

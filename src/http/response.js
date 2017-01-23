@@ -1,6 +1,6 @@
-import Message from './../message'
-import Header from './../header'
-import NotImplementedException from '../../exception/not-implemented'
+import Message from './message'
+import Header from './header'
+import NotImplementedException from '../exception/not-implemented'
 
 /**
  * HTTP Response

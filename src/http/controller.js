@@ -1,8 +1,8 @@
 import ContainerAware from '../di/container-aware'
-import Request from '../http/request'
-import Response from '../http/response/response'
+import Request from 'request'
+import Response from 'response/response'
 import InvalidArgumentException from '../exception/invalid-argument'
-import Route from '../http/routing/route'
+import Route from 'routing/route'
 
 export default class Controller extends ContainerAware {
   /**

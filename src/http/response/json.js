@@ -1,5 +1,5 @@
 import Body from '../body'
-import Response from './response'
+import Response from './../response'
 export default class JsonResponse extends Response {
   constructor(data = {}, statusCode = Response.HTTP_OK, header = {}) {
     super('', statusCode, header)

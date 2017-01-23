@@ -110,19 +110,15 @@ gulp.task('indexing', function () {
       if (part === srcDir) {
         return false
       }
-      if (part.length === 2) {
-        part = part.toUpperCase()
-      } else {
-        part = Str.ucfirst(part)
-      }
+
       if (part.match(/(\.js)$/)) {
         part = require('./' + path.join.apply(null, parts)).default.name
         parts[0] = ''
         node[part] = path.join.apply(null, parts)
-      } else if (node[part] === undefined) {
-        node[part] = {}
+      } else if (node[part.toLowerCase()] === undefined) {
+        node[part.toLowerCase()] = {}
       }
-      node = node[part]
+      node = node[part.toLowerCase()]
     })
   }
   readDir(srcDir)

@@ -1,4 +1,4 @@
-import Exception from '../exception/exception'
+import Exception from '../exception'
 
 /**
  * Event Listener
