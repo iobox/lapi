@@ -9,7 +9,9 @@ describe('http/routing/router.js', () => {
     name = 'home'
     path = '/my-path'
     router = new Router()
-    route = new Route(name, Request.METHOD_POST, path)
+    route = new Route(Request.METHOD_POST, path)
+    route.setName(name)
+    route.setAttributes({controller: function() {}})
   })
 
   it('[add] should allow to add a new route', () => {
@@ -17,17 +19,17 @@ describe('http/routing/router.js', () => {
     router.add(route)
     expect(router.length).to.equal(1)
 
-    router.add({name: 'another'})
+    router.add({name: 'another', path: '/my-path', attributes: {controller: function() {}}})
     expect(router.length).to.equal(2)
   })
 
   it('[has] should return false at first, and true on latter call', () => {
     expect(router.has(name)).to.be.false
-    router.add(route)
+    router.add(route).name(name)
     expect(router.has(name)).to.be.true
   })
 
-  it('[remove] should a specific route by name', () => {
+  it('[remove] should allow to remove a specific route by name', () => {
     router.add(route)
     expect(router.has(name)).to.be.true
     router.remove(name)
@@ -44,6 +46,9 @@ describe('http/routing/router.js', () => {
       path: '/accounts/{id}',
       requirements: {
         id: /\d+/
+      },
+      attributes: {
+        controller: function() {}
       }
     })
     let route_2 = Route.from({
@@ -52,6 +57,9 @@ describe('http/routing/router.js', () => {
       path: '/accounts/{id}-{name}',
       requirements: {
         id: /\d+/
+      },
+      attributes: {
+        controller: function() {}
       }
     })
     router.add(route_1)

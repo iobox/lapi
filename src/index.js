@@ -1,6 +1,6 @@
 import App from './foundation/app'
 import KernelExtension from './foundation/extension/kernel'
-import Controller from './foundation/controller'
+import Controller from './http/controller'
 import NotFoundException from './http/exception/not-found'
 
 let app = new App()

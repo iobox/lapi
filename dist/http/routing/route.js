@@ -16,6 +16,14 @@ var _request = require('../request');
 
 var _request2 = _interopRequireDefault(_request);
 
+var _controller = require('../controller');
+
+var _controller2 = _interopRequireDefault(_controller);
+
+var _invalidArgument = require('../../exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -106,43 +114,39 @@ var Route = function () {
    * Constructor
    * @example
    * let route = new Route(
-   *   'route_name',
    *   ['GET', 'POST'],
    *   '/accounts/{id}',
    *   '{language}.domain.com',
    *   6969,
    *   {id: /\d+/, language: /[a-zA-Z]{2}/},
-   *   {format: "json"},
    *   {controller: new SomeController(), action: "someAction"}
    * )
    *
-   * @param {string} [name=''] Name of route, it should be an unique string
    * @param {Array|string} [methods=null] Accepted methods for route
    * @param {string} [path=''] Path of route, regexp string is allowed
    * @param {?string} [host=null] Expected host, default is null to ignore host
    * @param {Object} [requirements={}] Requirements of matching, it is optional of have pre-defined required properties of matching
    * @param {Object} [attributes={}] Additional attributes of route, it would be merged with matches result
-   * @param {Object} [options={}] Route's options contain optional configuration
+   * @param {Array} [middlewares=[]] Route's middlewares
    */
   function Route() {
-    var name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    var methods = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-    var path = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-    var host = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-    var requirements = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
-    var attributes = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : {};
-    var options = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : {};
+    var methods = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var path = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+    var host = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+    var requirements = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+    var attributes = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+    var middlewares = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : [];
 
     _classCallCheck(this, Route);
 
-    this.setName(name);
+    this.setName(null);
     this.setMethods(methods);
     this.setPath(path);
     this.setHost(host);
     this.setPort(null);
     this.setRequirements(requirements);
     this.setAttributes(attributes);
-    this.setOptions(options);
+    this.setMiddlewares(middlewares);
     this.setMatches({});
   }
 
@@ -160,16 +164,29 @@ var Route = function () {
 
     /**
      * Set name
-     * @param {!string} name
+     * @param {?string} name Name of route, and it should be an unique string
      */
 
   }, {
     key: 'setName',
     value: function setName(name) {
       if (name === undefined) {
-        throw new Error('Name of route must be a string.');
+        throw new _invalidArgument2.default('[http.routing.route#setName] name must be a string.');
       }
       this._name = name;
+    }
+
+    /**
+     * An alias of setName
+     * @param {?string} name
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'name',
+    value: function name(_name) {
+      this.setName(_name);
+      return this;
     }
 
     /**
@@ -185,7 +202,7 @@ var Route = function () {
 
     /**
      * In case methods is a string, it would be converted to an array with single item
-     * @param {Array} methods
+     * @param {Array|string} methods
      */
 
   }, {
@@ -221,6 +238,19 @@ var Route = function () {
     }
 
     /**
+     * An alias of setPath
+     * @param {?string} path
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'path',
+    value: function path(_path) {
+      this.setPath(_path);
+      return this;
+    }
+
+    /**
      * Get host
      * @returns {string|null}
      */
@@ -240,6 +270,19 @@ var Route = function () {
     key: 'setHost',
     value: function setHost(host) {
       this._host = host;
+    }
+
+    /**
+     * An alias of setHost
+     * @param {string} host
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'host',
+    value: function host(_host) {
+      this.setHost(_host);
+      return this;
     }
 
     /**
@@ -265,6 +308,19 @@ var Route = function () {
     }
 
     /**
+     * An alias of setPort
+     * @param {?int} port
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'port',
+    value: function port(_port) {
+      this.setPort(_port);
+      return this;
+    }
+
+    /**
      * Get requirements
      * @returns {Object}
      */
@@ -287,36 +343,60 @@ var Route = function () {
     }
 
     /**
-     * Extra configuration for route
-     * @returns {Bag}
+     * An alias of setRequirements
+     * @param {?Object} requirements
+     * @returns {Route}
      */
 
   }, {
-    key: 'getOptions',
-    value: function getOptions() {
-      return this._options;
+    key: 'require',
+    value: function require(requirements) {
+      this.setRequirements(requirements);
+      return this;
+    }
+
+    /**
+     * Route's middlewares
+     * @returns {Array}
+     */
+
+  }, {
+    key: 'getMiddlewares',
+    value: function getMiddlewares() {
+      return this._middlewares;
     }
 
     /**
      * Set options
-     * @param {Bag|Object} options
+     * @param {Array} middlewares
+     * @throws {InvalidArgumentException} throws an exception when middlewares is not an array
      */
 
   }, {
-    key: 'setOptions',
-    value: function setOptions(options) {
-      if ((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object') {
-        if (options instanceof _bag2.default) {
-          this._options = options;
-        } else {
-          this._options = new _bag2.default(options);
-        }
+    key: 'setMiddlewares',
+    value: function setMiddlewares(middlewares) {
+      if (!Array.isArray(middlewares)) {
+        throw new _invalidArgument2.default('[http.routing.Route#setMiddlewares] middlewares must be an array');
       }
+      this._middlewares = middlewares;
+    }
+
+    /**
+     * An alias of setMiddlewares
+     * @param {Array} middlewares
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'middleware',
+    value: function middleware(middlewares) {
+      this.setMiddlewares(middlewares);
+      return this;
     }
 
     /**
      * Get attributes
-     * @returns {Object}
+     * @returns {Bag}
      */
 
   }, {
@@ -327,13 +407,33 @@ var Route = function () {
 
     /**
      * Set attributes
-     * @param {?Object} attributes
+     * @param {Object|Bag} attributes
+     * @throws {InvalidArgumentException} throws exception when attributes is not an instance of Bag or an object
      */
 
   }, {
     key: 'setAttributes',
     value: function setAttributes(attributes) {
-      this._attributes = attributes;
+      if (attributes instanceof _bag2.default) {
+        this._attributes = attributes;
+      } else if ((typeof attributes === 'undefined' ? 'undefined' : _typeof(attributes)) === 'object') {
+        this._attributes = new _bag2.default(attributes);
+      } else {
+        throw new _invalidArgument2.default('[http.routing.route#setAttributes] attributes must be either an instance of Bag or an object');
+      }
+    }
+
+    /**
+     * An alias of setAttributes
+     * @param {Object|Bag} attributes
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'with',
+    value: function _with(attributes) {
+      this.getAttributes().extend(attributes);
+      return this;
     }
 
     /**
@@ -356,6 +456,21 @@ var Route = function () {
     key: 'setMatches',
     value: function setMatches(matches) {
       this._matches = matches;
+    }
+
+    /**
+     * Set Route's handler
+     * @param {Controller|Function} controller Class of controller
+     * @param {string} action name of action to be called
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'handler',
+    value: function handler(controller, action) {
+      this.getAttributes().set('controller', controller || null);
+      this.getAttributes().set('action', action || null);
+      return this;
     }
 
     /**
@@ -440,7 +555,7 @@ var Route = function () {
       route.setPath(object.path || '');
       route.setHost(object.host || null);
       route.setPort(object.port || null);
-      route.setOptions(object.options || {});
+      route.setMiddlewares(object.middlewares || []);
       route.setRequirements(object.requirements || {});
       route.setAttributes(object.attributes || {});
 

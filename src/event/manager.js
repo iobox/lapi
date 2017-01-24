@@ -136,11 +136,11 @@ export default class EventManager {
    *
    * @param {!string} name Name of event to listen
    * @param {!function} runner Callback to handle incoming event
-   * @param {?number} priority Higher priority handler will be call later than the others
-   * @param {?number} limit Number of times to be run. Default is null to ignore limit
+   * @param {?number} [priority=null] Higher priority handler will be call later than the others
+   * @param {?number} [limit=null] Number of times to be run. Default is null to ignore limit
    * @returns {EventListener} EventListener instance of registration
    */
-  on(name, runner, priority, limit) {
+  on(name, runner, priority = null, limit = null) {
     if (!this.getEvents().has(name)) {
       this.getEvents().set(name, getEventItem())
     }
@@ -156,10 +156,10 @@ export default class EventManager {
    *
    * @param {!string} name Name of event to listen
    * @param {!function} runner Callback to handle incoming event
-   * @param {?number} priority Higher priority handler will be call later than the others
+   * @param {?number} [priority=null] Higher priority handler will be call later than the others
    * @returns {EventListener} EventListener instance of registration
    */
-  once(name, runner, priority) {
+  once(name, runner, priority = null) {
     return this.on(name, runner, priority, EventListener.LIMIT_ONCE)
   }
 
@@ -168,10 +168,10 @@ export default class EventManager {
    *
    * @param {!string} name Name of event to listen
    * @param {!function} runner Callback to handle incoming event
-   * @param {?number} priority Higher priority handler will be call later than the others
+   * @param {?number} [priority=null] Higher priority handler will be call later than the others
    * @returns {EventListener} EventListener instance of registration
    */
-  twice(name, runner, priority) {
+  twice(name, runner, priority = null) {
     return this.on(name, runner, priority, EventListener.LIMIT_TWICE)
   }
 
@@ -179,12 +179,12 @@ export default class EventManager {
    * Remove event's listeners
    *
    * @param {string} name Name of event to remove its listeners
-   * @param {number} priority Priority of handler to remove. In case this parameter is undefined,
+   * @param {?number} [priority=null] Priority of handler to remove. In case this parameter is undefined,
    *                          it will remove all handlers
    * @throws {Error} If name of event is not specified
    */
-  off(name, priority) {
-    if (priority === undefined) {
+  off(name, priority = null) {
+    if (priority === null) {
       // remove all listeners of event's name
       this.getEvents().set(name, getEventItem())
     } else if (this.getEvents().has(name)) {

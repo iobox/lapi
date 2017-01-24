@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _exception = require('./exception');
+var _exception = require('./../exception');
 
 var _exception2 = _interopRequireDefault(_exception);
 

@@ -1,7 +1,7 @@
 var expect = require('chai').expect
 import Controller from '../../src/http/controller'
 import Request from '../../src/http/request'
-import Response from '../../src/http/response/response'
+import Response from '../../src/http/response'
 import InvalidArgumentException from '../../src/exception/invalid-argument'
 
 /** @test {Controller} */

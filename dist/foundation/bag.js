@@ -227,10 +227,34 @@ var Bag = function () {
       });
       return bag;
     }
+
+    /**
+     * Get key-value pairs except for proposed keys
+     * @param {?Array} keys An array of keys to ignore their's values
+     * @returns {{}}
+     * @throws {InvalidArgumentException} throws an exception when keys is not an array
+     */
+
+  }, {
+    key: 'except',
+    value: function except(keys) {
+      var _this4 = this;
+
+      if (!Array.isArray(keys)) {
+        throw new _invalidArgument2.default('[Foundation/Bag#only] keys must be an array');
+      }
+      var bag = {};
+      keys.forEach(function (key) {
+        if (!keys.includes(key)) {
+          bag[key] = _this4.get(key);
+        }
+      });
+      return bag;
+    }
   }, {
     key: 'raw',
     value: function raw(keys) {
-      var _this4 = this;
+      var _this5 = this;
 
       var raw = {};
       if (keys !== undefined && !Array.isArray(keys)) {
@@ -239,7 +263,7 @@ var Bag = function () {
         keys = this.keys;
       }
       keys.forEach(function (key) {
-        return raw[key] = _this4.has(key) ? _this4._data[key] : null;
+        return raw[key] = _this5.has(key) ? _this5._data[key] : null;
       });
       return raw;
     }
@@ -322,15 +346,15 @@ var Bag = function () {
   }, {
     key: 'forEach',
     value: function forEach(callback) {
-      var _this5 = this;
+      var _this6 = this;
 
       var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
 
       this.keys.forEach(function (key) {
         if (target === null) {
-          callback(key, _this5.get(key));
+          callback(key, _this6.get(key));
         } else {
-          callback.apply(target, [key, _this5.get(key)]);
+          callback.apply(target, [key, _this6.get(key)]);
         }
       });
     }

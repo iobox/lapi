@@ -10,7 +10,7 @@ var _body = require('../body');
 
 var _body2 = _interopRequireDefault(_body);
 
-var _response = require('./response');
+var _response = require('./../response');
 
 var _response2 = _interopRequireDefault(_response);
 

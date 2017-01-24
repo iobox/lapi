@@ -20,7 +20,7 @@ var _listener = require('./listener');
 
 var _listener2 = _interopRequireDefault(_listener);
 
-var _exception = require('../exception/exception');
+var _exception = require('../exception');
 
 var _exception2 = _interopRequireDefault(_exception);
 
@@ -208,14 +208,17 @@ var EventManager = function () {
      *
      * @param {!string} name Name of event to listen
      * @param {!function} runner Callback to handle incoming event
-     * @param {?number} priority Higher priority handler will be call later than the others
-     * @param {?number} limit Number of times to be run. Default is null to ignore limit
+     * @param {?number} [priority=null] Higher priority handler will be call later than the others
+     * @param {?number} [limit=null] Number of times to be run. Default is null to ignore limit
      * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
     key: 'on',
-    value: function on(name, runner, priority, limit) {
+    value: function on(name, runner) {
+      var priority = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+      var limit = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+
       if (!this.getEvents().has(name)) {
         this.getEvents().set(name, getEventItem());
       }
@@ -231,13 +234,15 @@ var EventManager = function () {
      *
      * @param {!string} name Name of event to listen
      * @param {!function} runner Callback to handle incoming event
-     * @param {?number} priority Higher priority handler will be call later than the others
+     * @param {?number} [priority=null] Higher priority handler will be call later than the others
      * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
     key: 'once',
-    value: function once(name, runner, priority) {
+    value: function once(name, runner) {
+      var priority = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
       return this.on(name, runner, priority, _listener2.default.LIMIT_ONCE);
     }
 
@@ -246,13 +251,15 @@ var EventManager = function () {
      *
      * @param {!string} name Name of event to listen
      * @param {!function} runner Callback to handle incoming event
-     * @param {?number} priority Higher priority handler will be call later than the others
+     * @param {?number} [priority=null] Higher priority handler will be call later than the others
      * @returns {EventListener} EventListener instance of registration
      */
 
   }, {
     key: 'twice',
-    value: function twice(name, runner, priority) {
+    value: function twice(name, runner) {
+      var priority = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
       return this.on(name, runner, priority, _listener2.default.LIMIT_TWICE);
     }
 
@@ -260,15 +267,17 @@ var EventManager = function () {
      * Remove event's listeners
      *
      * @param {string} name Name of event to remove its listeners
-     * @param {number} priority Priority of handler to remove. In case this parameter is undefined,
+     * @param {?number} [priority=null] Priority of handler to remove. In case this parameter is undefined,
      *                          it will remove all handlers
      * @throws {Error} If name of event is not specified
      */
 
   }, {
     key: 'off',
-    value: function off(name, priority) {
-      if (priority === undefined) {
+    value: function off(name) {
+      var priority = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      if (priority === null) {
         // remove all listeners of event's name
         this.getEvents().set(name, getEventItem());
       } else if (this.getEvents().has(name)) {

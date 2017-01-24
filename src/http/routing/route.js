@@ -1,5 +1,7 @@
 import Bag from '../../foundation/bag'
 import Request from '../request'
+import Controller from '../controller'
+import InvalidArgumentException from '../../exception/invalid-argument'
 
 const SRC_HOST = 'host'
 const SRC_PATH = 'path'
@@ -86,39 +88,35 @@ export default class Route {
    * Constructor
    * @example
    * let route = new Route(
-   *   'route_name',
    *   ['GET', 'POST'],
    *   '/accounts/{id}',
    *   '{language}.domain.com',
    *   6969,
    *   {id: /\d+/, language: /[a-zA-Z]{2}/},
-   *   {format: "json"},
    *   {controller: new SomeController(), action: "someAction"}
    * )
    *
-   * @param {string} [name=''] Name of route, it should be an unique string
    * @param {Array|string} [methods=null] Accepted methods for route
    * @param {string} [path=''] Path of route, regexp string is allowed
    * @param {?string} [host=null] Expected host, default is null to ignore host
    * @param {Object} [requirements={}] Requirements of matching, it is optional of have pre-defined required properties of matching
    * @param {Object} [attributes={}] Additional attributes of route, it would be merged with matches result
-   * @param {Object} [options={}] Route's options contain optional configuration
+   * @param {Array} [middlewares=[]] Route's middlewares
    */
-  constructor(name = '',
-              methods = null,
+  constructor(methods = null,
               path = '',
               host = null,
               requirements = {},
               attributes = {},
-              options = {}) {
-    this.setName(name)
+              middlewares = []) {
+    this.setName(null)
     this.setMethods(methods)
     this.setPath(path)
     this.setHost(host)
     this.setPort(null)
     this.setRequirements(requirements)
     this.setAttributes(attributes)
-    this.setOptions(options)
+    this.setMiddlewares(middlewares)
     this.setMatches({})
   }
 
@@ -132,13 +130,23 @@ export default class Route {
 
   /**
    * Set name
-   * @param {!string} name
+   * @param {?string} name Name of route, and it should be an unique string
    */
   setName(name) {
     if (name === undefined) {
-      throw new Error('Name of route must be a string.')
+      throw new InvalidArgumentException('[http.routing.route#setName] name must be a string.')
     }
     this._name = name
+  }
+
+  /**
+   * An alias of setName
+   * @param {?string} name
+   * @returns {Route}
+   */
+  name(name) {
+    this.setName(name)
+    return this
   }
 
   /**
@@ -151,7 +159,7 @@ export default class Route {
 
   /**
    * In case methods is a string, it would be converted to an array with single item
-   * @param {Array} methods
+   * @param {Array|string} methods
    */
   setMethods(methods) {
     if (methods !== null && Array.isArray(methods) === false) {
@@ -178,6 +186,16 @@ export default class Route {
   }
 
   /**
+   * An alias of setPath
+   * @param {?string} path
+   * @returns {Route}
+   */
+  path(path) {
+    this.setPath(path)
+    return this
+  }
+
+  /**
    * Get host
    * @returns {string|null}
    */
@@ -191,6 +209,16 @@ export default class Route {
    */
   setHost(host) {
     this._host = host
+  }
+
+  /**
+   * An alias of setHost
+   * @param {string} host
+   * @returns {Route}
+   */
+  host(host) {
+    this.setHost(host)
+    return this
   }
 
   /**
@@ -210,6 +238,16 @@ export default class Route {
   }
 
   /**
+   * An alias of setPort
+   * @param {?int} port
+   * @returns {Route}
+   */
+  port(port) {
+    this.setPort(port)
+    return this
+  }
+
+  /**
    * Get requirements
    * @returns {Object}
    */
@@ -226,30 +264,48 @@ export default class Route {
   }
 
   /**
-   * Extra configuration for route
-   * @returns {Bag}
+   * An alias of setRequirements
+   * @param {?Object} requirements
+   * @returns {Route}
    */
-  getOptions() {
-    return this._options
+  require(requirements) {
+    this.setRequirements(requirements)
+    return this
+  }
+
+  /**
+   * Route's middlewares
+   * @returns {Array}
+   */
+  getMiddlewares() {
+    return this._middlewares
   }
 
   /**
    * Set options
-   * @param {Bag|Object} options
+   * @param {Array} middlewares
+   * @throws {InvalidArgumentException} throws an exception when middlewares is not an array
    */
-  setOptions(options) {
-    if (typeof options === 'object') {
-      if (options instanceof Bag) {
-        this._options = options
-      } else {
-        this._options = new Bag(options)
-      }
+  setMiddlewares(middlewares) {
+    if (!Array.isArray(middlewares)) {
+      throw new InvalidArgumentException('[http.routing.Route#setMiddlewares] middlewares must be an array')
     }
+    this._middlewares = middlewares
+  }
+
+  /**
+   * An alias of setMiddlewares
+   * @param {Array} middlewares
+   * @returns {Route}
+   */
+  middleware(middlewares) {
+    this.setMiddlewares(middlewares)
+    return this
   }
 
   /**
    * Get attributes
-   * @returns {Object}
+   * @returns {Bag}
    */
   getAttributes() {
     return this._attributes
@@ -257,10 +313,27 @@ export default class Route {
 
   /**
    * Set attributes
-   * @param {?Object} attributes
+   * @param {Object|Bag} attributes
+   * @throws {InvalidArgumentException} throws exception when attributes is not an instance of Bag or an object
    */
   setAttributes(attributes) {
-    this._attributes = attributes
+    if (attributes instanceof Bag) {
+      this._attributes = attributes
+    } else if (typeof attributes === 'object') {
+      this._attributes = new Bag(attributes)
+    } else {
+      throw new InvalidArgumentException('[http.routing.route#setAttributes] attributes must be either an instance of Bag or an object')
+    }
+  }
+
+  /**
+   * An alias of setAttributes
+   * @param {Object|Bag} attributes
+   * @returns {Route}
+   */
+  with(attributes) {
+    this.getAttributes().extend(attributes)
+    return this
   }
 
   /**
@@ -277,6 +350,18 @@ export default class Route {
    */
   setMatches(matches) {
     this._matches = matches
+  }
+
+  /**
+   * Set Route's handler
+   * @param {Controller|Function} controller Class of controller
+   * @param {string} action name of action to be called
+   * @returns {Route}
+   */
+  handler(controller, action) {
+    this.getAttributes().set('controller', controller || null)
+    this.getAttributes().set('action', action || null)
+    return this
   }
 
   /**
@@ -351,7 +436,7 @@ export default class Route {
     route.setPath(object.path || '')
     route.setHost(object.host || null)
     route.setPort(object.port || null)
-    route.setOptions(object.options || {})
+    route.setMiddlewares(object.middlewares || [])
     route.setRequirements(object.requirements || {})
     route.setAttributes(object.attributes || {})
 

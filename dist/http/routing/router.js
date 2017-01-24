@@ -4,8 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -22,70 +20,196 @@ var _bag = require('../../foundation/bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
+var _controller = require('../controller');
+
+var _controller2 = _interopRequireDefault(_controller);
+
+var _invalidArgument = require('../../exception/invalid-argument');
+
+var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+var GroupRoute = function () {
+  function GroupRoute() {
+    _classCallCheck(this, GroupRoute);
+  }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+  _createClass(GroupRoute, [{
+    key: 'contructor',
+    value: function contructor(routes) {
+      this._routes = routes;
+      this._prefix = null;
+      this._host = null;
+      this._port = null;
+      this._middlewares = null;
+    }
+  }, {
+    key: 'execute',
+    value: function execute() {
+      var _this = this;
+
+      if (!Array.isArray(this._routes) || !this._routes.length) {
+        return [];
+      }
+      this._routes.forEach(function (route) {
+        if (!(route instanceof _route2.default)) {
+          return false;
+        }
+        if (_this._prefix !== null) {
+          route.setPath('' + _this._prefix + route.getPath());
+        }
+        if (_this._host !== null) {
+          route.setHost(_this._host);
+        }
+        if (_this._port !== null) {
+          route.setPort(_this._port);
+        }
+        if (Array.isArray(_this._middlewares) && _this._middlewares.length) {
+          route.setMiddlewares(route.getMiddlewares().concat(_this._middlewares));
+        }
+      });
+      return this._routes;
+    }
+  }, {
+    key: 'has',
+    value: function has(name) {
+      for (var i = 0; i < this._routes.length; i++) {
+        if (this._routes[i].getName() === name) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+  }, {
+    key: 'prefix',
+    value: function prefix(_prefix) {
+      this._prefix = _prefix;
+    }
+  }, {
+    key: 'host',
+    value: function host(_host) {
+      this._host = _host;
+    }
+  }, {
+    key: 'port',
+    value: function port(_port) {
+      this._port = _port;
+    }
+  }, {
+    key: 'middleware',
+    value: function middleware(midlewares) {
+      this._middlewares = midlewares;
+    }
+  }]);
+
+  return GroupRoute;
+}();
 
 /**
  * Router
  *
  * Manage and route request
  */
-var Router = function (_Bag) {
-  _inherits(Router, _Bag);
 
+
+var Router = function () {
   /**
    * Constructor
-   * @param {Route[]} routes
    */
   function Router() {
-    var routes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-
     _classCallCheck(this, Router);
 
-    var _this = _possibleConstructorReturn(this, (Router.__proto__ || Object.getPrototypeOf(Router)).call(this));
-
-    if (routes.length) {
-      routes.forEach(function (route) {
-        return _this.add(route);
-      });
-    }
-    return _this;
+    this._routes = [];
+    this._groups = [];
   }
 
-  /**
-   * Add a route
-   * @param {Object|Route} route
-   */
-
-
   _createClass(Router, [{
-    key: 'add',
-    value: function add(route) {
-      if ((typeof route === 'undefined' ? 'undefined' : _typeof(route)) !== 'object') {
-        throw new Error('[Router#add] Route must be either an object or an instance of Route');
+    key: 'has',
+    value: function has(name) {
+      if (this._groups.length) {
+        for (var i = 0; i < this._groups.length; i++) {
+          if (this._groups[i].has(name)) {
+            return true;
+          }
+        }
       }
-
-      if (!(route instanceof _route2.default)) {
-        route = _route2.default.from(route);
+      for (var _i = 0; _i < this._routes.length; _i++) {
+        if (this._routes[_i].getName() === name) {
+          return true;
+        }
       }
-
-      this.set(route.getName(), route);
+      return false;
     }
 
     /**
-     * An alias of delete method
+     * Add a route
+     * @param {Object|Route|GroupRoute} route
+     * @returns {Route}
+     */
+
+  }, {
+    key: 'add',
+    value: function add(route) {
+      if ((typeof route === 'undefined' ? 'undefined' : _typeof(route)) !== 'object') {
+        throw new _invalidArgument2.default('[http.routing.Router#add] Route must be either an object or an instance of Route');
+      }
+
+      if (route instanceof GroupRoute) {
+        this._groups.push(route);
+        return route;
+      } else if (!(route instanceof _route2.default)) {
+        route = _route2.default.from(route);
+      }
+
+      var methods = route.getMethods();
+      if (!methods.length) {
+        throw new _invalidArgument2.default('[http.routing.Route#add] route must have at least one method');
+      }
+
+      var path = route.getPath();
+      if (path === '' || path === null) {
+        throw new _invalidArgument2.default('[http.routing.Route#add] route must define path');
+      }
+
+      var name = route.getName();
+      if (name === '' || name === null) {
+        // To guarantee that route must always have a name
+        name = '' + methods[0] + path;
+        route.setName(name.replace(/\W+/g, '_'));
+      }
+
+      // To make sure that handler always be a controller instance
+      var attributes = route.getAttributes(),
+          controller = attributes.get('controller'),
+          action = attributes.get('action');
+      if (action === null && typeof controller === 'function' && !(controller instanceof _controller2.default)) {
+        route.handler(new _controller2.default(), controller);
+      } else if (controller === null) {
+        throw new _invalidArgument2.default('[http.routing.Router#add] controller must be specified');
+      }
+
+      this._routes.push(route);
+      return route;
+    }
+
+    /**
+     * Remove a specific route from router
      * @param {string} name
      */
 
   }, {
     key: 'remove',
     value: function remove(name) {
-      this.delete(name);
+      for (var i = 0; i < this._routes.length; i++) {
+        if (this._routes[i].getName() === name) {
+          this._routes.splice(i, 1);
+          break;
+        }
+      }
     }
 
     /**
@@ -97,8 +221,17 @@ var Router = function (_Bag) {
   }, {
     key: 'route',
     value: function route(request) {
+      var _this2 = this;
+
       if (!(request instanceof _request2.default)) {
-        throw new Error('[Router#route] Request must be an instance of Http/Request');
+        throw new Error('[http.routing.Router#route] Request must be an instance of http.Request');
+      }
+      if (this._groups.length) {
+        this._groups.forEach(function (group) {
+          return group.execute().forEach(function (route) {
+            return _this2.add(route);
+          });
+        });
       }
 
       var _iteratorNormalCompletion = true;
@@ -106,13 +239,11 @@ var Router = function (_Bag) {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              name = _step$value[0],
-              route = _step$value[1];
+        for (var _iterator = this._routes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var route = _step.value;
 
           if (route.match(request)) {
-            request.setAttributes(Object.assign(route.getAttributes(), route.getMatches()));
+            request.setAttributes(Object.assign(route.getAttributes().except(['controller', 'action']), route.getMatches()));
             return route;
           }
         }
@@ -133,9 +264,44 @@ var Router = function (_Bag) {
 
       return null;
     }
+  }, {
+    key: 'get',
+    value: function get(path) {
+      this.add(new _route2.default(_request2.default.METHOD_GET, path));
+    }
+  }, {
+    key: 'post',
+    value: function post(path) {
+      return this.add(new _route2.default(_request2.default.METHOD_POST, path));
+    }
+  }, {
+    key: 'put',
+    value: function put(path) {
+      return this.add(new _route2.default(_request2.default.METHOD_PUT, path));
+    }
+  }, {
+    key: 'patch',
+    value: function patch(path) {
+      return this.add(new _route2.default(_request2.default.METHOD_PATCH, path));
+    }
+  }, {
+    key: 'delete',
+    value: function _delete(path) {
+      return this.add(new _route2.default(_request2.default.METHOD_DELETE, path));
+    }
+  }, {
+    key: 'group',
+    value: function group(routes) {
+      return this.add(new GroupRoute(routes));
+    }
+  }, {
+    key: 'length',
+    get: function get() {
+      return this._routes.length;
+    }
   }]);
 
   return Router;
-}(_bag2.default);
+}();
 
 exports.default = Router;

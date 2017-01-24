@@ -9,19 +9,19 @@ describe('http/routing/route.js', () => {
     route = new Route()
   })
 
-  it('[getOptions] should return an instance of Bag', () => {
-    expect(route.getOptions() instanceof Bag).to.be.true
+  it('[getAttributes] should return an instance of Bag', () => {
+    expect(route.getAttributes() instanceof Bag).to.be.true
   })
 
-  it('[setOptions] should allow to set options', () => {
-    let options = {hello: 'World'}
+  it('[setAttributes] should allow to set attributes', () => {
+    let attributes = {hello: 'World'}
 
-    route.setOptions(options)
-    expect(route.getOptions().get('hello')).to.equal('World')
+    route.setAttributes(attributes)
+    expect(route.getAttributes().get('hello')).to.equal('World')
 
-    options = new Bag(options)
-    route.setOptions(options)
-    expect(route.getOptions().get('hello')).to.equal('World')
+    attributes = new Bag(attributes)
+    route.setAttributes(attributes)
+    expect(route.getAttributes().get('hello')).to.equal('World')
   })
 
   it('[preMatch] should perform pre-scanning for demands', () => {

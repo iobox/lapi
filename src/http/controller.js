@@ -1,8 +1,8 @@
 import ContainerAware from '../di/container-aware'
-import Request from 'request'
-import Response from 'response/response'
+import Request from './request'
+import Response from './response'
 import InvalidArgumentException from '../exception/invalid-argument'
-import Route from 'routing/route'
+import Route from './routing/route'
 
 export default class Controller extends ContainerAware {
   /**
@@ -33,7 +33,7 @@ export default class Controller extends ContainerAware {
     if (route instanceof Route) {
       this._route = route
     } else {
-      throw new InvalidArgumentException('[Foundation/Controller#setRoute] route must be an instance of Route')
+      throw new InvalidArgumentException('[http.Controller#setRoute] route must be an instance of Route')
     }
   }
 
@@ -54,7 +54,7 @@ export default class Controller extends ContainerAware {
     if (request instanceof Request) {
       this._request = request
     } else {
-      throw new InvalidArgumentException('[Foundation/Controller#setRequest] request must be an instance of Request')
+      throw new InvalidArgumentException('[http.Controller#setRequest] request must be an instance of Request')
     }
   }
 
@@ -75,7 +75,7 @@ export default class Controller extends ContainerAware {
     if (response instanceof Response) {
       this._response = response
     } else {
-      throw new InvalidArgumentException('[Foundation/Controller#setResponse] request must be an instance of Response')
+      throw new InvalidArgumentException('[http.Controller#setResponse] request must be an instance of Response')
     }
   }
 

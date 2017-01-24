@@ -10,7 +10,7 @@ var _kernel = require('./foundation/extension/kernel');
 
 var _kernel2 = _interopRequireDefault(_kernel);
 
-var _controller = require('./foundation/controller');
+var _controller = require('./http/controller');
 
 var _controller2 = _interopRequireDefault(_controller);
 

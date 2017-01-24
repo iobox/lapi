@@ -1,3 +1,4 @@
+import NotImplementedException from '../exception/not-implemented'
 /**
  * @interface
  */
@@ -8,7 +9,9 @@ export default class LoggerInterface {
    * @param {string} [message='']
    * @param {Array} [traces=[]]
    */
-  write(type = LoggerInterface.TYPE_INFO, message = '', traces = []) {}
+  write(type = LoggerInterface.TYPE_INFO, message = '', traces = []) {
+    throw new NotImplementedException('[logger.LoggerInterface#write]')
+  }
 }
 LoggerInterface.TYPE_ERROR   = 'error'
 LoggerInterface.TYPE_INFO    = 'info'

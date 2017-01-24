@@ -171,6 +171,24 @@ export default class Bag {
     return bag
   }
 
+  /**
+   * Get key-value pairs except for proposed keys
+   * @param {?Array} keys An array of keys to ignore their's values
+   * @returns {{}}
+   * @throws {InvalidArgumentException} throws an exception when keys is not an array
+   */
+  except(keys) {
+    if (!Array.isArray(keys)) {
+      throw new InvalidArgumentException('[Foundation/Bag#only] keys must be an array')
+    }
+    let bag = {}
+    keys.forEach(key => {
+      if (!keys.includes(key)) {
+        bag[key] = this.get(key)
+      }
+    })
+    return bag
+  }
   raw(keys) {
     let raw = {}
     if (keys !== undefined && !Array.isArray(keys)) {

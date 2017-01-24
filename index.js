@@ -1,73 +1,75 @@
 // AUTO GENERATED ==>
 var $exports = {
  "Collection": "collection.js",
- "DB": {
+ "db": {
   "Db": "db/db.js",
-  "Driver": {
+  "driver": {
    "MongoDb": "db/driver/mongo.js"
   },
   "Model": "db/model.js",
   "Repository": "db/repository.js",
   "Schema": "db/schema.js"
  },
- "DI": {
+ "di": {
   "ContainerAware": "di/container-aware.js",
   "Container": "di/container.js"
  },
- "Event": {
+ "event": {
   "EventListener": "event/listener.js",
   "EventManager": "event/manager.js"
  },
- "Exception": {
-  "Exception": "exception/exception.js",
+ "exception": {
   "InternalErrorException": "exception/internal-error.js",
   "InvalidArgumentException": "exception/invalid-argument.js",
   "NotFoundException": "exception/not-found.js",
   "NotImplementedException": "exception/not-implemented.js"
  },
- "Foundation": {
+ "Exception": "exception.js",
+ "foundation": {
   "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
-  "Controller": "foundation/controller.js",
-  "Extension": {
-   "Extension": "foundation/extension/extension.js",
+  "extension": {
    "KernelExtension": "foundation/extension/kernel.js",
    "ExtensionManager": "foundation/extension/manager.js",
    "ModuleExtension": "foundation/extension/module.js"
-  }
+  },
+  "Extension": "foundation/extension.js"
  },
- "Http": {
+ "http": {
   "Body": "http/body.js",
-  "Exception": {
+  "Controller": "http/controller.js",
+  "exception": {
    "HttpException": "http/exception/http.js",
    "InvalidArgumentException": "http/exception/invalid-argument.js",
    "NotFoundException": "http/exception/not-found.js"
   },
   "Header": "http/header.js",
   "Message": "http/message.js",
-  "Query": {
-   "Extension": {
+  "query": {
+   "extension": {
     "CommonExtension": "http/query/extension/common.js",
     "QueryExtension": "http/query/extension/extension.js"
    },
    "Validator": "http/query/validator.js"
   },
   "Request": "http/request.js",
-  "Response": {
-   "JsonResponse": "http/response/json.js",
-   "Response": "http/response/response.js"
+  "response": {
+   "JsonResponse": "http/response/json.js"
   },
-  "Routing": {
+  "Response": "http/response.js",
+  "routing": {
+   "MiddleWare": "http/routing/middleware.js",
    "Route": "http/routing/route.js",
    "Router": "http/routing/router.js"
   }
  },
- "Logger": {
+ "logger": {
   "ConsoleLogger": "logger/console.js",
+  "EmptyLogger": "logger/empty.js",
   "FileLogger": "logger/file.js",
   "LoggerInterface": "logger/interface.js"
  },
- "Utils": {
+ "utils": {
   "Str": "utils/str.js"
  }
 };
