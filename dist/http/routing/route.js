@@ -461,13 +461,28 @@ var Route = function () {
     /**
      * Set Route's handler
      * @param {Controller|Function} controller Class of controller
-     * @param {string} action name of action to be called
+     * @param {?(string|Function)} [action=null] name of action to be called
      * @returns {Route}
      */
 
   }, {
     key: 'handler',
-    value: function handler(controller, action) {
+    value: function handler(controller) {
+      var action = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
+      if (typeof controller === 'function' && action === null) {
+        // In this case, controller is just a callable function,
+        // then we convert it to Controller instance
+        action = controller;
+        controller = new _controller2.default();
+      } else if (controller === null && typeof action === 'function') {
+        // In this case, action is defined explicitly as a callable function,
+        // then we convert it to Controller instance
+        controller = new _controller2.default();
+      } else if (!(controller instanceof _controller2.default)) {
+        throw new _invalidArgument2.default('[http.routing.route#handler] controller must be an instance of Controller');
+      }
+
       this.getAttributes().set('controller', controller || null);
       this.getAttributes().set('action', action || null);
       return this;

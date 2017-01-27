@@ -355,10 +355,23 @@ export default class Route {
   /**
    * Set Route's handler
    * @param {Controller|Function} controller Class of controller
-   * @param {string} action name of action to be called
+   * @param {?(string|Function)} [action=null] name of action to be called
    * @returns {Route}
    */
-  handler(controller, action) {
+  handler(controller, action = null) {
+    if (typeof controller === 'function' && action === null) {
+      // In this case, controller is just a callable function,
+      // then we convert it to Controller instance
+      action = controller
+      controller = new Controller()
+    } else if (controller === null && typeof action === 'function') {
+      // In this case, action is defined explicitly as a callable function,
+      // then we convert it to Controller instance
+      controller = new Controller()
+    } else if (!(controller instanceof Controller)) {
+      throw new InvalidArgumentException('[http.routing.route#handler] controller must be an instance of Controller')
+    }
+
     this.getAttributes().set('controller', controller || null)
     this.getAttributes().set('action', action || null)
     return this

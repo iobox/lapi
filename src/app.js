@@ -1,24 +1,23 @@
-import Bag from './bag'
-import ContainerAware from '../di/container-aware'
-import Container from '../di/container'
-import Router from '../http/routing/router'
-import ModuleExtension from './extension/module'
-import ExtensionManager from './extension/manager'
-import Extension from './extension'
-import EventManager from '../event/manager'
-import EmptyLogger from '../logger/empty'
-import LoggerInterface from '../logger/interface'
-import Request from '../http/request'
-import Header from '../http/header'
-import Route from '../http/routing/route'
-import Controller from '../http/controller'
-import JsonResponse from '../http/response/json'
-import Response from '../http/response'
-import Exception from '../exception'
-import HttpException from '../http/exception/http'
-import InternalErrorException from '../exception/internal-error'
-import InvalidArgumentException from '../exception/invalid-argument'
-import NotFoundException from '../http/exception/not-found'
+import Bag from './foundation/bag'
+import ContainerAware from './di/container-aware'
+import Container from './di/container'
+import Router from './http/routing/router'
+import ModuleExtension from './foundation/extension/module'
+import ExtensionManager from './foundation/extension/manager'
+import Extension from './foundation/extension'
+import EventManager from './event/manager'
+import EmptyLogger from './logger/empty'
+import LoggerInterface from './logger/interface'
+import Request from './http/request'
+import Header from './http/header'
+import Route from './http/routing/route'
+import Controller from './http/controller'
+import JsonResponse from './http/response/json'
+import Response from './http/response'
+import Exception from './exception'
+import HttpException from './http/exception/http'
+import InternalErrorException from './exception/internal-error'
+import NotFoundException from './http/exception/not-found'
 
 const http = require('http')
 const https = require('https')
@@ -48,6 +47,7 @@ export default class App extends ContainerAware {
      * @private
      */
     this._extensionManager = new ExtensionManager()
+    this._registeredMiddlewares = new Bag()
   }
 
   /**
@@ -99,22 +99,61 @@ export default class App extends ContainerAware {
   }
 
   /**
-   * Run application
+   * Register a middleware
+   * @param {string} name
+   * @param {Function} middleware
+   * @returns {App}
+   */
+  use(name, middleware) {
+    this._registeredMiddlewares.set(name, middleware)
+    return this
+  }
+
+  /**
+   * Start application
    * @param {Object} [options=null] Optional configuration for application
    */
-  run(options = null) {
+  start(options = null) {
     let container = this.getContainer()
     container.set('foundation.app.events', new EventManager())
     container.set('http.routing.router', new Router())
     container.set('foundation.app.options', new Bag(typeof options === 'object' ? options : {}))
     container.set('foundation.app.logger', new EmptyLogger())
 
-    try {
-      this.setUpExtensions()
-      this.setUpEvents()
-      this.setUpServers()
-    } catch (e) {
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+    this.setUp()
+      .then(() => {
+        this.getLogger().write(LoggerInterface.TYPE_INFO, 'Application has been started successfully.')
+      })
+      .catch(e => {
+        this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+      })
+  }
+
+  /**
+   * It runs when application is starting
+   * @returns {Promise}
+   */
+  setUp() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.setUpExtensions()
+        this.setUpEvents()
+        this.setUpServers()
+        resolve()
+      } catch (e) {
+        reject(e)
+      }
+    });
+  }
+
+  /**
+   * It runs when a response is sent to client
+   */
+  tearDown() {
+    for (let extension of this.getExtensionManager().getExtensions()) {
+      if (extension instanceof ModuleExtension) {
+        extension.tearDown()
+      }
     }
   }
 
@@ -286,16 +325,21 @@ export default class App extends ContainerAware {
    */
   handleRequest(req, res) {
     const conn  = new Connection(req, res)
-    let request = null
+    let route = null,
+        request = null,
+        response = null
 
     this.initRequest(conn)
-      .then((req) => {
-        request = req
-        return this.routeRequest(request)
-      })
-      .then((route) => this.dispatchRequest(route, request))
-      .then((response) => this.sendResponse(response, conn))
-      .catch((e) => this.handleRequestError(e, conn, request))
+      .then(r => { request = r })
+      .then(() => this.routeRequest(request))
+      .then(r => { route = r })
+      .then(() => this.handleMiddlewares(route, request))
+      .then(r => { if (r instanceof Response) response = r })
+      .then(() => this.dispatchRequest(route, request, response))
+      .then(r => { if (r instanceof Response) response = r })
+      .then(() => this.sendResponse(response, conn))
+      .then(() => this.tearDown())
+      .catch(e => this.handleRequestError(e, conn, request, response))
   }
 
   /**
@@ -342,7 +386,6 @@ export default class App extends ContainerAware {
     return new Promise((resolve, reject) => {
       try {
         const route = this.getRouter().route(request)
-
         if (route instanceof Route) {
           resolve(route)
         } else {
@@ -355,17 +398,61 @@ export default class App extends ContainerAware {
   }
 
   /**
-   * Dispatch request
+   * Handle route's middlewares
    * @protected
    * @param {Route} route
    * @param {Request} request
    * @returns {Promise}
+   */
+  handleMiddlewares(route, request) {
+    return new Promise((resolve, reject) => {
+      const middlewares = route.getMiddlewares()
+      let response = null
+      if (middlewares.length) {
+        let tasks = []
+        route.getMiddlewares().forEach(name => {
+          if (!this._registeredMiddlewares.has(name)) {
+            return false
+          }
+          tasks.push(new Promise((resolve, reject) => {
+            try {
+              const r = this._registeredMiddlewares.get(name)(route, request)
+              if (r instanceof Response) {
+                response = r
+              }
+              resolve()
+            } catch (e) {
+              reject(e)
+            }
+          }))
+        })
+        Promise.all(tasks)
+          .then(() => resolve(response))
+          .catch(e => reject(e))
+      } else {
+        resolve(response)
+      }
+    })
+  }
+
+  /**
+   * Dispatch request
+   * @protected
+   * @param {Route} route
+   * @param {Request} request
+   * @param {?Response} response
+   * @returns {Promise}
    * @emits foundation.controller.action.before
    */
-  dispatchRequest(route, request) {
+  dispatchRequest(route, request, response) {
     return new Promise((resolve, reject) => {
-      let response = new JsonResponse()
-      const controller = route.getAttributes().get('controller')
+      if (response instanceof Response) {
+        return resolve(response)
+      } else {
+        response = new JsonResponse()
+      }
+      const controller = route.getAttributes().get('controller'),
+            container  = this.getContainer()
       if (controller instanceof Controller) {
         const action = route.getAttributes().get('action')
         if (action === null || action === '' || (typeof action === 'string' && typeof controller[action] !== 'function')) {
@@ -376,38 +463,30 @@ export default class App extends ContainerAware {
           }))
         }
 
-        controller.setContainer(this.getContainer())
+        controller.setContainer(container)
         controller.setRequest(request)
         controller.setResponse(response)
         controller.setRoute(route)
 
-        this.getEvents()
-          .emit('foundation.controller.action.before', {
-            controller: controller,
-            action: action,
-            request: request,
-            route: route
-          })
-          .then(() => {
-            let result = null
-            if (typeof action === 'function') {
-              result = controller.action(action)
-            } else {
-              result = controller[action]()
-            }
-            if (result instanceof Promise) {
-              result.then((result) => {
-                this.handleActionResult(result, controller)
-                resolve(controller.getResponse())
-              }).catch((e) => {
-                reject(e)
-              })
-            } else {
-              this.handleActionResult(result, controller)
-              resolve(controller.getResponse())
-            }
-          })
-          .catch(reject)
+        let result = null
+        if (typeof action === 'function') {
+          result = controller.action(action, request, response, container, route)
+        } else {
+          result = controller[action]()
+        }
+        if (result instanceof Promise) {
+          result.then((result) => {
+            this.handleActionResult(result, controller)
+            resolve(controller.getResponse())
+          }).catch(e => reject(e))
+        } else {
+          try {
+            this.handleActionResult(result, controller)
+            resolve(controller.getResponse())
+          } catch (e) {
+            reject(e)
+          }
+        }
       } else {
         reject(new InternalErrorException('[foundation.App#dispatchRequest] controller is not defined or not an instance of http.Controller', null, {
           'request': request,
@@ -447,21 +526,25 @@ export default class App extends ContainerAware {
    */
   sendResponse(response, conn) {
     return new Promise((resolve, reject) => {
-      this.getEvents()
-        .emit('http.response.send.before', {
-          response: response,
-          conn: conn
-        })
-        .then(() => {
-          try {
-            response.send(conn.res)
-            resolve(response)
-          } catch(e) {
-            this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
-            conn.res.end('')
-          }
-        })
-        .catch(e => reject(e))
+      if (response === null || !(response instanceof Response)) {
+        reject(new InternalErrorException('An appropriate response could not be found'))
+      } else {
+        this.getEvents()
+          .emit('http.response.send.before', {
+            response: response,
+            conn: conn
+          })
+          .then(() => {
+            try {
+              response.send(conn.res)
+              resolve(response)
+            } catch(e) {
+              this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+              conn.res.end('')
+            }
+          })
+          .catch(e => reject(e))
+      }
     })
   }
 
@@ -474,8 +557,10 @@ export default class App extends ContainerAware {
    * @emits http.request.exception
    * @emits system.error
    */
-  handleRequestError(e, conn, request = null) {
-    if (e instanceof Exception) {
+  handleRequestError(e, conn, request = null, response = null) {
+    if (response instanceof Response) {
+      this.sendResponse(response, conn)
+    } else if (e instanceof Exception) {
       this.getEvents().emit('http.request.exception', {
         exception: e,
         conn: conn

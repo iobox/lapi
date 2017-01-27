@@ -1,47 +1,62 @@
-import App from './foundation/app'
-import KernelExtension from './foundation/extension/kernel'
+import App from './app'
+import ConsoleLogger from './logger/console'
+import JsonResponse from './http/response/json'
 import Controller from './http/controller'
-import NotFoundException from './http/exception/not-found'
-
-let app = new App()
-app.extend(new KernelExtension())
-var options = {
-  'server.port': 8080,
-  'logger.driver': 'console',
-  'logger.options': true
+import ModuleExtension from './foundation/extension/module'
+class BlogExtension extends ModuleExtension {
+  getName() {
+    return 'module.blog'  
+  }
+  
+  setUp() {
+    var events = this.getContainer().get('foundation.app.events')
+    events.on('http.server.ready', (args, next) => {
+      console.log('Blog extension is ready!')
+      next()
+    })
+  }
 }
-app.run(options)
+const app = new App(),
+      container = app.getContainer()
+app.extend(new BlogExtension())
+app.start({
+  'server.port': 8080
+})
+container.set('foundation.app.logger', new ConsoleLogger())
 
-class MyController extends Controller {
-  getUserAction() {
-    // throw new NotFoundException('This page could not be found!')
+app.use('auth', (route, request) => {
+  return new JsonResponse({
+    error: "Authentication is required"
+  })
+})
+
+class BlogController extends Controller {
+  getItemAction() {
     return {
-      user: this.getRequest().get('user'),
-      email: this.getRequest().get('email')
+      data: {
+        id: 1,
+        title: "Some blog title"
+      }
     }
   }
 }
-
-// app.getContainer().get('events').once('http.response.send.before', (event, done) => {
-//   event.response.getBody().setContent(JSON.stringify({
-//     status: true,
-//     message: 'Hello World!'
-//   }))
-//   done()
-// })
-
-app.get('/controller/action', null, {
-  controller: new MyController(),
-  action: 'getUserAction'
-})
-app.get('/hello/{user}', null, function() {
-  const request = this.getRequest()
+const router = app.getRouter()
+router.get('/hello/world').handler(function() {
   return {
-    message: `Hello^ ${request.get('user')}!`,
-    queries: request.getQuery().all()
+    data: {
+      say: "Hello World!",
+      isAuthenticated: this.getRequest().get('isAuthenticated')
+    }
   }
-})
-app.put('/hello', null, function() {
-  const request = this.getRequest()
-  return request.getBody().getParsedContent().all()
-})
+}).middleware(['auth'])
+router.group(function() {
+  this.get('/users/{id}').require({id: /\d+/}).handler(function(request) {
+    return {
+      data: {
+        id: request.get('id'),
+        name: "Long Do"
+      }
+    }
+  }).middleware(['isMale'])
+}).prefix('/v1').middleware(['v1'])
+router.get('/blogs/{id}').require({id: /\d+/}).handler(new BlogController(), 'getItemAction')

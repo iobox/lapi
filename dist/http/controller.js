@@ -142,7 +142,7 @@ var Controller = function (_ContainerAware) {
      * Therefore, override this method is prohibited
      *
      * @param {function} action
-     * @param {Array} args
+     * @param {*} args
      * @returns {*}
      */
 

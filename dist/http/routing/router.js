@@ -16,14 +16,6 @@ var _request = require('../request');
 
 var _request2 = _interopRequireDefault(_request);
 
-var _bag = require('../../foundation/bag');
-
-var _bag2 = _interopRequireDefault(_bag);
-
-var _controller = require('../controller');
-
-var _controller2 = _interopRequireDefault(_controller);
-
 var _invalidArgument = require('../../exception/invalid-argument');
 
 var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
@@ -33,28 +25,31 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var GroupRoute = function () {
-  function GroupRoute() {
+  /**
+   * Constructor
+   * @param {?Function} callback
+   */
+  function GroupRoute(callback) {
     _classCallCheck(this, GroupRoute);
+
+    this._callback = callback;
+    this._router = new Router();
+    this._prefix = null;
+    this._host = null;
+    this._port = null;
+    this._middlewares = null;
   }
 
   _createClass(GroupRoute, [{
-    key: 'contructor',
-    value: function contructor(routes) {
-      this._routes = routes;
-      this._prefix = null;
-      this._host = null;
-      this._port = null;
-      this._middlewares = null;
-    }
-  }, {
     key: 'execute',
     value: function execute() {
       var _this = this;
 
-      if (!Array.isArray(this._routes) || !this._routes.length) {
+      if (this._callback === undefined || this._callback === null) {
         return [];
       }
-      this._routes.forEach(function (route) {
+      this._callback.apply(this._router);
+      this._router.routes.forEach(function (route) {
         if (!(route instanceof _route2.default)) {
           return false;
         }
@@ -71,7 +66,7 @@ var GroupRoute = function () {
           route.setMiddlewares(route.getMiddlewares().concat(_this._middlewares));
         }
       });
-      return this._routes;
+      return this._router.routes;
     }
   }, {
     key: 'has',
@@ -88,21 +83,25 @@ var GroupRoute = function () {
     key: 'prefix',
     value: function prefix(_prefix) {
       this._prefix = _prefix;
+      return this;
     }
   }, {
     key: 'host',
     value: function host(_host) {
       this._host = _host;
+      return this;
     }
   }, {
     key: 'port',
     value: function port(_port) {
       this._port = _port;
+      return this;
     }
   }, {
     key: 'middleware',
-    value: function middleware(midlewares) {
-      this._middlewares = midlewares;
+    value: function middleware(middlewares) {
+      this._middlewares = middlewares;
+      return this;
     }
   }]);
 
@@ -182,16 +181,6 @@ var Router = function () {
         route.setName(name.replace(/\W+/g, '_'));
       }
 
-      // To make sure that handler always be a controller instance
-      var attributes = route.getAttributes(),
-          controller = attributes.get('controller'),
-          action = attributes.get('action');
-      if (action === null && typeof controller === 'function' && !(controller instanceof _controller2.default)) {
-        route.handler(new _controller2.default(), controller);
-      } else if (controller === null) {
-        throw new _invalidArgument2.default('[http.routing.Router#add] controller must be specified');
-      }
-
       this._routes.push(route);
       return route;
     }
@@ -226,12 +215,15 @@ var Router = function () {
       if (!(request instanceof _request2.default)) {
         throw new Error('[http.routing.Router#route] Request must be an instance of http.Request');
       }
+
+      // Process group of routes if any, and reset groups when done
       if (this._groups.length) {
         this._groups.forEach(function (group) {
           return group.execute().forEach(function (route) {
             return _this2.add(route);
           });
         });
+        this._groups = [];
       }
 
       var _iteratorNormalCompletion = true;
@@ -264,40 +256,87 @@ var Router = function () {
 
       return null;
     }
+
+    /**
+     * Add route with method GET
+     * @param {string} path
+     * @returns {Route}
+     */
+
   }, {
     key: 'get',
     value: function get(path) {
-      this.add(new _route2.default(_request2.default.METHOD_GET, path));
+      return this.add(new _route2.default(_request2.default.METHOD_GET, path));
     }
+
+    /**
+     * Add route with method POST
+     * @param {string} path
+     * @returns {Route}
+     */
+
   }, {
     key: 'post',
     value: function post(path) {
       return this.add(new _route2.default(_request2.default.METHOD_POST, path));
     }
+
+    /**
+     * Add route with method PUT
+     * @param {string} path
+     * @returns {Route}
+     */
+
   }, {
     key: 'put',
     value: function put(path) {
       return this.add(new _route2.default(_request2.default.METHOD_PUT, path));
     }
+
+    /**
+     * Add route with method PATCH
+     * @param {string} path
+     * @returns {Route}
+     */
+
   }, {
     key: 'patch',
     value: function patch(path) {
       return this.add(new _route2.default(_request2.default.METHOD_PATCH, path));
     }
+
+    /**
+     * Add route with method DELETE
+     * @param {string} path
+     * @returns {Route}
+     */
+
   }, {
     key: 'delete',
     value: function _delete(path) {
       return this.add(new _route2.default(_request2.default.METHOD_DELETE, path));
     }
+
+    /**
+     * Add a group of routes
+     * @param {?Function} callback
+     * @returns {Route}
+     */
+
   }, {
     key: 'group',
-    value: function group(routes) {
-      return this.add(new GroupRoute(routes));
+    value: function group(callback) {
+      return this.add(new GroupRoute(callback));
     }
   }, {
     key: 'length',
     get: function get() {
       return this._routes.length;
+    }
+  }, {
+    key: 'routes',
+    get: function get() {
+      return this._routes;
     }
   }]);
 

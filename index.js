@@ -1,5 +1,6 @@
 // AUTO GENERATED ==>
 var $exports = {
+ "App": "app.js",
  "Collection": "collection.js",
  "db": {
   "Db": "db/db.js",
@@ -26,10 +27,8 @@ var $exports = {
  },
  "Exception": "exception.js",
  "foundation": {
-  "App": "foundation/app.js",
   "Bag": "foundation/bag.js",
   "extension": {
-   "KernelExtension": "foundation/extension/kernel.js",
    "ExtensionManager": "foundation/extension/manager.js",
    "ModuleExtension": "foundation/extension/module.js"
   },

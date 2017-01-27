@@ -1,12 +1,15 @@
 import Route from './route'
 import Request from '../request'
-import Bag from '../../foundation/bag'
-import Controller from '../controller'
 import InvalidArgumentException from '../../exception/invalid-argument'
 
 class GroupRoute {
-  contructor(routes) {
-    this._routes = routes
+  /**
+   * Constructor
+   * @param {?Function} callback
+   */
+  constructor(callback) {
+    this._callback = callback
+    this._router = new Router()
     this._prefix = null
     this._host = null
     this._port = null
@@ -14,10 +17,11 @@ class GroupRoute {
   }
 
   execute() {
-    if (!Array.isArray(this._routes) || !this._routes.length) {
+    if (this._callback === undefined || this._callback === null) {
       return []
     }
-    this._routes.forEach(route => {
+    this._callback.apply(this._router)
+    this._router.routes.forEach(route => {
       if (!(route instanceof Route)) {
         return false
       }
@@ -34,7 +38,7 @@ class GroupRoute {
         route.setMiddlewares(route.getMiddlewares().concat(this._middlewares))
       }
     })
-    return this._routes
+    return this._router.routes
   }
 
   has(name) {
@@ -49,18 +53,22 @@ class GroupRoute {
 
   prefix(prefix) {
     this._prefix = prefix
+    return this
   }
 
   host(host) {
     this._host = host
+    return this
   }
 
   port(port) {
     this._port = port
+    return this
   }
 
-  middleware(midlewares) {
-    this._middlewares = midlewares
+  middleware(middlewares) {
+    this._middlewares = middlewares
+    return this
   }
 }
 
@@ -80,6 +88,10 @@ export default class Router {
 
   get length() {
     return this._routes.length
+  }
+
+  get routes() {
+    return this._routes
   }
 
   has(name) {
@@ -132,17 +144,6 @@ export default class Router {
       route.setName(name.replace(/\W+/g, '_'))
     }
 
-    // To make sure that handler always be a controller instance
-    const attributes = route.getAttributes(),
-          controller = attributes.get('controller'),
-          action = attributes.get('action')
-    if (action === null
-        && typeof controller === 'function' && !(controller instanceof Controller)) {
-      route.handler(new Controller(), controller)
-    } else if (controller === null) {
-      throw new InvalidArgumentException('[http.routing.Router#add] controller must be specified')
-    }
-
     this._routes.push(route)
     return route
   }
@@ -169,8 +170,11 @@ export default class Router {
     if (!(request instanceof Request)) {
       throw new Error('[http.routing.Router#route] Request must be an instance of http.Request')
     }
+
+    // Process group of routes if any, and reset groups when done
     if (this._groups.length) {
       this._groups.forEach(group => group.execute().forEach(route => this.add(route)))
+      this._groups = []
     }
 
     for (let route of this._routes) {
@@ -183,27 +187,57 @@ export default class Router {
     return null
   }
 
+  /**
+   * Add route with method GET
+   * @param {string} path
+   * @returns {Route}
+   */
   get(path) {
-    this.add(new Route(Request.METHOD_GET, path))
+    return this.add(new Route(Request.METHOD_GET, path))
   }
 
+  /**
+   * Add route with method POST
+   * @param {string} path
+   * @returns {Route}
+   */
   post(path) {
     return this.add(new Route(Request.METHOD_POST, path))
   }
 
+  /**
+   * Add route with method PUT
+   * @param {string} path
+   * @returns {Route}
+   */
   put(path) {
     return this.add(new Route(Request.METHOD_PUT, path))
   }
 
+  /**
+   * Add route with method PATCH
+   * @param {string} path
+   * @returns {Route}
+   */
   patch(path) {
     return this.add(new Route(Request.METHOD_PATCH, path))
   }
 
+  /**
+   * Add route with method DELETE
+   * @param {string} path
+   * @returns {Route}
+   */
   delete(path) {
     return this.add(new Route(Request.METHOD_DELETE, path))
   }
 
-  group(routes) {
-    return this.add(new GroupRoute(routes))
+  /**
+   * Add a group of routes
+   * @param {?Function} callback
+   * @returns {Route}
+   */
+  group(callback) {
+    return this.add(new GroupRoute(callback))
   }
 }
