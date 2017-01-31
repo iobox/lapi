@@ -45,10 +45,10 @@ var GroupRoute = function () {
     value: function execute() {
       var _this = this;
 
-      if (this._callback === undefined || this._callback === null) {
+      if (this._callback === undefined || this._callback === null || typeof this._callback !== 'function') {
         return [];
       }
-      this._callback.apply(this._router);
+      this._callback(this._router);
       this._router.routes.forEach(function (route) {
         if (!(route instanceof _route2.default)) {
           return false;

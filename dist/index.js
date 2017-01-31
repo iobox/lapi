@@ -113,8 +113,8 @@ router.get('/hello/world').handler(function () {
     }
   };
 }).middleware(['auth']);
-router.group(function () {
-  this.get('/users/{id}').require({ id: /\d+/ }).handler(function (request) {
+router.group(function (router) {
+  router.get('/users/{id}').require({ id: /\d+/ }).handler(function (request) {
     return {
       data: {
         id: request.get('id'),

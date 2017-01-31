@@ -17,10 +17,10 @@ class GroupRoute {
   }
 
   execute() {
-    if (this._callback === undefined || this._callback === null) {
+    if (this._callback === undefined || this._callback === null || typeof this._callback !== 'function') {
       return []
     }
-    this._callback.apply(this._router)
+    this._callback(this._router)
     this._router.routes.forEach(route => {
       if (!(route instanceof Route)) {
         return false

@@ -186,8 +186,8 @@ router.get(/* path */).middleware(['auth'])
 ```
 - Group of routes
 ```
-router.group(function() {
-  this.get(/* path */) // path is /v1/path, middleware is auth
-  this.get(/* other-path */).middleware(['new']) // path is /v1/other-path, middlewares are auth, new
+router.group((router) => {
+  router.get(/* path */) // path is /v1/path, middleware is auth
+  router.get(/* other-path */).middleware(['new']) // path is /v1/other-path, middlewares are auth, new
 }).prefix('/v1').middleware(['auth'])
 ```
