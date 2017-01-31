@@ -4,6 +4,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _message = require('./message');
@@ -115,6 +117,75 @@ var Response = function (_Message) {
 
       resource.statusCode = this.getStatusCode();
       resource.end(this.getBody().toString());
+    }
+
+    /**
+     * Create a response from resource
+     * @param {*} resource
+     * @returns {Promise}
+     */
+
+  }], [{
+    key: 'from',
+    value: function from(resource) {
+      var _this2 = this;
+
+      if (resource === null || (typeof resource === 'undefined' ? 'undefined' : _typeof(resource)) !== 'object') {
+        throw new Error('The resource of response must be an object.');
+      }
+
+      return new Promise(function (resolve, reject) {
+        var response = new Response();
+        _this2._setUpHeader(response, resource);
+        _this2._setUpBody(response, resource).then(function () {
+          resolve(response);
+        }).catch(function (e) {
+          return reject(e);
+        });
+      });
+    }
+
+    /**
+     * Setup Header
+     * @param {Response} response
+     * @param {*} resource
+     * @private
+     */
+
+  }, {
+    key: '_setUpHeader',
+    value: function _setUpHeader(response, resource) {
+      Object.keys(resource.headers).forEach(function (key) {
+        return response.getHeader().set(key, resource.headers[key]);
+      });
+      response.getBody().setContentType(response.getHeader().get(_header2.default.CONTENT_TYPE));
+      response.setStatusCode(resource.statusCode);
+    }
+
+    /**
+     * Setup Body Content
+     * @param {Response} response
+     * @param {*} resource
+     * @returns {Promise}
+     * @private
+     */
+
+  }, {
+    key: '_setUpBody',
+    value: function _setUpBody(response, resource) {
+      return new Promise(function (resolve, reject) {
+        var data = '';
+        resource.on('data', function (chunk) {
+          return data += chunk;
+        });
+        resource.on('end', function () {
+          response.getBody().setContent(data);
+          resolve();
+        });
+        resource.on('error', function (e) {
+          return reject(e);
+        });
+      });
     }
   }]);
 

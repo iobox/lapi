@@ -22,6 +22,10 @@ var _module = require('./foundation/extension/module');
 
 var _module2 = _interopRequireDefault(_module);
 
+var _interface = require('./logger/interface');
+
+var _interface2 = _interopRequireDefault(_interface);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -63,6 +67,10 @@ var app = new _app2.default(),
 app.extend(new BlogExtension());
 app.start({
   'server.port': 8080
+}).then(function () {
+  app.getLogger().write(_interface2.default.TYPE_INFO, 'Application has been started successfully.');
+}).catch(function (e) {
+  app.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
 });
 container.set('foundation.app.logger', new _console2.default());
 

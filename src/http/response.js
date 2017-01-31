@@ -65,6 +65,56 @@ export default class Response extends Message {
     resource.statusCode = this.getStatusCode()
     resource.end(this.getBody().toString())
   }
+
+  /**
+   * Create a response from resource
+   * @param {*} resource
+   * @returns {Promise}
+   */
+  static from(resource) {
+    if (resource === null || typeof resource !== 'object') {
+      throw new Error('The resource of response must be an object.')
+    }
+
+    return new Promise((resolve, reject) => {
+      let response = new Response()
+      this._setUpHeader(response, resource)
+      this._setUpBody(response, resource)
+        .then(() => { resolve(response) })
+        .catch(e => reject(e))
+    })
+  }
+
+  /**
+   * Setup Header
+   * @param {Response} response
+   * @param {*} resource
+   * @private
+   */
+  static _setUpHeader(response, resource) {
+    Object.keys(resource.headers).forEach(key => response.getHeader().set(key, resource.headers[key]))
+    response.getBody().setContentType(response.getHeader().get(Header.CONTENT_TYPE))
+    response.setStatusCode(resource.statusCode)
+  }
+
+  /**
+   * Setup Body Content
+   * @param {Response} response
+   * @param {*} resource
+   * @returns {Promise}
+   * @private
+   */
+  static _setUpBody(response, resource) {
+    return new Promise((resolve, reject) => {
+      let data = ''
+      resource.on('data', (chunk) => data += chunk)
+      resource.on('end', () => {
+        response.getBody().setContent(data)
+        resolve()
+      })
+      resource.on('error', e => reject(e))
+    })
+  }
 }
 Response.HTTP_OK                  = 200
 Response.HTTP_CREATED             = 201

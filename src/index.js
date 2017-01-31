@@ -3,6 +3,7 @@ import ConsoleLogger from './logger/console'
 import JsonResponse from './http/response/json'
 import Controller from './http/controller'
 import ModuleExtension from './foundation/extension/module'
+import LoggerInterface from './logger/interface'
 class BlogExtension extends ModuleExtension {
   getName() {
     return 'module.blog'  
@@ -22,6 +23,12 @@ app.extend(new BlogExtension())
 app.start({
   'server.port': 8080
 })
+  .then(() => {
+    app.getLogger().write(LoggerInterface.TYPE_INFO, 'Application has been started successfully.')
+  })
+  .catch(e => {
+    app.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+  })
 container.set('foundation.app.logger', new ConsoleLogger())
 
 app.use('auth', (route, request) => {

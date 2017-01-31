@@ -48,6 +48,7 @@ export default class App extends ContainerAware {
      */
     this._extensionManager = new ExtensionManager()
     this._registeredMiddlewares = new Bag()
+    this._server = null
   }
 
   /**
@@ -120,13 +121,7 @@ export default class App extends ContainerAware {
     container.set('foundation.app.options', new Bag(typeof options === 'object' ? options : {}))
     container.set('foundation.app.logger', new EmptyLogger())
 
-    this.setUp()
-      .then(() => {
-        this.getLogger().write(LoggerInterface.TYPE_INFO, 'Application has been started successfully.')
-      })
-      .catch(e => {
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
-      })
+    return this.setUp()
   }
 
   /**
@@ -138,8 +133,9 @@ export default class App extends ContainerAware {
       try {
         this.setUpExtensions()
         this.setUpEvents()
-        this.setUpServers()
-        resolve()
+        this.setUpServer()
+          .then(() => { resolve(this._server) })
+          .catch(e => reject(e))
       } catch (e) {
         reject(e)
       }
@@ -181,7 +177,7 @@ export default class App extends ContainerAware {
       next()
     })
     this.getEvents().on('http.server.ready', (args, next) => {
-      console.log(`[info] Server is started at ${args.get('host')}:${args.get('port')}`)
+      this.getLogger().write(LoggerInterface.TYPE_INFO, `[info] Server is started at ${args.get('host')}:${args.get('port')}`)
       next()
     })
     this.getEvents().on('foundation.controller.action.before', (args, next) => {
@@ -244,77 +240,90 @@ export default class App extends ContainerAware {
 
   /**
    * @protected
+   * @returns {Promise}
    */
-  setUpServers() {
-    const protocol = this.getOptions().get('server.protocol', 'http')
-    let server = null
-    try {
+  setUpServer() {
+    return new Promise((resolve, reject) => {
+      const protocol = this.getOptions().get('server.protocol', 'http')
       if (protocol === 'https') {
         // set up HTTPS server
-        server = this._setUpServerHttps()
+        this._setUpServerHttps().then(() => {
+          this._setUpServerEvents()
+          resolve()
+        }).catch(e => reject(e))
       } else {
         // set up HTTP server
-        server = this._setUpServerHttp()
+        this._setUpServerHttp().then(() => {
+          this._setUpServerEvents()
+          resolve()
+        }).catch(e => reject(e))
       }
-    } catch (e) {
-      this.getEvents().emit('error', {
-        error: new InternalErrorException(e.message)
-      })
-      return false
-    }
+    })
+  }
 
-    if (server) {
-      server.on('clientError', (err, socket) => {
-        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n')
-      })
-      server.on('request', (req, res) => this.handleRequest(req, res))
-    } else {
-      this.getEvents().emit('error', {
-        error: new InternalErrorException('Unable to set up a server')
-      })
-    }
+  /**
+   * Set up related events handler to server
+   * @private
+   */
+  _setUpServerEvents() {
+    this._server.on('clientError', (err, socket) => {
+      socket.end('HTTP/1.1 400 Bad Request\r\n\r\n')
+    })
+    this._server.on('request', (req, res) => this.handleRequest(req, res))
   }
 
   /**
    * Start and return HTTP server instance
-   * @returns {http.Server}
+   * @returns {Promise}
    * @private
    */
   _setUpServerHttp() {
-    const host = this.getOptions().get('server.host', null)
-    const port = this.getOptions().get('server.port', 80)
-    const backlog = this.getOptions().get('server.backlog', 511)
-    return http.createServer()
-      .listen(port, host, backlog, () => {
-        this.getEvents().emit('http.server.ready', {
-          host: host,
-          port: port
-        })
-      })
+    return new Promise((resolve, reject) => {
+      const host = this.getOptions().get('server.host', null)
+      const port = this.getOptions().get('server.port', 80)
+      const backlog = this.getOptions().get('server.backlog', 511)
+      try {
+        this._server = http.createServer()
+          .listen(port, host, backlog, () => {
+            this.getEvents().emit('http.server.ready', {
+              host: host,
+              port: port
+            }).then(() => { resolve() })
+          })
+      } catch (e) {
+        reject(e)
+      }
+    })
   }
 
   /**
    * Start and return HTTP server instance
-   * @returns {https.Server}
+   * @returns {Promise}
    * @private
    */
   _setUpServerHttps() {
-    const host = this.getOptions().get('server.host', null)
-    const port = this.getOptions().get('server.port', 443)
-    const backlog = this.getOptions().get('server.backlog', 511)
-    if (!this.getOptions().has('server.ssl.key') || !this.getOptions().has('server.ssl.cert')) {
-      throw new InternalErrorException('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS')
-    }
-    return https.createServer({
-        key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
-        cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
-      })
-      .listen(port, host, backlog, () => {
-        this.getEvents().emit('http.server.ready', {
-          host: host,
-          port: port
-        })
-      })
+    return new Promise((resolve, reject) => {
+      const host = this.getOptions().get('server.host', null)
+      const port = this.getOptions().get('server.port', 443)
+      const backlog = this.getOptions().get('server.backlog', 511)
+      if (!this.getOptions().has('server.ssl.key') || !this.getOptions().has('server.ssl.cert')) {
+        reject(new InternalErrorException('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'))
+      }
+      try {
+        this._server = https.createServer({
+            key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
+            cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
+          })
+          .listen(port, host, backlog, () => {
+            this.getEvents().emit('http.server.ready', {
+              host: host,
+              port: port
+            }).then(() => { resolve() })
+          })
+      } catch (e) {
+        reject(e)
+      }
+    })
   }
 
   /**
@@ -573,5 +582,31 @@ export default class App extends ContainerAware {
         conn: conn
       })
     }
+  }
+
+  /**
+   * Stop application
+   * @returns {Promise}
+   */
+  stop() {
+    return new Promise((resolve, reject) => {
+      if (this._server === null) {
+        resolve()
+      } else {
+        try {
+          this._server.close(resolve)
+        } catch (e) {
+          reject(e)
+        }
+      }
+    })
+  }
+
+  /**
+   * Restart application
+   * @returns {Promise.<TResult>}
+   */
+  restart() {
+    return this.stop().then(this.start)
   }
 }

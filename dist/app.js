@@ -132,6 +132,7 @@ var App = function (_ContainerAware) {
 
     _this._extensionManager = new _manager2.default();
     _this._registeredMiddlewares = new _bag2.default();
+    _this._server = null;
     return _this;
   }
 
@@ -224,8 +225,6 @@ var App = function (_ContainerAware) {
   }, {
     key: 'start',
     value: function start() {
-      var _this2 = this;
-
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
       var container = this.getContainer();
@@ -234,11 +233,7 @@ var App = function (_ContainerAware) {
       container.set('foundation.app.options', new _bag2.default((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {}));
       container.set('foundation.app.logger', new _empty2.default());
 
-      this.setUp().then(function () {
-        _this2.getLogger().write(_interface2.default.TYPE_INFO, 'Application has been started successfully.');
-      }).catch(function (e) {
-        _this2.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
-      });
+      return this.setUp();
     }
 
     /**
@@ -249,14 +244,17 @@ var App = function (_ContainerAware) {
   }, {
     key: 'setUp',
     value: function setUp() {
-      var _this3 = this;
+      var _this2 = this;
 
       return new Promise(function (resolve, reject) {
         try {
-          _this3.setUpExtensions();
-          _this3.setUpEvents();
-          _this3.setUpServers();
-          resolve();
+          _this2.setUpExtensions();
+          _this2.setUpEvents();
+          _this2.setUpServer().then(function () {
+            resolve(_this2._server);
+          }).catch(function (e) {
+            return reject(e);
+          });
         } catch (e) {
           reject(e);
         }
@@ -344,20 +342,20 @@ var App = function (_ContainerAware) {
   }, {
     key: 'setUpEvents',
     value: function setUpEvents() {
-      var _this4 = this;
+      var _this3 = this;
 
       this.getEvents().on('error', function (args, next) {
-        _this4.getLogger().write(_interface2.default.TYPE_ERROR, args.get('error').getMessage());
+        _this3.getLogger().write(_interface2.default.TYPE_ERROR, args.get('error').getMessage());
         next();
       });
       this.getEvents().on('http.server.ready', function (args, next) {
-        console.log('[info] Server is started at ' + args.get('host') + ':' + args.get('port'));
+        _this3.getLogger().write(_interface2.default.TYPE_INFO, '[info] Server is started at ' + args.get('host') + ':' + args.get('port'));
         next();
       });
       this.getEvents().on('foundation.controller.action.before', function (args, next) {
         var request = args.get('request'),
             route = args.get('route');
-        _this4.getLogger().write(_interface2.default.TYPE_INFO, request.getMethod() + ' ' + request.getPath() + ' ' + request.getQuery().toString() + ' matches ' + route.getName(), [route.getMatches()]);
+        _this3.getLogger().write(_interface2.default.TYPE_INFO, request.getMethod() + ' ' + request.getPath() + ' ' + request.getQuery().toString() + ' matches ' + route.getName(), [route.getMatches()]);
         next();
       });
       this.getEvents().on('system.error', function (args, next) {
@@ -372,8 +370,8 @@ var App = function (_ContainerAware) {
             traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
           }
         }
-        _this4.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), traces);
-        _this4.sendResponse(response, args.get('conn'));
+        _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), traces);
+        _this3.sendResponse(response, args.get('conn'));
         next();
       });
       this.getEvents().on('http.request.exception', function (args, next) {
@@ -385,7 +383,7 @@ var App = function (_ContainerAware) {
               message: exception.getMessage()
             }
           }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this4.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), [exception.getArguments().all()]);
+          _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), [exception.getArguments().all()]);
         } else if (exception instanceof _http2.default) {
           response = new _json2.default({
             error: {
@@ -394,11 +392,11 @@ var App = function (_ContainerAware) {
             }
           }, exception.getStatusCode());
         } else if (exception instanceof Error) {
-          _this4.getLogger().write(_interface2.default.TYPE_ERROR, exception.message);
+          _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.message);
         }
 
         if (response instanceof _response2.default) {
-          _this4.sendResponse(response, args.get('conn'));
+          _this3.sendResponse(response, args.get('conn'));
         }
         next();
       });
@@ -406,47 +404,57 @@ var App = function (_ContainerAware) {
 
     /**
      * @protected
+     * @returns {Promise}
      */
 
   }, {
-    key: 'setUpServers',
-    value: function setUpServers() {
-      var _this5 = this;
+    key: 'setUpServer',
+    value: function setUpServer() {
+      var _this4 = this;
 
-      var protocol = this.getOptions().get('server.protocol', 'http');
-      var server = null;
-      try {
+      return new Promise(function (resolve, reject) {
+        var protocol = _this4.getOptions().get('server.protocol', 'http');
         if (protocol === 'https') {
           // set up HTTPS server
-          server = this._setUpServerHttps();
+          _this4._setUpServerHttps().then(function () {
+            _this4._setUpServerEvents();
+            resolve();
+          }).catch(function (e) {
+            return reject(e);
+          });
         } else {
           // set up HTTP server
-          server = this._setUpServerHttp();
+          _this4._setUpServerHttp().then(function () {
+            _this4._setUpServerEvents();
+            resolve();
+          }).catch(function (e) {
+            return reject(e);
+          });
         }
-      } catch (e) {
-        this.getEvents().emit('error', {
-          error: new _internalError2.default(e.message)
-        });
-        return false;
-      }
+      });
+    }
 
-      if (server) {
-        server.on('clientError', function (err, socket) {
-          socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-        });
-        server.on('request', function (req, res) {
-          return _this5.handleRequest(req, res);
-        });
-      } else {
-        this.getEvents().emit('error', {
-          error: new _internalError2.default('Unable to set up a server')
-        });
-      }
+    /**
+     * Set up related events handler to server
+     * @private
+     */
+
+  }, {
+    key: '_setUpServerEvents',
+    value: function _setUpServerEvents() {
+      var _this5 = this;
+
+      this._server.on('clientError', function (err, socket) {
+        socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+      });
+      this._server.on('request', function (req, res) {
+        return _this5.handleRequest(req, res);
+      });
     }
 
     /**
      * Start and return HTTP server instance
-     * @returns {http.Server}
+     * @returns {Promise}
      * @private
      */
 
@@ -455,20 +463,28 @@ var App = function (_ContainerAware) {
     value: function _setUpServerHttp() {
       var _this6 = this;
 
-      var host = this.getOptions().get('server.host', null);
-      var port = this.getOptions().get('server.port', 80);
-      var backlog = this.getOptions().get('server.backlog', 511);
-      return http.createServer().listen(port, host, backlog, function () {
-        _this6.getEvents().emit('http.server.ready', {
-          host: host,
-          port: port
-        });
+      return new Promise(function (resolve, reject) {
+        var host = _this6.getOptions().get('server.host', null);
+        var port = _this6.getOptions().get('server.port', 80);
+        var backlog = _this6.getOptions().get('server.backlog', 511);
+        try {
+          _this6._server = http.createServer().listen(port, host, backlog, function () {
+            _this6.getEvents().emit('http.server.ready', {
+              host: host,
+              port: port
+            }).then(function () {
+              resolve();
+            });
+          });
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 
     /**
      * Start and return HTTP server instance
-     * @returns {https.Server}
+     * @returns {Promise}
      * @private
      */
 
@@ -477,20 +493,28 @@ var App = function (_ContainerAware) {
     value: function _setUpServerHttps() {
       var _this7 = this;
 
-      var host = this.getOptions().get('server.host', null);
-      var port = this.getOptions().get('server.port', 443);
-      var backlog = this.getOptions().get('server.backlog', 511);
-      if (!this.getOptions().has('server.ssl.key') || !this.getOptions().has('server.ssl.cert')) {
-        throw new _internalError2.default('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS');
-      }
-      return https.createServer({
-        key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
-        cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
-      }).listen(port, host, backlog, function () {
-        _this7.getEvents().emit('http.server.ready', {
-          host: host,
-          port: port
-        });
+      return new Promise(function (resolve, reject) {
+        var host = _this7.getOptions().get('server.host', null);
+        var port = _this7.getOptions().get('server.port', 443);
+        var backlog = _this7.getOptions().get('server.backlog', 511);
+        if (!_this7.getOptions().has('server.ssl.key') || !_this7.getOptions().has('server.ssl.cert')) {
+          reject(new _internalError2.default('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'));
+        }
+        try {
+          _this7._server = https.createServer({
+            key: fs.readFileSync(_this7.getOptions().get('server.ssl.key')),
+            cert: fs.readFileSync(_this7.getOptions().get('server.ssl.cert'))
+          }).listen(port, host, backlog, function () {
+            _this7.getEvents().emit('http.server.ready', {
+              host: host,
+              port: port
+            }).then(function () {
+              resolve();
+            });
+          });
+        } catch (e) {
+          reject(e);
+        }
       });
     }
 
@@ -808,6 +832,40 @@ var App = function (_ContainerAware) {
           conn: conn
         });
       }
+    }
+
+    /**
+     * Stop application
+     * @returns {Promise}
+     */
+
+  }, {
+    key: 'stop',
+    value: function stop() {
+      var _this14 = this;
+
+      return new Promise(function (resolve, reject) {
+        if (_this14._server === null) {
+          resolve();
+        } else {
+          try {
+            _this14._server.close(resolve);
+          } catch (e) {
+            reject(e);
+          }
+        }
+      });
+    }
+
+    /**
+     * Restart application
+     * @returns {Promise.<TResult>}
+     */
+
+  }, {
+    key: 'restart',
+    value: function restart() {
+      return this.stop().then(this.start);
     }
   }]);
 
