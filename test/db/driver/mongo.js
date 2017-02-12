@@ -1,4 +1,4 @@
-import MongoDb from '../../../src/db/driver/mongo'
+import MongoDb from '../../../src/db/mongo'
 var expect = require('chai').expect
 
 /** @test {MongoDb} */

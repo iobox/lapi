@@ -20,9 +20,9 @@ var _notFound = require('../exception/not-found');
 
 var _notFound2 = _interopRequireDefault(_notFound);
 
-var _db = require('./db');
+var _interface = require('./interface');
 
-var _db2 = _interopRequireDefault(_db);
+var _interface2 = _interopRequireDefault(_interface);
 
 var _model = require('./model');
 
@@ -68,7 +68,7 @@ var Repository = function (_ContainerAware) {
         throw new _notFound2.default('[Db/Repository#getDb] db is not registered in DI/Container');
       }
       var db = this.getContainer().get('db');
-      if (!(db instanceof _db2.default)) {
+      if (!(db instanceof _interface2.default)) {
         throw new _invalidArgument2.default('[Db/Repository#getDb] db is null or not an instance of Db/Db');
       }
       return db;

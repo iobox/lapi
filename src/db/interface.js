@@ -1,5 +1,5 @@
 import NotImplementedException from '../exception/not-implemented'
-export default class Db {
+export default class DbInterface {
   /**
    * Open a new connection to database
    * @returns {Promise}

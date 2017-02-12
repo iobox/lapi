@@ -12,7 +12,7 @@ var _bag = require('../foundation/bag');
 
 var _bag2 = _interopRequireDefault(_bag);
 
-var _str = require('../utils/str');
+var _str = require('../utility/str');
 
 var _str2 = _interopRequireDefault(_str);
 

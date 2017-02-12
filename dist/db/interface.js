@@ -14,12 +14,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Db = function () {
-  function Db() {
-    _classCallCheck(this, Db);
+var DbInterface = function () {
+  function DbInterface() {
+    _classCallCheck(this, DbInterface);
   }
 
-  _createClass(Db, [{
+  _createClass(DbInterface, [{
     key: 'open',
 
     /**
@@ -123,7 +123,7 @@ var Db = function () {
     }
   }]);
 
-  return Db;
+  return DbInterface;
 }();
 
-exports.default = Db;
+exports.default = DbInterface;

@@ -1,7 +1,7 @@
-import Db from '../db'
-import Bag from '../../foundation/bag'
+import DbInterface from './interface'
+import Bag from '../foundation/bag'
 var MongoClient = require('mongodb')
-export default class MongoDb extends Db {
+export default class MongoDb extends DbInterface {
   constructor(url, options = null) {
     super()
     this._url = url

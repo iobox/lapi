@@ -1,4 +1,4 @@
-import MongoDb from '../../src/db/driver/mongo'
+import MongoDb from '../../src/db/mongo'
 import Model from '../../src/db/model'
 import Repository from '../../src/db/repository'
 import Schema from '../../src/db/schema'
