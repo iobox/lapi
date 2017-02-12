@@ -68,8 +68,9 @@ var $exports = {
   "FileLogger": "logger/file.js",
   "LoggerInterface": "logger/interface.js"
  },
- "utils": {
-  "Str": "utils/str.js"
+ "utility": {
+  "Base": "utility/base.js",
+  "Str": "utility/str.js"
  }
 };
 // <== AUTO GENERATED

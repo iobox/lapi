@@ -103,7 +103,6 @@ gulp.task('indexing', function () {
       }
     })
   }
-  const Str = require('./src/utils/str').default
   const parseFile = function (file) {
     var parts = file.split('/'), node = indexes
     parts.forEach(function (part) {

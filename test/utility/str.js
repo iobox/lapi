@@ -1,4 +1,4 @@
-import Str from "../../src/utils/str"
+import Str from "../../src/utility/str"
 var expect = require("chai").expect
 
 /** @test {Str} */
