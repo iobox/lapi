@@ -3,11 +3,9 @@ var $exports = {
  "App": "app.js",
  "Collection": "collection.js",
  "db": {
-  "Db": "db/db.js",
-  "driver": {
-   "MongoDb": "db/driver/mongo.js"
-  },
+  "DbInterface": "db/interface.js",
   "Model": "db/model.js",
+  "MongoDb": "db/mongo.js",
   "Repository": "db/repository.js",
   "Schema": "db/schema.js"
  },
