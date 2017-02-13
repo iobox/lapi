@@ -10,7 +10,9 @@
     "server": "./node_modules/.bin/gulp server",
     "doc": "./node_modules/.bin/esdoc -c esdoc.json",
     "prestart": "npm run doc",
-    "start": "SERVER_ROOT=./docs/api node server.js"
+    "start": "SERVER_ROOT=./docs/api node server.js",
+    "indexing": "./node_modules/.bin/gulp indexing",
+    "deploy": "npm run build && npm run indexing"
   },
   "repository": {
     "type": "git",
