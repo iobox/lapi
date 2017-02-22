@@ -2,6 +2,7 @@ const url = require('url')
 import Bag from '../foundation/bag'
 import Message from './message'
 import Header from './header'
+import Body from './body'
 
 /**
  * Http Request
@@ -216,6 +217,26 @@ export default class Request extends Message {
     } else {
       throw new Error('The request\'s client information must be either an instance of Bag or an object.')
     }
+  }
+
+  /**
+   * Set Request content
+   * @param {string|Object} content
+   * @param {string} [contentType="application/json"]
+   */
+  setContent(content, contentType = Body.CONTENT_JSON) {
+    if (typeof content === 'object') {
+      content = JSON.stringify(content)
+    }
+    this.setBody(new Body(content, contentType))
+  }
+
+  /**
+   * Get Request content
+   * @returns {string}
+   */
+  getContent() {
+    return this.getBody().getContent()
   }
 
   /**
