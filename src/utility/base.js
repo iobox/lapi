@@ -13,6 +13,17 @@ export default class Base {
   }
 
   use(target, methods) {
+    let source = this._source
+    switch (typeof this._source) {
+      case 'object':
+        source = this._source.constructor
+        break
+      case 'function':
+      default:
+        source = this._source
+        break
+    }
+
     Object.getOwnPropertyNames(target.prototype)
       .concat(Object.getOwnPropertySymbols(target.prototype))
       .forEach((prop) => {
@@ -24,8 +35,9 @@ export default class Base {
         if (typeof methods === 'object' && methods[prop] !== undefined) {
           method = methods[prop]
         }
-        Object.defineProperty(this._source, method, Object.getOwnPropertyDescriptor(target.prototype, prop))
+        Object.defineProperty(source.prototype, method, Object.getOwnPropertyDescriptor(target.prototype, prop))
       })
+
     return this
   }
 

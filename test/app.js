@@ -3,17 +3,20 @@ import ModuleExtension from '../src/foundation/extension/module'
 import JsonResponse from '../src/http/response/json'
 import Route from '../src/http/routing/route'
 import Request from '../src/http/request'
-import Response from '../src/http/response'
+import Api from '../src/test/api'
 var expect = require('chai').expect
-var http = require('http')
 
 /** @test {App} */
 describe('app.js', () => {
   let app, config = {
     'server.port': 8080
-  }, host = 'http://localhost:8080'
+  }, api
   beforeEach(() => {
     app = new App()
+    api = new Api({
+      host: 'localhost',
+      port: 8080
+    })
   })
   afterEach(() => {
     if (app instanceof App) {
@@ -60,17 +63,16 @@ describe('app.js', () => {
       })
       app.start(config).then(() => {
         app.getRouter().get('/hello').middleware(['auth'])
-        http.get(`${host}/hello`, (res) => {
-          Response.from(res).then((response) => {
-            expect(response).to.be.an.instanceof(Response)
-            expect(response.getHeader().get('content-type')).to.equal('application/json')
-            expect(response.getBody().getParsedContent().all()).to.deep.equal({
-              error: "Authentication is required"
-            })
-            expect(response.getStatusCode()).to.equal(400)
-            done(error)
-          }).catch(e => done(e))
-        })
+        api.get('/hello').then(spec => {
+          spec.hasHeaderKeyValue('content-type', 'application/json')
+          spec.hasBodyParsedContent({
+            error: "Authentication is required"
+          })
+          spec.hasStatusCode(400)
+
+          done(error)
+        }).catch(e => done(e))
+        // })
       })
     })
   })

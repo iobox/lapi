@@ -1,6 +1,7 @@
 import Request from '../http/request'
 import Response from '../http/response'
 import InvalidArgumentException from '../exception/invalid-argument'
+import Spec from './spec'
 var http = require('http')
 
 export default class Api {
@@ -14,7 +15,7 @@ export default class Api {
   }
 
   call(request) {
-    if (request instanceof Request) {
+    if (!(request instanceof Request)) {
       throw new InvalidArgumentException(`[test.Api#call] request must be an instance of Request`)
     }
 
@@ -26,7 +27,7 @@ export default class Api {
 
       const req = http.request(options, (res) => {
         Response.from(res).then(response => {
-          
+          resolve(new Api.Spec(response))
         })
       })
 
@@ -68,3 +69,4 @@ export default class Api {
     return request
   }
 }
+Api.Spec = Spec
