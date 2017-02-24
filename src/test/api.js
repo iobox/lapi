@@ -14,6 +14,11 @@ export default class Api {
     this._options = Object.assign(this._default, options)
   }
 
+  /**
+   * Call a request
+   * @param {Request} request
+   * @returns {Promise}
+   */
   call(request) {
     if (!(request instanceof Request)) {
       throw new InvalidArgumentException(`[test.Api#call] request must be an instance of Request`)
@@ -38,27 +43,71 @@ export default class Api {
       req.end()
     })
   }
-  
+
+  /**
+   * GET request
+   * @param {string} uri
+   * @param {Object} query
+   * @param {Object} header
+   * @returns {Promise}
+   */
   get(uri, query = {}, header = {}) {
     return this.call(this._makeRequest(Request.METHOD_GET, uri, query, {}, header))
   }
-  
+
+  /**
+   * POST request
+   * @param {string} uri
+   * @param {Object} content
+   * @param {Object} header
+   * @returns {Promise}
+   */
   post(uri, content = {}, header = {}) {
     return this.call(this._makeRequest(Request.METHOD_POST, uri, {}, content, header))
   }
 
+  /**
+   * PUT request
+   * @param {string} uri
+   * @param {Object} content
+   * @param {Object} header
+   * @returns {Promise}
+   */
   put(uri, content = {}, header = {}) {
     return this.call(this._makeRequest(Request.METHOD_PUT, uri, {}, content, header))
   }
 
+  /**
+   * PATCH request
+   * @param {string} uri
+   * @param {Object} content
+   * @param {Object} header
+   * @returns {Promise}
+   */
   patch(uri, content = {}, header = {}) {
     return this.call(this._makeRequest(Request.METHOD_PATCH, uri, {}, content, header))
   }
 
+  /**
+   * DELETE request
+   * @param {string} uri
+   * @param {Object} header
+   * @returns {Promise}
+   */
   delete(uri, header = {}) {
     return this.call(this._makeRequest(Request.METHOD_DELETE, uri, {}, {}, header))
   }
 
+  /**
+   * Make a request instance
+   * @param method
+   * @param uri
+   * @param query
+   * @param content
+   * @param header
+   * @returns {Request}
+   * @private
+   */
   _makeRequest(method, uri, query = {}, content = {}, header = {}) {
     let request = new Request()
     request.setMethod(method)
