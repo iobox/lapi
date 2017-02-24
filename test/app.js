@@ -72,7 +72,6 @@ describe('app.js', () => {
 
           done(error)
         }).catch(e => done(e))
-        // })
       })
     })
   })
