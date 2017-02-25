@@ -59,9 +59,18 @@ var $exports = {
   "FileLogger": "logger/file.js",
   "LoggerInterface": "logger/interface.js"
  },
- "utility": {
-  "Base": "utility/base.js",
-  "Str": "utility/str.js"
+ "test": {
+  "Api": "test/api.js",
+  "spec": {
+   "BodySpec": "test/spec/body.js",
+   "HeaderSpec": "test/spec/header.js",
+   "HttpSpec": "test/spec/http.js"
+  },
+  "Spec": "test/spec.js"
+ },
+ "util": {
+  "Base": "util/base.js",
+  "Str": "util/str.js"
  }
 };
 // <== AUTO GENERATED

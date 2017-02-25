@@ -46,4 +46,14 @@ export default class Base {
       this.use.apply(this, arg)
     })
   }
+
+  /**
+   * Clone an object
+   * It is only useful to clone an object which has no arguments in constructor
+   * @returns {*}
+   */
+  clone() {
+    const constructor = this._source.constructor
+    return Object.assign(new constructor(), this._source)
+  }
 }

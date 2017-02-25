@@ -191,3 +191,91 @@ router.group((router) => {
   router.get(/* other-path */).middleware(['new']) // path is /v1/other-path, middlewares are auth, new
 }).prefix('/v1').middleware(['auth'])
 ```
+
+## Testing
+It is always a must to test your application so as to make sure you are welcome for changes.
+Here are some steps to set up functional tests with `lapi`
+- Setup Application and API
+```
+const app = new App()
+const api = new Api({
+  host: 'localhost',
+  port: 6767
+})
+```
+- Single request
+```
+app.use('auth', (route, request) => {
+    return new JsonResponse({
+      error: "Authentication is required"
+    }, 400)
+  })
+app.start({'server.port': 6767}).then(() => {
+    app.getRouter().get('/hello').middleware(['auth'])
+    api.get('/hello').then(spec => {
+      spec.hasHeaderKeyValue('content-type', 'application/json')
+      spec.hasBodyParsedContent({
+        error: "Authentication is required"
+      })
+    spec.hasStatusCode(400)
+    done()
+  }).catch(e => done(e))
+})
+```
+- Multiple requests
+```
+app.start({'server.port': 6767}).then(() => {
+  app.getRouter().post('/users').handler(function() {
+    return this.getRequest().getBody().getParsedContent().all()
+  })
+  api.post('/users', {
+    name: "<name>",
+    role: "<role>",
+    company: "ABC"
+  }).with({
+    name: ["Tony", "Bill"],
+    role: ["Boss", "Developer"]
+  }).then(spec => {
+    spec.hasPropertyKeyValue('name', spec.get('name'))
+    spec.hasPropertyKeyValue('role', spec.get('role'))
+    spec.hasPropertyKeyValue('company', "ABC")
+  }).catch(e => done(e)).done(() => {done()})
+})
+```
+- Remember to stop application for each tests
+```
+afterEach(() => {
+  if (app instanceof App) {
+    app.stop()
+  }
+})
+```
+### Extending Tests
+You might need to check more in response in order to assure that response is exactly as expectation.
+You should extend the `Spec` class.
+```
+// my.spec.js
+var Api = require('lapi').test.Api
+var Spec = require('lapi').test.Spec
+var assert = require('assert')
+
+export default class MySpec extends Spec {
+  constructor() {
+    super()
+  }
+
+  hasSomeValue(value) {
+    assert.equal(true, value)
+  }
+}
+Api.Spec = MySpec // Mark it as default Spec
+
+// my.test.js
+app.start({'server.port': 6767}).then(() => {
+    app.getRouter().get('/hello')
+    api.get('/hello').then(spec => {
+      spec.hasSomeValue('my-value')
+      done()
+  }).catch(e => done(e))
+})
+```

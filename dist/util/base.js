@@ -65,6 +65,19 @@ var Base = function () {
         _this.use.apply(_this, arg);
       });
     }
+
+    /**
+     * Clone an object
+     * It is only useful to clone an object which has no arguments in constructor
+     * @returns {*}
+     */
+
+  }, {
+    key: 'clone',
+    value: function clone() {
+      var constructor = this._source.constructor;
+      return Object.assign(new constructor(), this._source);
+    }
   }], [{
     key: 'from',
     value: function from(source) {

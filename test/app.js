@@ -9,13 +9,13 @@ var expect = require('chai').expect
 /** @test {App} */
 describe('app.js', () => {
   let app, config = {
-    'server.port': 8080
+    'server.port': 6767
   }, api
   beforeEach(() => {
     app = new App()
     api = new Api({
       host: 'localhost',
-      port: 8080
+      port: 6767
     })
   })
   afterEach(() => {
@@ -69,9 +69,30 @@ describe('app.js', () => {
             error: "Authentication is required"
           })
           spec.hasStatusCode(400)
-
           done(error)
         }).catch(e => done(e))
+      })
+    })
+  })
+
+  describe('Test multiple requests', () => {
+    it('should perform multiple POST requests with provided attributes', (done) => {
+      app.start(config).then(() => {
+        app.getRouter().post('/users').handler(function() {
+          return this.getRequest().getBody().getParsedContent().all()
+        })
+        api.post('/users', {
+          name: "<name>",
+          role: "<role>",
+          company: "ABC"
+        }).with({
+          name: ["Tony", "Bill"],
+          role: ["Boss", "Developer"]
+        }).then(spec => {
+          spec.hasPropertyKeyValue('name', spec.get('name'))
+          spec.hasPropertyKeyValue('role', spec.get('role'))
+          spec.hasPropertyKeyValue('company', "ABC")
+        }).catch(e => done(e)).done(() => {done()})
       })
     })
   })

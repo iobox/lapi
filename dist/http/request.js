@@ -20,6 +20,10 @@ var _header = require('./header');
 
 var _header2 = _interopRequireDefault(_header);
 
+var _body = require('./body');
+
+var _body2 = _interopRequireDefault(_body);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -312,6 +316,34 @@ var Request = function (_Message) {
       } else {
         throw new Error('The request\'s client information must be either an instance of Bag or an object.');
       }
+    }
+
+    /**
+     * Set Request content
+     * @param {string|Object} content
+     * @param {string} [contentType="application/json"]
+     */
+
+  }, {
+    key: 'setContent',
+    value: function setContent(content) {
+      var contentType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _body2.default.CONTENT_JSON;
+
+      if ((typeof content === 'undefined' ? 'undefined' : _typeof(content)) === 'object') {
+        content = JSON.stringify(content);
+      }
+      this.setBody(new _body2.default(content, contentType));
+    }
+
+    /**
+     * Get Request content
+     * @returns {string}
+     */
+
+  }, {
+    key: 'getContent',
+    value: function getContent() {
+      return this.getBody().getContent();
     }
 
     /**

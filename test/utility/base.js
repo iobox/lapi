@@ -1,4 +1,4 @@
-import Base from "../../src/utility/Base"
+import Base from "../../src/util/Base"
 var expect = require("chai").expect
 
 /** @test {use} */
