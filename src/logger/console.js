@@ -1,10 +1,10 @@
 import LoggerInterface from './interface'
-var color = require('cli-color')
 
 export default class ConsoleLogger extends LoggerInterface {
   constructor(trace = false) {
     super()
     this._trace = trace
+    this._decorator = require('cli-color')
   }
 
   /**
@@ -20,19 +20,19 @@ export default class ConsoleLogger extends LoggerInterface {
     message = `[${now.toJSON()}] [${type}] ${message}`
     switch (type) {
       case LoggerInterface.TYPE_ERROR:
-        console.log(color.red(message))
+        console.log(this._decorator.red(message))
         break
       case LoggerInterface.TYPE_WARNING:
-        console.log(color.yellow(message))
+        console.log(this._decorator.yellow(message))
         break
       case LoggerInterface.TYPE_DEBUG:
       case LoggerInterface.TYPE_INFO:
       default:
-        console.log(color.blue(message))
+        console.log(this._decorator.blue(message))
         break
     }
     if (this.isTraceable()) {
-      const gray = color.xterm(219)
+      const gray = this._decorator.xterm(219)
       traces.forEach((line) => {
         console.log(gray(`[${now.toJSON()}] [trace]`), line)
       })

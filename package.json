@@ -1,6 +1,6 @@
 {
   "name": "lapi",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Light API framework for NodeJS",
   "main": "index.js",
   "scripts": {

@@ -572,29 +572,25 @@ var App = function (_ContainerAware) {
 
       return new Promise(function (resolve, reject) {
         try {
-          (function () {
-            var request = _request2.default.from(conn.req);
-            request.getUri().set(_request2.default.URI_PROTOCOL, _this9.getOptions().get('server.protocol', 'http'));
-            if (request.getMethod() === _request2.default.METHOD_GET) {
-              resolve(request);
-            } else {
-              (function () {
-                var content = '';
-                conn.req.on('data', function (buffer) {
-                  content += buffer.toString('utf8');
-                });
-                conn.req.on('end', function () {
-                  try {
-                    request.getBody().setContent(content);
-                    request.getBody().setContentType(request.getHeader().get(_header2.default.CONTENT_TYPE));
-                    resolve(request);
-                  } catch (e) {
-                    reject(e);
-                  }
-                });
-              })();
-            }
-          })();
+          var request = _request2.default.from(conn.req);
+          request.getUri().set(_request2.default.URI_PROTOCOL, _this9.getOptions().get('server.protocol', 'http'));
+          if (request.getMethod() === _request2.default.METHOD_GET) {
+            resolve(request);
+          } else {
+            var content = '';
+            conn.req.on('data', function (buffer) {
+              content += buffer.toString('utf8');
+            });
+            conn.req.on('end', function () {
+              try {
+                request.getBody().setContent(content);
+                request.getBody().setContentType(request.getHeader().get(_header2.default.CONTENT_TYPE));
+                resolve(request);
+              } catch (e) {
+                reject(e);
+              }
+            });
+          }
         } catch (e) {
           reject(e);
         }
@@ -644,30 +640,28 @@ var App = function (_ContainerAware) {
         var middlewares = route.getMiddlewares();
         var response = null;
         if (middlewares.length) {
-          (function () {
-            var tasks = [];
-            route.getMiddlewares().forEach(function (name) {
-              if (!_this11._registeredMiddlewares.has(name)) {
-                return false;
-              }
-              tasks.push(new Promise(function (resolve, reject) {
-                try {
-                  var r = _this11._registeredMiddlewares.get(name)(route, request);
-                  if (r instanceof _response2.default) {
-                    response = r;
-                  }
-                  resolve();
-                } catch (e) {
-                  reject(e);
+          var tasks = [];
+          route.getMiddlewares().forEach(function (name) {
+            if (!_this11._registeredMiddlewares.has(name)) {
+              return false;
+            }
+            tasks.push(new Promise(function (resolve, reject) {
+              try {
+                var r = _this11._registeredMiddlewares.get(name)(route, request);
+                if (r instanceof _response2.default) {
+                  response = r;
                 }
-              }));
-            });
-            Promise.all(tasks).then(function () {
-              return resolve(response);
-            }).catch(function (e) {
-              return reject(e);
-            });
-          })();
+                resolve();
+              } catch (e) {
+                reject(e);
+              }
+            }));
+          });
+          Promise.all(tasks).then(function () {
+            return resolve(response);
+          }).catch(function (e) {
+            return reject(e);
+          });
         } else {
           resolve(response);
         }

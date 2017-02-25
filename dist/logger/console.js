@@ -18,8 +18,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var color = require('cli-color');
-
 var ConsoleLogger = function (_LoggerInterface) {
   _inherits(ConsoleLogger, _LoggerInterface);
 
@@ -31,6 +29,7 @@ var ConsoleLogger = function (_LoggerInterface) {
     var _this = _possibleConstructorReturn(this, (ConsoleLogger.__proto__ || Object.getPrototypeOf(ConsoleLogger)).call(this));
 
     _this._trace = trace;
+    _this._decorator = require('cli-color');
     return _this;
   }
 
@@ -56,24 +55,22 @@ var ConsoleLogger = function (_LoggerInterface) {
       message = '[' + now.toJSON() + '] [' + type + '] ' + message;
       switch (type) {
         case _interface2.default.TYPE_ERROR:
-          console.log(color.red(message));
+          console.log(this._decorator.red(message));
           break;
         case _interface2.default.TYPE_WARNING:
-          console.log(color.yellow(message));
+          console.log(this._decorator.yellow(message));
           break;
         case _interface2.default.TYPE_DEBUG:
         case _interface2.default.TYPE_INFO:
         default:
-          console.log(color.blue(message));
+          console.log(this._decorator.blue(message));
           break;
       }
       if (this.isTraceable()) {
-        (function () {
-          var gray = color.xterm(219);
-          traces.forEach(function (line) {
-            console.log(gray('[' + now.toJSON() + '] [trace]'), line);
-          });
-        })();
+        var gray = this._decorator.xterm(219);
+        traces.forEach(function (line) {
+          console.log(gray('[' + now.toJSON() + '] [trace]'), line);
+        });
       }
       console.log('');
     }
