@@ -7,7 +7,6 @@
     "test": "./node_modules/.bin/gulp test",
     "dev": "./node_modules/.bin/gulp watch:test",
     "build": "./node_modules/.bin/gulp build",
-    "server": "./node_modules/.bin/gulp server",
     "doc": "./node_modules/.bin/esdoc -c esdoc.json",
     "prestart": "npm run doc",
     "start": "SERVER_ROOT=./docs/api node server.js",
