@@ -16,29 +16,13 @@ var _containerAware = require('./di/container-aware');
 
 var _containerAware2 = _interopRequireDefault(_containerAware);
 
-var _container = require('./di/container');
-
-var _container2 = _interopRequireDefault(_container);
-
 var _router = require('./http/routing/router');
 
 var _router2 = _interopRequireDefault(_router);
 
-var _module = require('./foundation/extension/module');
-
-var _module2 = _interopRequireDefault(_module);
-
-var _manager = require('./foundation/extension/manager');
+var _manager = require('./event/manager');
 
 var _manager2 = _interopRequireDefault(_manager);
-
-var _extension = require('./foundation/extension');
-
-var _extension2 = _interopRequireDefault(_extension);
-
-var _manager3 = require('./event/manager');
-
-var _manager4 = _interopRequireDefault(_manager3);
 
 var _empty = require('./logger/empty');
 
@@ -116,55 +100,28 @@ var App = function (_ContainerAware) {
 
   /**
    * Constructor
-   * @param {Container} [container=null]
+   * @param {Object} [dependencies={}]
    */
   function App() {
-    var container = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+    var dependencies = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     _classCallCheck(this, App);
 
-    /**
-     * Internal Extension Manager
-     * @type {ExtensionManager}
-     * @private
-     */
-    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, container));
+    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
-    _this._extensionManager = new _manager2.default();
-    _this._registeredMiddlewares = new _bag2.default();
-    _this._server = null;
+    _this.getContainer().set('foundation.app.events', dependencies['events'] || new _manager2.default());
+    _this.getContainer().set('http.routing.router', dependencies['router'] || new _router2.default());
+    _this.getContainer().set('foundation.app.logger', dependencies['logger'] || new _empty2.default());
     return _this;
   }
 
   /**
-   * Get Extension Manager
-   * @returns {ExtensionManager}
+   * @protected
+   * @returns {LoggerInterface}
    */
 
 
   _createClass(App, [{
-    key: 'getExtensionManager',
-    value: function getExtensionManager() {
-      return this._extensionManager;
-    }
-
-    /**
-     * Extend application with extension
-     * @param {Extension} extension
-     */
-
-  }, {
-    key: 'extend',
-    value: function extend(extension) {
-      this.getExtensionManager().extend(extension);
-    }
-
-    /**
-     * @protected
-     * @returns {LoggerInterface}
-     */
-
-  }, {
     key: 'getLogger',
     value: function getLogger() {
       return this.getContainer().get('foundation.app.logger');
@@ -204,20 +161,6 @@ var App = function (_ContainerAware) {
     }
 
     /**
-     * Register a middleware
-     * @param {string} name
-     * @param {Function} middleware
-     * @returns {App}
-     */
-
-  }, {
-    key: 'use',
-    value: function use(name, middleware) {
-      this._registeredMiddlewares.set(name, middleware);
-      return this;
-    }
-
-    /**
      * Start application
      * @param {Object} [options=null] Optional configuration for application
      */
@@ -227,12 +170,7 @@ var App = function (_ContainerAware) {
     value: function start() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-      var container = this.getContainer();
-      container.set('foundation.app.events', new _manager4.default());
-      container.set('http.routing.router', new _router2.default());
-      container.set('foundation.app.options', new _bag2.default((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {}));
-      container.set('foundation.app.logger', new _empty2.default());
-
+      this.getContainer().set('foundation.app.options', new _bag2.default((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {}));
       return this.setUp();
     }
 
@@ -248,91 +186,28 @@ var App = function (_ContainerAware) {
 
       return new Promise(function (resolve, reject) {
         try {
-          _this2.setUpExtensions();
           _this2.setUpEvents();
-          _this2.setUpServer().then(function () {
-            resolve(_this2._server);
-          }).catch(function (e) {
-            return reject(e);
-          });
         } catch (e) {
           reject(e);
         }
+
+        _this2.setUpServer().then(function (server) {
+          _this2.getContainer().set('foundation.app.server', server);
+          resolve(server);
+        }).catch(function (e) {
+          return reject(e);
+        });
       });
     }
 
     /**
-     * It runs when a response is sent to client
+     * It runs when server is supposed to close
      */
 
   }, {
     key: 'tearDown',
     value: function tearDown() {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.getExtensionManager().getExtensions()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var extension = _step.value;
-
-          if (extension instanceof _module2.default) {
-            extension.tearDown();
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-
-    /**
-     * @protected
-     */
-
-  }, {
-    key: 'setUpExtensions',
-    value: function setUpExtensions() {
-      var container = this.getContainer();
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = this.getExtensionManager().getExtensions()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var extension = _step2.value;
-
-          if (extension instanceof _extension2.default) {
-            extension.setContainer(container);
-          }
-          if (extension instanceof _module2.default) {
-            extension.setUp();
-          }
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
+      this.getEvents().emit('foundation.app.tearDown', { app: this });
     }
 
     /**
@@ -344,6 +219,7 @@ var App = function (_ContainerAware) {
     value: function setUpEvents() {
       var _this3 = this;
 
+      this.getEvents().emit('foundation.app.setUp', { app: this });
       this.getEvents().on('error', function (args, next) {
         _this3.getLogger().write(_interface2.default.TYPE_ERROR, args.get('error').getMessage());
         next();
@@ -410,45 +286,26 @@ var App = function (_ContainerAware) {
   }, {
     key: 'setUpServer',
     value: function setUpServer() {
-      var _this4 = this;
-
-      return new Promise(function (resolve, reject) {
-        var protocol = _this4.getOptions().get('server.protocol', 'http');
-        if (protocol === 'https') {
-          // set up HTTPS server
-          _this4._setUpServerHttps().then(function () {
-            _this4._setUpServerEvents();
-            resolve();
-          }).catch(function (e) {
-            return reject(e);
-          });
-        } else {
-          // set up HTTP server
-          _this4._setUpServerHttp().then(function () {
-            _this4._setUpServerEvents();
-            resolve();
-          }).catch(function (e) {
-            return reject(e);
-          });
-        }
-      });
+      var protocol = this.getOptions().get('server.protocol', 'http');
+      return protocol === 'https' ? this._setUpServerHttps() : this._setUpServerHttp();
     }
 
     /**
      * Set up related events handler to server
+     * @param {net.Server} server
      * @private
      */
 
   }, {
     key: '_setUpServerEvents',
-    value: function _setUpServerEvents() {
-      var _this5 = this;
+    value: function _setUpServerEvents(server) {
+      var _this4 = this;
 
-      this._server.on('clientError', function (err, socket) {
+      server.on('clientError', function (err, socket) {
         socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
       });
-      this._server.on('request', function (req, res) {
-        return _this5.handleRequest(req, res);
+      server.on('request', function (req, res) {
+        return _this4.handleRequest(req, res);
       });
     }
 
@@ -461,20 +318,20 @@ var App = function (_ContainerAware) {
   }, {
     key: '_setUpServerHttp',
     value: function _setUpServerHttp() {
-      var _this6 = this;
+      var _this5 = this;
 
       return new Promise(function (resolve, reject) {
-        var host = _this6.getOptions().get('server.host', null);
-        var port = _this6.getOptions().get('server.port', 80);
-        var backlog = _this6.getOptions().get('server.backlog', 511);
+        var host = _this5.getOptions().get('server.host', null);
+        var port = _this5.getOptions().get('server.port', 80);
+        var backlog = _this5.getOptions().get('server.backlog', 511);
         try {
-          _this6._server = http.createServer().listen(port, host, backlog, function () {
-            _this6.getEvents().emit('http.server.ready', {
+          var server = http.createServer().listen(port, host, backlog, function () {
+            _this5._setUpServerEvents(server);
+            _this5.getEvents().emit('http.server.ready', {
               host: host,
               port: port
-            }).then(function () {
-              resolve();
             });
+            resolve(server);
           });
         } catch (e) {
           reject(e);
@@ -491,26 +348,26 @@ var App = function (_ContainerAware) {
   }, {
     key: '_setUpServerHttps',
     value: function _setUpServerHttps() {
-      var _this7 = this;
+      var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        var host = _this7.getOptions().get('server.host', null);
-        var port = _this7.getOptions().get('server.port', 443);
-        var backlog = _this7.getOptions().get('server.backlog', 511);
-        if (!_this7.getOptions().has('server.ssl.key') || !_this7.getOptions().has('server.ssl.cert')) {
+        var host = _this6.getOptions().get('server.host', null);
+        var port = _this6.getOptions().get('server.port', 443);
+        var backlog = _this6.getOptions().get('server.backlog', 511);
+        if (!_this6.getOptions().has('server.ssl.key') || !_this6.getOptions().has('server.ssl.cert')) {
           reject(new _internalError2.default('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'));
         }
         try {
-          _this7._server = https.createServer({
-            key: fs.readFileSync(_this7.getOptions().get('server.ssl.key')),
-            cert: fs.readFileSync(_this7.getOptions().get('server.ssl.cert'))
+          var server = https.createServer({
+            key: fs.readFileSync(_this6.getOptions().get('server.ssl.key')),
+            cert: fs.readFileSync(_this6.getOptions().get('server.ssl.cert'))
           }).listen(port, host, backlog, function () {
-            _this7.getEvents().emit('http.server.ready', {
+            _this6._setUpServerEvents(server);
+            _this6.getEvents().emit('http.server.ready', {
               host: host,
               port: port
-            }).then(function () {
-              resolve();
             });
+            resolve(server);
           });
         } catch (e) {
           reject(e);
@@ -528,7 +385,7 @@ var App = function (_ContainerAware) {
   }, {
     key: 'handleRequest',
     value: function handleRequest(req, res) {
-      var _this8 = this;
+      var _this7 = this;
 
       var conn = new Connection(req, res);
       var route = null,
@@ -538,23 +395,23 @@ var App = function (_ContainerAware) {
       this.initRequest(conn).then(function (r) {
         request = r;
       }).then(function () {
-        return _this8.routeRequest(request);
+        return _this7.routeRequest(request);
       }).then(function (r) {
         route = r;
       }).then(function () {
-        return _this8.handleMiddlewares(route, request);
+        return _this7.handleMiddlewares(route, request);
       }).then(function (r) {
         if (r instanceof _response2.default) response = r;
       }).then(function () {
-        return _this8.dispatchRequest(route, request, response);
+        return _this7.dispatchRequest(route, request, response);
       }).then(function (r) {
         if (r instanceof _response2.default) response = r;
       }).then(function () {
-        return _this8.sendResponse(response, conn);
+        return _this7.sendResponse(response, conn);
       }).then(function () {
-        return _this8.tearDown();
+        return _this7.tearDown();
       }).catch(function (e) {
-        return _this8.handleRequestError(e, conn, request, response);
+        return _this7.handleRequestError(e, conn, request, response);
       });
     }
 
@@ -568,12 +425,12 @@ var App = function (_ContainerAware) {
   }, {
     key: 'initRequest',
     value: function initRequest(conn) {
-      var _this9 = this;
+      var _this8 = this;
 
       return new Promise(function (resolve, reject) {
         try {
           var request = _request2.default.from(conn.req);
-          request.getUri().set(_request2.default.URI_PROTOCOL, _this9.getOptions().get('server.protocol', 'http'));
+          request.getUri().set(_request2.default.URI_PROTOCOL, _this8.getOptions().get('server.protocol', 'http'));
           if (request.getMethod() === _request2.default.METHOD_GET) {
             resolve(request);
           } else {
@@ -607,11 +464,11 @@ var App = function (_ContainerAware) {
   }, {
     key: 'routeRequest',
     value: function routeRequest(request) {
-      var _this10 = this;
+      var _this9 = this;
 
       return new Promise(function (resolve, reject) {
         try {
-          var route = _this10.getRouter().route(request);
+          var route = _this9.getRouter().route(request);
           if (route instanceof _route2.default) {
             resolve(route);
           } else {
@@ -634,7 +491,7 @@ var App = function (_ContainerAware) {
   }, {
     key: 'handleMiddlewares',
     value: function handleMiddlewares(route, request) {
-      var _this11 = this;
+      var _this10 = this;
 
       return new Promise(function (resolve, reject) {
         var middlewares = route.getMiddlewares();
@@ -642,12 +499,12 @@ var App = function (_ContainerAware) {
         if (middlewares.length) {
           var tasks = [];
           route.getMiddlewares().forEach(function (name) {
-            if (!_this11._registeredMiddlewares.has(name)) {
+            if (!_this10.getRouter().getMiddlewares().has(name)) {
               return false;
             }
             tasks.push(new Promise(function (resolve, reject) {
               try {
-                var r = _this11._registeredMiddlewares.get(name)(route, request);
+                var r = _this10.getRouter().getMiddlewares().get(name)(route, request);
                 if (r instanceof _response2.default) {
                   response = r;
                 }
@@ -681,7 +538,7 @@ var App = function (_ContainerAware) {
   }, {
     key: 'dispatchRequest',
     value: function dispatchRequest(route, request, response) {
-      var _this12 = this;
+      var _this11 = this;
 
       return new Promise(function (resolve, reject) {
         if (response instanceof _response2.default) {
@@ -690,7 +547,7 @@ var App = function (_ContainerAware) {
           response = new _json2.default();
         }
         var controller = route.getAttributes().get('controller'),
-            container = _this12.getContainer();
+            container = _this11.getContainer();
         if (controller instanceof _controller2.default) {
           var action = route.getAttributes().get('action');
           if (action === null || action === '' || typeof action === 'string' && typeof controller[action] !== 'function') {
@@ -714,14 +571,14 @@ var App = function (_ContainerAware) {
           }
           if (result instanceof Promise) {
             result.then(function (result) {
-              _this12.handleActionResult(result, controller);
+              _this11.handleActionResult(result, controller);
               resolve(controller.getResponse());
             }).catch(function (e) {
               return reject(e);
             });
           } else {
             try {
-              _this12.handleActionResult(result, controller);
+              _this11.handleActionResult(result, controller);
               resolve(controller.getResponse());
             } catch (e) {
               reject(e);
@@ -771,13 +628,13 @@ var App = function (_ContainerAware) {
   }, {
     key: 'sendResponse',
     value: function sendResponse(response, conn) {
-      var _this13 = this;
+      var _this12 = this;
 
       return new Promise(function (resolve, reject) {
         if (response === null || !(response instanceof _response2.default)) {
           reject(new _internalError2.default('An appropriate response could not be found'));
         } else {
-          _this13.getEvents().emit('http.response.send.before', {
+          _this12.getEvents().emit('http.response.send.before', {
             response: response,
             conn: conn
           }).then(function () {
@@ -785,7 +642,7 @@ var App = function (_ContainerAware) {
               response.send(conn.res);
               resolve(response);
             } catch (e) {
-              _this13.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
+              _this12.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
               conn.res.end('');
             }
           }).catch(function (e) {
@@ -836,17 +693,19 @@ var App = function (_ContainerAware) {
   }, {
     key: 'stop',
     value: function stop() {
-      var _this14 = this;
+      var _this13 = this;
 
       return new Promise(function (resolve, reject) {
-        if (_this14._server === null) {
-          resolve();
-        } else {
+        if (_this13.getContainer().has('foundation.app.server')) {
           try {
-            _this14._server.close(resolve);
+            _this13.getContainer().get('foundation.app.server').close(resolve);
+            _this13.getContainer().remove('foundation.app.server');
+            _this13.tearDown();
           } catch (e) {
             reject(e);
           }
+        } else {
+          resolve();
         }
       });
     }

@@ -46,7 +46,7 @@ export default class Container {
 
   /**
    * Determine whether or not a name is registered
-   * @param name
+   * @param {string} name
    * @returns {boolean}
    */
   has(name) {
@@ -55,8 +55,8 @@ export default class Container {
 
   /**
    * Get instance of a registered name
-   * @param name
-   * @param args
+   * @param {string} name
+   * @param {Array} args
    * @returns {*}
    * @throws {NotFoundException} throws an exeception when name is not registered in container
    */
@@ -88,6 +88,16 @@ export default class Container {
     }
 
     return this._definitions[name]
+  }
+
+  /**
+   * Remove a name from Container
+   * @param {string} name
+   */
+  remove(name) {
+    if (this.has(name)) {
+      delete this._definitions[name]
+    }
   }
 
   /**

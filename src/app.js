@@ -1,10 +1,6 @@
 import Bag from './foundation/bag'
 import ContainerAware from './di/container-aware'
-import Container from './di/container'
 import Router from './http/routing/router'
-import ModuleExtension from './foundation/extension/module'
-import ExtensionManager from './foundation/extension/manager'
-import Extension from './foundation/extension'
 import EventManager from './event/manager'
 import EmptyLogger from './logger/empty'
 import LoggerInterface from './logger/interface'
@@ -19,9 +15,9 @@ import HttpException from './http/exception/http'
 import InternalErrorException from './exception/internal-error'
 import NotFoundException from './http/exception/not-found'
 
-const http = require('http')
+const http  = require('http')
 const https = require('https')
-const fs = require('fs')
+const fs    = require('fs')
 
 /**
  * Contain information about original request, response
@@ -36,35 +32,14 @@ class Connection {
 export default class App extends ContainerAware {
   /**
    * Constructor
-   * @param {Container} [container=null]
+   * @param {Object} [dependencies={}]
    */
-  constructor(container = null) {
-    super(container)
+  constructor(dependencies = {}) {
+    super()
 
-    /**
-     * Internal Extension Manager
-     * @type {ExtensionManager}
-     * @private
-     */
-    this._extensionManager = new ExtensionManager()
-    this._registeredMiddlewares = new Bag()
-    this._server = null
-  }
-
-  /**
-   * Get Extension Manager
-   * @returns {ExtensionManager}
-   */
-  getExtensionManager() {
-    return this._extensionManager
-  }
-
-  /**
-   * Extend application with extension
-   * @param {Extension} extension
-   */
-  extend(extension) {
-    this.getExtensionManager().extend(extension)
+    this.getContainer().set('foundation.app.events', dependencies['events'] || new EventManager())
+    this.getContainer().set('http.routing.router', dependencies['router'] || new Router())
+    this.getContainer().set('foundation.app.logger', dependencies['logger'] || new EmptyLogger())
   }
 
   /**
@@ -100,27 +75,11 @@ export default class App extends ContainerAware {
   }
 
   /**
-   * Register a middleware
-   * @param {string} name
-   * @param {Function} middleware
-   * @returns {App}
-   */
-  use(name, middleware) {
-    this._registeredMiddlewares.set(name, middleware)
-    return this
-  }
-
-  /**
    * Start application
    * @param {Object} [options=null] Optional configuration for application
    */
   start(options = null) {
-    let container = this.getContainer()
-    container.set('foundation.app.events', new EventManager())
-    container.set('http.routing.router', new Router())
-    container.set('foundation.app.options', new Bag(typeof options === 'object' ? options : {}))
-    container.set('foundation.app.logger', new EmptyLogger())
-
+    this.getContainer().set('foundation.app.options', new Bag(typeof options === 'object' ? options : {}))
     return this.setUp()
   }
 
@@ -131,47 +90,32 @@ export default class App extends ContainerAware {
   setUp() {
     return new Promise((resolve, reject) => {
       try {
-        this.setUpExtensions()
         this.setUpEvents()
-        this.setUpServer()
-          .then(() => { resolve(this._server) })
-          .catch(e => reject(e))
       } catch (e) {
         reject(e)
       }
-    });
+
+      this.setUpServer()
+        .then(server => {
+          this.getContainer().set('foundation.app.server', server)
+          resolve(server)
+        })
+        .catch(e => reject(e))
+    })
   }
 
   /**
-   * It runs when a response is sent to client
+   * It runs when server is supposed to close
    */
   tearDown() {
-    for (let extension of this.getExtensionManager().getExtensions()) {
-      if (extension instanceof ModuleExtension) {
-        extension.tearDown()
-      }
-    }
-  }
-
-  /**
-   * @protected
-   */
-  setUpExtensions() {
-    const container = this.getContainer()
-    for (let extension of this.getExtensionManager().getExtensions()) {
-      if (extension instanceof Extension) {
-        extension.setContainer(container)
-      }
-      if (extension instanceof ModuleExtension) {
-        extension.setUp()
-      }
-    }
+    this.getEvents().emit('foundation.app.tearDown', {app: this})
   }
 
   /**
    * @protected
    */
   setUpEvents() {
+    this.getEvents().emit('foundation.app.setUp', {app: this})
     this.getEvents().on('error', (args, next) => {
       this.getLogger().write(LoggerInterface.TYPE_ERROR, args.get('error').getMessage())
       next()
@@ -187,10 +131,10 @@ export default class App extends ContainerAware {
       next()
     })
     this.getEvents().on('system.error', (args, next) => {
-      let response = new JsonResponse({
+      let response    = new JsonResponse({
         message: 'Oops! There is something wrong.'
       }, Response.HTTP_INTERNAL_ERROR)
-      let traces = []
+      let traces      = []
       const exception = args.get('exception')
       if (exception instanceof InternalErrorException && exception.has('request')) {
         const request = exception.get('request')
@@ -207,7 +151,7 @@ export default class App extends ContainerAware {
       next()
     })
     this.getEvents().on('http.request.exception', (args, next) => {
-      let response = null
+      let response    = null
       const exception = args.get('exception')
       if (exception instanceof InternalErrorException) {
         response = new JsonResponse({
@@ -243,33 +187,20 @@ export default class App extends ContainerAware {
    * @returns {Promise}
    */
   setUpServer() {
-    return new Promise((resolve, reject) => {
-      const protocol = this.getOptions().get('server.protocol', 'http')
-      if (protocol === 'https') {
-        // set up HTTPS server
-        this._setUpServerHttps().then(() => {
-          this._setUpServerEvents()
-          resolve()
-        }).catch(e => reject(e))
-      } else {
-        // set up HTTP server
-        this._setUpServerHttp().then(() => {
-          this._setUpServerEvents()
-          resolve()
-        }).catch(e => reject(e))
-      }
-    })
+    const protocol = this.getOptions().get('server.protocol', 'http')
+    return protocol === 'https' ? this._setUpServerHttps() : this._setUpServerHttp()
   }
 
   /**
    * Set up related events handler to server
+   * @param {net.Server} server
    * @private
    */
-  _setUpServerEvents() {
-    this._server.on('clientError', (err, socket) => {
+  _setUpServerEvents(server) {
+    server.on('clientError', (err, socket) => {
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n')
     })
-    this._server.on('request', (req, res) => this.handleRequest(req, res))
+    server.on('request', (req, res) => this.handleRequest(req, res))
   }
 
   /**
@@ -279,17 +210,18 @@ export default class App extends ContainerAware {
    */
   _setUpServerHttp() {
     return new Promise((resolve, reject) => {
-      const host = this.getOptions().get('server.host', null)
-      const port = this.getOptions().get('server.port', 80)
+      const host    = this.getOptions().get('server.host', null)
+      const port    = this.getOptions().get('server.port', 80)
       const backlog = this.getOptions().get('server.backlog', 511)
       try {
-        this._server = http.createServer()
-          .listen(port, host, backlog, () => {
-            this.getEvents().emit('http.server.ready', {
-              host: host,
-              port: port
-            }).then(() => { resolve() })
+        const server = http.createServer().listen(port, host, backlog, () => {
+          this._setUpServerEvents(server)
+          this.getEvents().emit('http.server.ready', {
+            host: host,
+            port: port
           })
+          resolve(server)
+        })
       } catch (e) {
         reject(e)
       }
@@ -303,23 +235,24 @@ export default class App extends ContainerAware {
    */
   _setUpServerHttps() {
     return new Promise((resolve, reject) => {
-      const host = this.getOptions().get('server.host', null)
-      const port = this.getOptions().get('server.port', 443)
+      const host    = this.getOptions().get('server.host', null)
+      const port    = this.getOptions().get('server.port', 443)
       const backlog = this.getOptions().get('server.backlog', 511)
       if (!this.getOptions().has('server.ssl.key') || !this.getOptions().has('server.ssl.cert')) {
         reject(new InternalErrorException('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'))
       }
       try {
-        this._server = https.createServer({
-            key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
-            cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
+        const server = https.createServer({
+          key: fs.readFileSync(this.getOptions().get('server.ssl.key')),
+          cert: fs.readFileSync(this.getOptions().get('server.ssl.cert'))
+        }).listen(port, host, backlog, () => {
+          this._setUpServerEvents(server)
+          this.getEvents().emit('http.server.ready', {
+            host: host,
+            port: port
           })
-          .listen(port, host, backlog, () => {
-            this.getEvents().emit('http.server.ready', {
-              host: host,
-              port: port
-            }).then(() => { resolve() })
-          })
+          resolve(server)
+        })
       } catch (e) {
         reject(e)
       }
@@ -333,19 +266,27 @@ export default class App extends ContainerAware {
    * @throws {InternalErrorException} throws an exception when controller or action is not defined
    */
   handleRequest(req, res) {
-    const conn  = new Connection(req, res)
-    let route = null,
-        request = null,
-        response = null
+    const conn     = new Connection(req, res)
+    let route      = null,
+          request  = null,
+          response = null
 
     this.initRequest(conn)
-      .then(r => { request = r })
+      .then(r => {
+        request = r
+      })
       .then(() => this.routeRequest(request))
-      .then(r => { route = r })
+      .then(r => {
+        route = r
+      })
       .then(() => this.handleMiddlewares(route, request))
-      .then(r => { if (r instanceof Response) response = r })
+      .then(r => {
+        if (r instanceof Response) response = r
+      })
       .then(() => this.dispatchRequest(route, request, response))
-      .then(r => { if (r instanceof Response) response = r })
+      .then(r => {
+        if (r instanceof Response) response = r
+      })
       .then(() => this.sendResponse(response, conn))
       .then(() => this.tearDown())
       .catch(e => this.handleRequestError(e, conn, request, response))
@@ -416,16 +357,16 @@ export default class App extends ContainerAware {
   handleMiddlewares(route, request) {
     return new Promise((resolve, reject) => {
       const middlewares = route.getMiddlewares()
-      let response = null
+      let response      = null
       if (middlewares.length) {
         let tasks = []
         route.getMiddlewares().forEach(name => {
-          if (!this._registeredMiddlewares.has(name)) {
+          if (!this.getRouter().getMiddlewares().has(name)) {
             return false
           }
           tasks.push(new Promise((resolve, reject) => {
             try {
-              const r = this._registeredMiddlewares.get(name)(route, request)
+              const r = this.getRouter().getMiddlewares().get(name)(route, request)
               if (r instanceof Response) {
                 response = r
               }
@@ -547,7 +488,7 @@ export default class App extends ContainerAware {
             try {
               response.send(conn.res)
               resolve(response)
-            } catch(e) {
+            } catch (e) {
               this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
               conn.res.end('')
             }
@@ -590,14 +531,16 @@ export default class App extends ContainerAware {
    */
   stop() {
     return new Promise((resolve, reject) => {
-      if (this._server === null) {
-        resolve()
-      } else {
+      if (this.getContainer().has('foundation.app.server')) {
         try {
-          this._server.close(resolve)
+          this.getContainer().get('foundation.app.server').close(resolve)
+          this.getContainer().remove('foundation.app.server')
+          this.tearDown()
         } catch (e) {
           reject(e)
         }
+      } else {
+        resolve()
       }
     })
   }

@@ -1,5 +1,4 @@
 import App from '../src/app'
-import ModuleExtension from '../src/foundation/extension/module'
 import JsonResponse from '../src/http/response/json'
 import Route from '../src/http/routing/route'
 import Request from '../src/http/request'
@@ -24,25 +23,15 @@ describe('app.js', () => {
     }
   })
 
-  describe('ModuleExtension', () => {
-    let flag = false
-    it('it should allow to extend with a module based extension', () => {
-      class MyExtension extends ModuleExtension {
-        getName() {
-          return 'my.module'
-        }
-
-        setUp() {
-          let events = this.getContainer().get('foundation.app.events')
-          events.on('http.server.ready', (args, next) => {
-            flag = true
-            next()
-          })
-        }
-      }
-      app.extend(new MyExtension())
+  describe('Events', () => {
+    it('should print a message when application is ready', () => {
+      var message = null
+      app.getEvents().on('http.server.ready', (args, next) => {
+        message = 'Server is ready! at ' + args.get('host') + ':' + args.get('port')
+        next()
+      })
       return app.start(config).then(() => {
-        expect(flag).to.be.true
+        expect(message).to.be.not.nul
       })
     })
   })
@@ -50,7 +39,7 @@ describe('app.js', () => {
   describe('Middleware', () => {
     it('should run middleware with route and request as input arguments', (done) => {
       let error = null
-      app.use('auth', (route, request) => {
+      app.getRouter().use('auth', (route, request) => {
         try {
           expect(route).to.be.an.instanceof(Route)
           expect(request).to.be.an.instanceof(Request)

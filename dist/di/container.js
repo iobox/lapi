@@ -86,7 +86,7 @@ var Container = function () {
 
   /**
    * Determine whether or not a name is registered
-   * @param name
+   * @param {string} name
    * @returns {boolean}
    */
 
@@ -99,8 +99,8 @@ var Container = function () {
 
     /**
      * Get instance of a registered name
-     * @param name
-     * @param args
+     * @param {string} name
+     * @param {Array} args
      * @returns {*}
      * @throws {NotFoundException} throws an exeception when name is not registered in container
      */
@@ -144,6 +144,19 @@ var Container = function () {
       }
 
       return this._definitions[name];
+    }
+
+    /**
+     * Remove a name from Container
+     * @param {string} name
+     */
+
+  }, {
+    key: 'remove',
+    value: function remove(name) {
+      if (this.has(name)) {
+        delete this._definitions[name];
+      }
     }
 
     /**

@@ -40,17 +40,29 @@ router.get('/hello/world').handler(function() {
   }
 }
 ```
+## Extending App
+- Register event's listeners
+```
+const app = new App()
+app.getEvents().on('http.server.ready', (args, next) => {
+  console.log('Server is ready! at ' + args.host + ':' + args.port)
+  next()
+})
+app.start({
+  'server.port': 8080
+})
+```
 
 ## Middleware
 Middleware is a way to manipulate request before action actually runs
 
 - Add some attributes to request
 ```
-app.use('auth', (route, request) => {
+var router = app.getRouter()
+router.use('auth', (route, request) => {
   request.set('isAuthenticated', request.getHeader().has('X-TOKEN'))
 })
 
-var router = app.getRouter()
 router.get('/hello/world').handler(function() {
   return {
     data: {
@@ -68,63 +80,6 @@ app.use('auth', () => {
   return new JsonResponse({
     error: "Authentication is required"
   })
-})
-```
-
-## Extension
-First of all, extension is a way to get primary `Container` object of application.
-
-In addition, if an extension is a sub class of `foundation.extension.ModuleExtension`, it will has ability to extend a lot of more features from application by invoking 2 main phases `setUp` and `tearDown`.
-- Phase `setUp` allows extension to add more routes, event's listeners
-- Phase `tearDown` which is called after response is sent, it would be a great choice to clean resources, such as database connection
-
-Examples:
-- Add routes
-```
-class BlogExtension extends ModuleExtension {
-  getName() {
-    return 'module.blog'
-  }
-
-  setUp() {
-    var router = this.getContainer().get('http.routing.router')
-    router.get('/blogs').handler(function() {
-      return [
-        {
-          id: 1,
-          title: "Some blog"
-        }
-      ]
-    })
-  }
-}
-
-const app = new App()
-app.extend(new BlogExtension())
-app.start({
-  'server.port': 8080
-})
-```
-- Register event's listeners
-```
-class BlogExtension extends ModuleExtension {
-  getName() {
-    return 'module.blog'
-  }
-
-  setUp() {
-    var events = this.getContainer().get('foundation.app.events')
-    events.on('http.server.ready', (args, next) => {
-      console.log('Blog extension is ready!')
-      next()
-    })
-  }
-}
-
-const app = new App()
-app.extend(new BlogExtension())
-app.start({
-  'server.port': 8080
 })
 ```
 

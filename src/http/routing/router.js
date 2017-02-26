@@ -1,3 +1,4 @@
+import Bag from '../../foundation/bag'
 import Route from './route'
 import Request from '../request'
 import InvalidArgumentException from '../../exception/invalid-argument'
@@ -8,11 +9,11 @@ class GroupRoute {
    * @param {?Function} callback
    */
   constructor(callback) {
-    this._callback = callback
-    this._router = new Router()
-    this._prefix = null
-    this._host = null
-    this._port = null
+    this._callback    = callback
+    this._router      = new Router()
+    this._prefix      = null
+    this._host        = null
+    this._port        = null
     this._middlewares = null
   }
 
@@ -84,6 +85,8 @@ export default class Router {
   constructor() {
     this._routes = []
     this._groups = []
+    
+    this._middlewares = new Bag()
   }
 
   get length() {
@@ -239,5 +242,34 @@ export default class Router {
    */
   group(callback) {
     return this.add(new GroupRoute(callback))
+  }
+
+  /**
+   * Register a middleware
+   * @param {string} name
+   * @param {Function} middleware
+   * @returns {Router}
+   */
+  use(name, middleware) {
+    this._middlewares.set(name, middleware)
+    return this
+  }
+
+  /**
+   * Return registered middlewares
+   * @returns {Bag}
+   */
+  getMiddlewares() {
+    return this._middlewares
+  }
+
+  setMiddlewares(middlewares) {
+    if (middlewares instanceof Bag) {
+      this._middlewares = middlewares
+    } else if (typeof middlewares === 'object') {
+      this._middlewares = new Bag(middlewares)
+    } else {
+      throw new InvalidArgumentException('[http.routing.Router#setMiddlewares] middlewares must be an instance of Bag or an object')
+    }
   }
 }

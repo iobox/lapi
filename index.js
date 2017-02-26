@@ -20,8 +20,7 @@ var $exports = {
  "foundation": {
   "Bag": "foundation/bag.js",
   "extension": {
-   "ExtensionManager": "foundation/extension/manager.js",
-   "ModuleExtension": "foundation/extension/module.js"
+   "ExtensionManager": "foundation/extension/manager.js"
   },
   "Extension": "foundation/extension.js"
  },

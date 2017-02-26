@@ -8,6 +8,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _bag = require('../../foundation/bag');
+
+var _bag2 = _interopRequireDefault(_bag);
+
 var _route = require('./route');
 
 var _route2 = _interopRequireDefault(_route);
@@ -124,6 +128,8 @@ var Router = function () {
 
     this._routes = [];
     this._groups = [];
+
+    this._middlewares = new _bag2.default();
   }
 
   _createClass(Router, [{
@@ -327,6 +333,42 @@ var Router = function () {
     key: 'group',
     value: function group(callback) {
       return this.add(new GroupRoute(callback));
+    }
+
+    /**
+     * Register a middleware
+     * @param {string} name
+     * @param {Function} middleware
+     * @returns {Router}
+     */
+
+  }, {
+    key: 'use',
+    value: function use(name, middleware) {
+      this._middlewares.set(name, middleware);
+      return this;
+    }
+
+    /**
+     * Return registered middlewares
+     * @returns {Bag}
+     */
+
+  }, {
+    key: 'getMiddlewares',
+    value: function getMiddlewares() {
+      return this._middlewares;
+    }
+  }, {
+    key: 'setMiddlewares',
+    value: function setMiddlewares(middlewares) {
+      if (middlewares instanceof _bag2.default) {
+        this._middlewares = middlewares;
+      } else if ((typeof middlewares === 'undefined' ? 'undefined' : _typeof(middlewares)) === 'object') {
+        this._middlewares = new _bag2.default(middlewares);
+      } else {
+        throw new _invalidArgument2.default('[http.routing.Router#setMiddlewares] middlewares must be an instance of Bag or an object');
+      }
     }
   }, {
     key: 'length',
