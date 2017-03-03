@@ -1,23 +1,24 @@
-import Bag from './foundation/bag'
-import ContainerAware from './di/container-aware'
-import Router from './http/routing/router'
-import EventManager from './event/manager'
-import EmptyLogger from './logger/empty'
-import LoggerInterface from './logger/interface'
-import Request from './http/request'
-import Header from './http/header'
-import Route from './http/routing/route'
-import Controller from './http/controller'
-import JsonResponse from './http/response/json'
-import Response from './http/response'
-import Exception from './exception'
-import HttpException from './http/exception/http'
-import InternalErrorException from './exception/internal-error'
-import NotFoundException from './http/exception/not-found'
-
+const fs    = require('fs')
 const http  = require('http')
 const https = require('https')
-const fs    = require('fs')
+
+const Bag = require('lapi-common').Bag
+const Exception = require('lapi-common').Exception
+const InternalErrorException = require('lapi-common').exception.InternalErrorException
+const ContainerAware = require('lapi-common').di.ContainerAware
+const EmptyLogger = require('lapi-common').logger.EmptyLogger
+const Logger = require('lapi-common').Logger
+const Route = require('lapi-http').routing.Route
+const Router = require('lapi-http').routing.Router
+const Header = require('lapi-http').Header
+const Request = require('lapi-http').Request
+const Response = require('lapi-http').Response
+const Controller = require('lapi-http').Controller
+const JsonResponse = require('lapi-http').response.JsonResponse
+const HttpException = require('lapi-http').exception.HttpException
+const NotFoundException = require('lapi-http').exception.NotFoundException
+import EventManager from './event/manager'
+
 
 /**
  * Contain information about original request, response
@@ -44,7 +45,7 @@ export default class App extends ContainerAware {
 
   /**
    * @protected
-   * @returns {LoggerInterface}
+   * @returns {Logger}
    */
   getLogger() {
     return this.getContainer().get('foundation.app.logger')
@@ -117,17 +118,17 @@ export default class App extends ContainerAware {
   setUpEvents() {
     this.getEvents().emit('foundation.app.setUp', {app: this})
     this.getEvents().on('error', (args, next) => {
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, args.get('error').getMessage())
+      this.getLogger().write(Logger.TYPE_ERROR, args.get('error').getMessage())
       next()
     })
     this.getEvents().on('http.server.ready', (args, next) => {
-      this.getLogger().write(LoggerInterface.TYPE_INFO, `[info] Server is started at ${args.get('host')}:${args.get('port')}`)
+      this.getLogger().write(Logger.TYPE_INFO, `[info] Server is started at ${args.get('host')}:${args.get('port')}`)
       next()
     })
     this.getEvents().on('foundation.controller.action.before', (args, next) => {
       const request = args.get('request'),
             route   = args.get('route')
-      this.getLogger().write(LoggerInterface.TYPE_INFO, `${request.getMethod()} ${request.getPath()} ${request.getQuery().toString()} matches ${route.getName()}`, [route.getMatches()])
+      this.getLogger().write(Logger.TYPE_INFO, `${request.getMethod()} ${request.getPath()} ${request.getQuery().toString()} matches ${route.getName()}`, [route.getMatches()])
       next()
     })
     this.getEvents().on('system.error', (args, next) => {
@@ -146,7 +147,7 @@ export default class App extends ContainerAware {
           ]
         }
       }
-      this.getLogger().write(LoggerInterface.TYPE_ERROR, exception.getMessage(), traces)
+      this.getLogger().write(Logger.TYPE_ERROR, exception.getMessage(), traces)
       this.sendResponse(response, args.get('conn'))
       next()
     })
@@ -160,7 +161,7 @@ export default class App extends ContainerAware {
           }
         }, Response.HTTP_INTERNAL_ERROR)
         this.getLogger().write(
-          LoggerInterface.TYPE_ERROR,
+          Logger.TYPE_ERROR,
           exception.getMessage(),
           [exception.getArguments().all()]
         )
@@ -172,7 +173,7 @@ export default class App extends ContainerAware {
           }
         }, exception.getStatusCode())
       } else if (exception instanceof Error) {
-        this.getLogger().write(LoggerInterface.TYPE_ERROR, exception.message)
+        this.getLogger().write(Logger.TYPE_ERROR, exception.message)
       }
 
       if (response instanceof Response) {
@@ -489,7 +490,7 @@ export default class App extends ContainerAware {
               response.send(conn.res)
               resolve(response)
             } catch (e) {
-              this.getLogger().write(LoggerInterface.TYPE_ERROR, e.message)
+              this.getLogger().write(Logger.TYPE_ERROR, e.message)
               conn.res.end('')
             }
           })

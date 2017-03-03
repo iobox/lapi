@@ -1,17 +1,15 @@
 {
   "name": "lapi",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "Light API framework for NodeJS",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/gulp test",
     "dev": "./node_modules/.bin/gulp watch:test",
-    "build": "./node_modules/.bin/gulp build",
     "doc": "./node_modules/.bin/esdoc -c esdoc.json",
     "prestart": "npm run doc",
-    "start": "SERVER_ROOT=./docs/api node server.js",
-    "indexing": "./node_modules/.bin/gulp indexing",
-    "deploy": "npm run build && npm run indexing"
+    "start": "SERVER_ROOT=./docs/api node docs.js",
+    "deploy": "./node_modules/.bin/gulp deploy"
   },
   "repository": {
     "type": "git",
@@ -45,11 +43,13 @@
     "eslint-plugin-promise": "^2.0.1",
     "eslint-plugin-standard": "^2.0.0",
     "gulp-jsdoc3": "^0.3.0",
-    "lapi-dev": "^1.0.0"
+    "lapi-dev": "^1.0.x",
+    "lapi-test": "^1.0.x"
   },
   "dependencies": {
     "esdoc": "^0.4.8",
     "async": "^2.0.0",
-    "path": "^0.12.7"
+    "lapi-http": "^1.0.x",
+    "lapi-common": "^1.0.x"
   }
 }

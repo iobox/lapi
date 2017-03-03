@@ -1,9 +1,9 @@
-import App from '../src/app'
-import JsonResponse from '../src/http/response/json'
-import Route from '../src/http/routing/route'
-import Request from '../src/http/request'
-import Api from '../src/test/api'
 var expect = require('chai').expect
+const JsonResponse = require('lapi-http').response.JsonResponse
+const Route = require('lapi-http').routing.Route
+const Request = require('lapi-http').Request
+const Api = require('lapi-test').Api
+import App from '../src/app'
 
 /** @test {App} */
 describe('app.js', () => {

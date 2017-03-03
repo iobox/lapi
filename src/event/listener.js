@@ -1,4 +1,4 @@
-import Exception from '../exception'
+const Exception = require('lapi-common').Exception
 
 /**
  * Event Listener

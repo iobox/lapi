@@ -1,7 +1,7 @@
-import EventManager from '../../src/event/manager'
-import EventListener from '../../src/event/listener'
 var expect = require('chai').expect
 var assert = require('assert')
+import EventManager from '../../src/event/manager'
+import EventListener from '../../src/event/listener'
 
 /** @test {EventManager} */
 describe('event/manager.js', () => {

@@ -8,69 +8,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _bag = require('./foundation/bag');
-
-var _bag2 = _interopRequireDefault(_bag);
-
-var _containerAware = require('./di/container-aware');
-
-var _containerAware2 = _interopRequireDefault(_containerAware);
-
-var _router = require('./http/routing/router');
-
-var _router2 = _interopRequireDefault(_router);
-
 var _manager = require('./event/manager');
 
 var _manager2 = _interopRequireDefault(_manager);
-
-var _empty = require('./logger/empty');
-
-var _empty2 = _interopRequireDefault(_empty);
-
-var _interface = require('./logger/interface');
-
-var _interface2 = _interopRequireDefault(_interface);
-
-var _request = require('./http/request');
-
-var _request2 = _interopRequireDefault(_request);
-
-var _header = require('./http/header');
-
-var _header2 = _interopRequireDefault(_header);
-
-var _route = require('./http/routing/route');
-
-var _route2 = _interopRequireDefault(_route);
-
-var _controller = require('./http/controller');
-
-var _controller2 = _interopRequireDefault(_controller);
-
-var _json = require('./http/response/json');
-
-var _json2 = _interopRequireDefault(_json);
-
-var _response = require('./http/response');
-
-var _response2 = _interopRequireDefault(_response);
-
-var _exception = require('./exception');
-
-var _exception2 = _interopRequireDefault(_exception);
-
-var _http = require('./http/exception/http');
-
-var _http2 = _interopRequireDefault(_http);
-
-var _internalError = require('./exception/internal-error');
-
-var _internalError2 = _interopRequireDefault(_internalError);
-
-var _notFound = require('./http/exception/not-found');
-
-var _notFound2 = _interopRequireDefault(_notFound);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -80,14 +20,29 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var fs = require('fs');
 var http = require('http');
 var https = require('https');
-var fs = require('fs');
+
+var Bag = require('lapi-common').Bag;
+var Exception = require('lapi-common').Exception;
+var InternalErrorException = require('lapi-common').exception.InternalErrorException;
+var ContainerAware = require('lapi-common').di.ContainerAware;
+var EmptyLogger = require('lapi-common').logger.EmptyLogger;
+var Logger = require('lapi-common').Logger;
+var Route = require('lapi-http').routing.Route;
+var Router = require('lapi-http').routing.Router;
+var Header = require('lapi-http').Header;
+var Request = require('lapi-http').Request;
+var Response = require('lapi-http').Response;
+var Controller = require('lapi-http').Controller;
+var JsonResponse = require('lapi-http').response.JsonResponse;
+var HttpException = require('lapi-http').exception.HttpException;
+var NotFoundException = require('lapi-http').exception.NotFoundException;
 
 /**
  * Contain information about original request, response
  */
-
 var Connection = function Connection(req, res) {
   _classCallCheck(this, Connection);
 
@@ -110,14 +65,14 @@ var App = function (_ContainerAware) {
     var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
     _this.getContainer().set('foundation.app.events', dependencies['events'] || new _manager2.default());
-    _this.getContainer().set('http.routing.router', dependencies['router'] || new _router2.default());
-    _this.getContainer().set('foundation.app.logger', dependencies['logger'] || new _empty2.default());
+    _this.getContainer().set('http.routing.router', dependencies['router'] || new Router());
+    _this.getContainer().set('foundation.app.logger', dependencies['logger'] || new EmptyLogger());
     return _this;
   }
 
   /**
    * @protected
-   * @returns {LoggerInterface}
+   * @returns {Logger}
    */
 
 
@@ -170,7 +125,7 @@ var App = function (_ContainerAware) {
     value: function start() {
       var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
-      this.getContainer().set('foundation.app.options', new _bag2.default((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {}));
+      this.getContainer().set('foundation.app.options', new Bag((typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : {}));
       return this.setUp();
     }
 
@@ -221,57 +176,57 @@ var App = function (_ContainerAware) {
 
       this.getEvents().emit('foundation.app.setUp', { app: this });
       this.getEvents().on('error', function (args, next) {
-        _this3.getLogger().write(_interface2.default.TYPE_ERROR, args.get('error').getMessage());
+        _this3.getLogger().write(Logger.TYPE_ERROR, args.get('error').getMessage());
         next();
       });
       this.getEvents().on('http.server.ready', function (args, next) {
-        _this3.getLogger().write(_interface2.default.TYPE_INFO, '[info] Server is started at ' + args.get('host') + ':' + args.get('port'));
+        _this3.getLogger().write(Logger.TYPE_INFO, '[info] Server is started at ' + args.get('host') + ':' + args.get('port'));
         next();
       });
       this.getEvents().on('foundation.controller.action.before', function (args, next) {
         var request = args.get('request'),
             route = args.get('route');
-        _this3.getLogger().write(_interface2.default.TYPE_INFO, request.getMethod() + ' ' + request.getPath() + ' ' + request.getQuery().toString() + ' matches ' + route.getName(), [route.getMatches()]);
+        _this3.getLogger().write(Logger.TYPE_INFO, request.getMethod() + ' ' + request.getPath() + ' ' + request.getQuery().toString() + ' matches ' + route.getName(), [route.getMatches()]);
         next();
       });
       this.getEvents().on('system.error', function (args, next) {
-        var response = new _json2.default({
+        var response = new JsonResponse({
           message: 'Oops! There is something wrong.'
-        }, _response2.default.HTTP_INTERNAL_ERROR);
+        }, Response.HTTP_INTERNAL_ERROR);
         var traces = [];
         var exception = args.get('exception');
-        if (exception instanceof _internalError2.default && exception.has('request')) {
+        if (exception instanceof InternalErrorException && exception.has('request')) {
           var request = exception.get('request');
-          if (request instanceof _request2.default) {
-            traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(_request2.default.CLIENT_HOST)];
+          if (request instanceof Request) {
+            traces = ['(Request.URI) ' + request.getMethod() + ' ' + request.getPath(), '(Request.Header) ' + request.getHeader().toString(), '(Request.ClientAddress) ' + request.getClient().get(Request.CLIENT_HOST)];
           }
         }
-        _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), traces);
+        _this3.getLogger().write(Logger.TYPE_ERROR, exception.getMessage(), traces);
         _this3.sendResponse(response, args.get('conn'));
         next();
       });
       this.getEvents().on('http.request.exception', function (args, next) {
         var response = null;
         var exception = args.get('exception');
-        if (exception instanceof _internalError2.default) {
-          response = new _json2.default({
+        if (exception instanceof InternalErrorException) {
+          response = new JsonResponse({
             error: {
               message: exception.getMessage()
             }
-          }, _response2.default.HTTP_INTERNAL_ERROR);
-          _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.getMessage(), [exception.getArguments().all()]);
-        } else if (exception instanceof _http2.default) {
-          response = new _json2.default({
+          }, Response.HTTP_INTERNAL_ERROR);
+          _this3.getLogger().write(Logger.TYPE_ERROR, exception.getMessage(), [exception.getArguments().all()]);
+        } else if (exception instanceof HttpException) {
+          response = new JsonResponse({
             error: {
               code: exception.getCode(),
               message: exception.getMessage()
             }
           }, exception.getStatusCode());
         } else if (exception instanceof Error) {
-          _this3.getLogger().write(_interface2.default.TYPE_ERROR, exception.message);
+          _this3.getLogger().write(Logger.TYPE_ERROR, exception.message);
         }
 
-        if (response instanceof _response2.default) {
+        if (response instanceof Response) {
           _this3.sendResponse(response, args.get('conn'));
         }
         next();
@@ -355,7 +310,7 @@ var App = function (_ContainerAware) {
         var port = _this6.getOptions().get('server.port', 443);
         var backlog = _this6.getOptions().get('server.backlog', 511);
         if (!_this6.getOptions().has('server.ssl.key') || !_this6.getOptions().has('server.ssl.cert')) {
-          reject(new _internalError2.default('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'));
+          reject(new InternalErrorException('server.ssl.key and server.ssl.cert must be configured in order to use HTTPS'));
         }
         try {
           var server = https.createServer({
@@ -401,11 +356,11 @@ var App = function (_ContainerAware) {
       }).then(function () {
         return _this7.handleMiddlewares(route, request);
       }).then(function (r) {
-        if (r instanceof _response2.default) response = r;
+        if (r instanceof Response) response = r;
       }).then(function () {
         return _this7.dispatchRequest(route, request, response);
       }).then(function (r) {
-        if (r instanceof _response2.default) response = r;
+        if (r instanceof Response) response = r;
       }).then(function () {
         return _this7.sendResponse(response, conn);
       }).then(function () {
@@ -429,9 +384,9 @@ var App = function (_ContainerAware) {
 
       return new Promise(function (resolve, reject) {
         try {
-          var request = _request2.default.from(conn.req);
-          request.getUri().set(_request2.default.URI_PROTOCOL, _this8.getOptions().get('server.protocol', 'http'));
-          if (request.getMethod() === _request2.default.METHOD_GET) {
+          var request = Request.from(conn.req);
+          request.getUri().set(Request.URI_PROTOCOL, _this8.getOptions().get('server.protocol', 'http'));
+          if (request.getMethod() === Request.METHOD_GET) {
             resolve(request);
           } else {
             var content = '';
@@ -441,7 +396,7 @@ var App = function (_ContainerAware) {
             conn.req.on('end', function () {
               try {
                 request.getBody().setContent(content);
-                request.getBody().setContentType(request.getHeader().get(_header2.default.CONTENT_TYPE));
+                request.getBody().setContentType(request.getHeader().get(Header.CONTENT_TYPE));
                 resolve(request);
               } catch (e) {
                 reject(e);
@@ -469,10 +424,10 @@ var App = function (_ContainerAware) {
       return new Promise(function (resolve, reject) {
         try {
           var route = _this9.getRouter().route(request);
-          if (route instanceof _route2.default) {
+          if (route instanceof Route) {
             resolve(route);
           } else {
-            reject(new _notFound2.default('Sorry! There is no routes found'));
+            reject(new NotFoundException('Sorry! There is no routes found'));
           }
         } catch (e) {
           reject(e);
@@ -505,7 +460,7 @@ var App = function (_ContainerAware) {
             tasks.push(new Promise(function (resolve, reject) {
               try {
                 var r = _this10.getRouter().getMiddlewares().get(name)(route, request);
-                if (r instanceof _response2.default) {
+                if (r instanceof Response) {
                   response = r;
                 }
                 resolve();
@@ -541,17 +496,17 @@ var App = function (_ContainerAware) {
       var _this11 = this;
 
       return new Promise(function (resolve, reject) {
-        if (response instanceof _response2.default) {
+        if (response instanceof Response) {
           return resolve(response);
         } else {
-          response = new _json2.default();
+          response = new JsonResponse();
         }
         var controller = route.getAttributes().get('controller'),
             container = _this11.getContainer();
-        if (controller instanceof _controller2.default) {
+        if (controller instanceof Controller) {
           var action = route.getAttributes().get('action');
           if (action === null || action === '' || typeof action === 'string' && typeof controller[action] !== 'function') {
-            reject(new _internalError2.default('action is not defined in controller', null, {
+            reject(new InternalErrorException('action is not defined in controller', null, {
               'request': request,
               'response': response,
               'route': route
@@ -585,7 +540,7 @@ var App = function (_ContainerAware) {
             }
           }
         } else {
-          reject(new _internalError2.default('[foundation.App#dispatchRequest] controller is not defined or not an instance of http.Controller', null, {
+          reject(new InternalErrorException('[foundation.App#dispatchRequest] controller is not defined or not an instance of http.Controller', null, {
             'request': request,
             'response': response,
             'route': route
@@ -606,13 +561,13 @@ var App = function (_ContainerAware) {
     value: function handleActionResult(result, controller) {
       if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) === 'object') {
         var response = controller.getResponse();
-        if (response instanceof _json2.default) {
+        if (response instanceof JsonResponse) {
           response.setContent(result);
         }
-      } else if (result instanceof _response2.default) {
+      } else if (result instanceof Response) {
         controller.setResponse(result);
       } else {
-        throw new _internalError2.default('[foundation.App#handleActionResult] result has unexpected format');
+        throw new InternalErrorException('[foundation.App#handleActionResult] result has unexpected format');
       }
     }
 
@@ -631,8 +586,8 @@ var App = function (_ContainerAware) {
       var _this12 = this;
 
       return new Promise(function (resolve, reject) {
-        if (response === null || !(response instanceof _response2.default)) {
-          reject(new _internalError2.default('An appropriate response could not be found'));
+        if (response === null || !(response instanceof Response)) {
+          reject(new InternalErrorException('An appropriate response could not be found'));
         } else {
           _this12.getEvents().emit('http.response.send.before', {
             response: response,
@@ -642,7 +597,7 @@ var App = function (_ContainerAware) {
               response.send(conn.res);
               resolve(response);
             } catch (e) {
-              _this12.getLogger().write(_interface2.default.TYPE_ERROR, e.message);
+              _this12.getLogger().write(Logger.TYPE_ERROR, e.message);
               conn.res.end('');
             }
           }).catch(function (e) {
@@ -668,16 +623,16 @@ var App = function (_ContainerAware) {
       var request = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
       var response = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
 
-      if (response instanceof _response2.default) {
+      if (response instanceof Response) {
         this.sendResponse(response, conn);
-      } else if (e instanceof _exception2.default) {
+      } else if (e instanceof Exception) {
         this.getEvents().emit('http.request.exception', {
           exception: e,
           conn: conn
         });
       } else if (e instanceof Error) {
         this.getEvents().emit('system.error', {
-          exception: new _internalError2.default(e.message, null, {
+          exception: new InternalErrorException(e.message, null, {
             request: request
           }),
           conn: conn
@@ -723,6 +678,6 @@ var App = function (_ContainerAware) {
   }]);
 
   return App;
-}(_containerAware2.default);
+}(ContainerAware);
 
 exports.default = App;

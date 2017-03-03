@@ -8,25 +8,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _async = require('async');
-
-var _async2 = _interopRequireDefault(_async);
-
-var _bag = require('../foundation/bag');
-
-var _bag2 = _interopRequireDefault(_bag);
-
 var _listener = require('./listener');
 
 var _listener2 = _interopRequireDefault(_listener);
-
-var _exception = require('../exception');
-
-var _exception2 = _interopRequireDefault(_exception);
-
-var _invalidArgument = require('../exception/invalid-argument');
-
-var _invalidArgument2 = _interopRequireDefault(_invalidArgument);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -35,6 +19,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var async = require('async');
+var Bag = require('lapi-common').Bag;
+var Exception = require('lapi-common').Exception;
+var InvalidArgumentException = require('lapi-common').exception.InvalidArgumentException;
+
 
 /**
  * Get structure of an event item
@@ -137,7 +127,7 @@ var EventManager = function () {
      * @type {Bag}
      * @private
      */
-    this._events = new _bag2.default();
+    this._events = new Bag();
   }
 
   /**
@@ -161,12 +151,12 @@ var EventManager = function () {
   }, {
     key: 'setEvents',
     value: function setEvents(events) {
-      if (events instanceof _bag2.default) {
+      if (events instanceof Bag) {
         this._events = events;
       } else if ((typeof events === 'undefined' ? 'undefined' : _typeof(events)) === 'object') {
-        this._events = new _bag2.default(events);
+        this._events = new Bag(events);
       } else {
-        throw new _invalidArgument2.default('[Event/EventManager#setEvents] events must be an instance of Bag or an object');
+        throw new InvalidArgumentException('[Event/EventManager#setEvents] events must be an instance of Bag or an object');
       }
     }
 
@@ -182,7 +172,7 @@ var EventManager = function () {
     key: 'subscribe',
     value: function subscribe(name, listener) {
       if (!(listener instanceof _listener2.default)) {
-        throw new _exception2.default('[Event/EventManager#subscribe] listener must be an instance of Event/EventListener');
+        throw new Exception('[Event/EventManager#subscribe] listener must be an instance of Event/EventListener');
       }
       this.on(name, listener.getRunner(), listener.getPriority(), listener.getLimit());
     }
@@ -289,7 +279,7 @@ var EventManager = function () {
           }
         }
       } else {
-        throw new _exception2.default('[Event/EventManager#off] name must be specified.');
+        throw new Exception('[Event/EventManager#off] name must be specified.');
       }
     }
 
@@ -356,13 +346,13 @@ var EventManager = function () {
         this.sort(name);
       }
       if (parameters === undefined || parameters === null) {
-        parameters = new _bag2.default();
+        parameters = new Bag();
       } else if ((typeof parameters === 'undefined' ? 'undefined' : _typeof(parameters)) === 'object') {
-        if (!(parameters instanceof _bag2.default)) {
-          parameters = new _bag2.default(parameters);
+        if (!(parameters instanceof Bag)) {
+          parameters = new Bag(parameters);
         }
       } else {
-        throw new _invalidArgument2.default('[Event/EventManager#emit] args must be an instance of Bag or an object');
+        throw new InvalidArgumentException('[Event/EventManager#emit] args must be an instance of Bag or an object');
       }
 
       var listeners = this.getEvents().get(name).listeners;
@@ -394,9 +384,9 @@ var EventManager = function () {
               }
             }];
             if (series === true) {
-              _async2.default.series.apply(_this2, args);
+              async.series.apply(_this2, args);
             } else {
-              _async2.default.parallel.apply(_this2, args);
+              async.parallel.apply(_this2, args);
             }
           } catch (e) {
             reject(e);

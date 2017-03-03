@@ -1,8 +1,8 @@
-import async from 'async'
-import Bag from '../foundation/bag'
+const async = require('async')
+const Bag = require('lapi-common').Bag
+const Exception = require('lapi-common').Exception
+const InvalidArgumentException = require('lapi-common').exception.InvalidArgumentException
 import EventListener from './listener'
-import Exception from '../exception'
-import InvalidArgumentException from '../exception/invalid-argument'
 
 /**
  * Get structure of an event item
