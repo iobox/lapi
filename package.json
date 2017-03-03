@@ -1,6 +1,6 @@
 {
   "name": "lapi",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Light API framework for NodeJS",
   "main": "index.js",
   "scripts": {
@@ -36,24 +36,16 @@
     "url": "https://github.com/iobox/lapi/issues"
   },
   "homepage": "https://github.com/iobox/lapi#readme",
-  "engines" : {
-    "node" : ">=5.1.0"
+  "engines": {
+    "node": ">=5.1.0"
   },
   "devDependencies": {
-    "babel-preset-es2015": "^6.9.0",
-    "chai": "^3.5.0",
     "eslint": "^3.3.1",
     "eslint-config-standard": "^5.3.5",
     "eslint-plugin-promise": "^2.0.1",
     "eslint-plugin-standard": "^2.0.0",
-    "cli-color": "^1.1.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-clean": "^0.3.2",
-    "gulp-concat": "^2.6.0",
     "gulp-jsdoc3": "^0.3.0",
-    "gulp-mocha": "^2.2.0",
-    "gulp-nodemon": "^2.1.0"
+    "lapi-dev": "^1.0.0"
   },
   "dependencies": {
     "esdoc": "^0.4.8",
